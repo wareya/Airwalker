@@ -15,6 +15,8 @@ enum {
 export var moving_platform_mode : int = MOVING_PLATFORM_IGNORE
 export var moving_platform_jump_ignore_vertical : bool = false
 
+export var pogostick_jumping : bool = true
+
 func set_rotation(y):
     $CameraHolder.rotation.y = y
     $CameraHolder.rotation.x = 0
@@ -156,7 +158,8 @@ func _process(delta):
             get_viewport().debug_draw = Viewport.DEBUG_DRAW_OVERDRAW
         pass
     
-    want_to_jump = Input.is_action_pressed("jump")
+    if pogostick_jumping:
+        want_to_jump = Input.is_action_pressed("jump")
     
     var prev_simtimer = simtimer
     simtimer += delta
@@ -172,16 +175,6 @@ func _process(delta):
     
     if peak_time + 1 < simtimer:
         peak = global_transform.origin.y
-    
-    HUD.get_node("Peak").text = "%s\n%s\n%s\n%s\n%s\n%s\n%s" % \
-        [(peak*unit_scale),
-        vector_reject(velocity,
-        Vector3.DOWN).length()*unit_scale,
-        velocity.length()*unit_scale,
-        is_on_floor(),
-        global_translation*unit_scale,
-        velocity.y*unit_scale,
-        Engine.get_frames_per_second()]
     if jump_state_timer > 0:
         jump_state_timer -= delta
     
@@ -251,6 +244,7 @@ func _process(delta):
             floor_velocity = (foot_location - old_foot_location)/delta
     
     if is_on_floor() and want_to_jump:
+        sway_rate_multiplier = 1.0
         #EmitterFactory.emit("HybridFoley")
         if !$JumpSound.playing or $JumpSound.get_playback_position() > 0.20 or can_doublejump:
             #print($JumpSound.get_playback_position())
@@ -428,7 +422,8 @@ func _process(delta):
     if is_on_floor():
         sway_rate_multiplier = 1.0
     else:
-        sway_rate_multiplier = move_toward(sway_rate_multiplier, 0.25, delta/4.0)
+        sway_rate_multiplier = move_toward(sway_rate_multiplier, 0.25, delta*0.25)
+        print(sway_rate_multiplier)
     if force_sway_amount > 0.0:
         sway_timer = fmod(sway_timer, PI*2.0)
         var target = fmod(force_sway_to, PI*2.0)
@@ -479,7 +474,31 @@ func _process(delta):
     previous_on_floor = floor_collision != null
     
     force_update_transform()
-    #move_and_collide(Vector3(), true, true)
+    
+    HUD.get_node("Peak").text = "%s\n%s\n%s\n%s\n%s\n%s\n%s" % \
+        [(peak*unit_scale),
+        vector_reject(velocity,
+        Vector3.DOWN).length()*unit_scale,
+        velocity.length()*unit_scale,
+        is_on_floor(),
+        global_translation*unit_scale,
+        velocity.y*unit_scale,
+        Engine.get_frames_per_second()]
+    
+    HUD.get_node("ArrowUp").visible = wishdir.z < 0
+    HUD.get_node("ArrowDown").visible = wishdir.z > 0
+    HUD.get_node("ArrowLeft").visible = wishdir.x < 0
+    HUD.get_node("ArrowRight").visible = wishdir.x > 0
+    HUD.get_node("ArrowJump").visible = Input.is_action_pressed("jump")
+    if can_doublejump and jump_state_timer > 0:
+        HUD.get_node("ArrowJump").modulate = Color.turquoise
+    else:
+        HUD.get_node("ArrowJump").modulate = Color.white
+    if !want_to_jump and !pogostick_jumping:
+        HUD.get_node("ArrowJump").modulate.a = 0.5
+    else:
+        HUD.get_node("ArrowJump").modulate.a = 1.0
+    
     var new_velocity = custom_move_and_slide(delta, velocity)
     velocity.y = new_velocity.y
     
@@ -511,7 +530,3 @@ func _process(delta):
     
     velocity += vel_delta/2
     
-        
-    
-    
-    pass

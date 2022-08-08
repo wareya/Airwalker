@@ -152,15 +152,8 @@ moving_platform_mode = 1
 
 [node name="CSGStuff" type="Spatial" parent="Stuff"]
 
-[node name="CSGBox26" type="CSGBox" parent="Stuff/CSGStuff"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0 )
-use_collision = true
-width = 256.0
-depth = 256.0
-material = SubResource( 48 )
-
-[node name="CSGBox54" type="CSGBox" parent="Stuff/CSGStuff/CSGBox26"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 149.75, 0 )
+[node name="CSGBox58" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 148.75, 0 )
 visible = false
 use_collision = true
 width = 256.0
@@ -168,39 +161,42 @@ height = 4.0
 depth = 256.0
 material = SubResource( 48 )
 
-[node name="CSGBox55" type="CSGBox" parent="Stuff/CSGStuff/CSGBox26"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 130, 84.5, 0 )
-visible = false
+[node name="CSGBox59" type="CSGBox" parent="Stuff/CSGStuff/CSGBox58"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 130, -65.25, 0 )
 use_collision = true
 width = 4.0
 height = 135.0
 depth = 256.0
 material = SubResource( 48 )
 
-[node name="CSGBox56" type="CSGBox" parent="Stuff/CSGStuff/CSGBox26"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -130, 84.5, 0 )
-visible = false
+[node name="CSGBox60" type="CSGBox" parent="Stuff/CSGStuff/CSGBox58"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -130, -65.25, 0 )
 use_collision = true
 width = 4.0
 height = 135.0
 depth = 256.0
 material = SubResource( 48 )
 
-[node name="CSGBox57" type="CSGBox" parent="Stuff/CSGStuff/CSGBox26"]
-transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -5.68248e-06, 84.5, 130 )
-visible = false
+[node name="CSGBox61" type="CSGBox" parent="Stuff/CSGStuff/CSGBox58"]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -5.68248e-06, -65.25, 130 )
 use_collision = true
 width = 4.0
 height = 135.0
 depth = 256.0
 material = SubResource( 48 )
 
-[node name="CSGBox58" type="CSGBox" parent="Stuff/CSGStuff/CSGBox26"]
-transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 5.68248e-06, 84.5, -130 )
-visible = false
+[node name="CSGBox62" type="CSGBox" parent="Stuff/CSGStuff/CSGBox58"]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 5.68248e-06, -65.25, -130 )
 use_collision = true
 width = 4.0
 height = 135.0
+depth = 256.0
+material = SubResource( 48 )
+
+[node name="CSGBox26" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0 )
+use_collision = true
+width = 256.0
 depth = 256.0
 material = SubResource( 48 )
 

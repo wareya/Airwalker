@@ -26,8 +26,15 @@ func _input(event):
                 Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
                 #holder.get_parent().disable_autocam()
     elif event is InputEventMouseMotion:
+        var ratio : Vector2
+        # FIXME: in godot 3.5 (and older, and probably newer), mouse relatie motion is tied to window size
+        # ...in 2d scaling mode only
+        if ProjectSettings.get_setting("display/window/stretch/mode") == "2d":
+            ratio = get_viewport().size / get_viewport().get_visible_rect().size
+        else:
+            ratio = Vector2.ONE
         if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
-            mouse_motion += event.relative
+            mouse_motion += event.relative*ratio
     if event is InputEventMouseMotion:
         #print(HUD.get_viewport().get_visible_rect())
         #print(event.relative)
