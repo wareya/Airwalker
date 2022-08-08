@@ -1,0 +1,76 @@
+[gd_scene load_steps=8 format=2]
+
+[sub_resource type="Gradient" id=8]
+interpolation_mode = 2
+offsets = PoolRealArray( 0, 0.388889, 0.555556, 1 )
+colors = PoolColorArray( 1, 1, 1, 1, 0.99978, 0.826134, 0.642438, 1, 0.999023, 0.423147, 0.191219, 1, 0, 0, 0, 0 )
+
+[sub_resource type="GradientTexture2D" id=9]
+gradient = SubResource( 8 )
+fill = 1
+fill_from = Vector2( 0.5, 0.5 )
+fill_to = Vector2( 0.5, 0 )
+
+[sub_resource type="SpatialMaterial" id=7]
+flags_transparent = true
+vertex_color_use_as_albedo = true
+params_billboard_mode = 1
+params_billboard_keep_scale = true
+albedo_texture = SubResource( 9 )
+proximity_fade_enable = true
+proximity_fade_distance = 1.0
+
+[sub_resource type="QuadMesh" id=3]
+material = SubResource( 7 )
+size = Vector2( 16, 16 )
+
+[sub_resource type="Curve" id=5]
+_data = [ Vector2( 0, 0.627273 ), 0.0, 1.93091, 0, 0, Vector2( 1, 1 ), -0.292562, 0.0, 0, 0 ]
+
+[sub_resource type="Gradient" id=4]
+interpolation_mode = 2
+offsets = PoolRealArray( 0, 0.506579, 1 )
+colors = PoolColorArray( 1, 1, 1, 1, 0.282895, 0.282895, 0.282895, 0.282895, 0, 0, 0, 0 )
+
+[sub_resource type="GDScript" id=6]
+script/source = "extends CPUParticles
+
+func _ready():
+    life = lifetime
+    $OmniLight.light_energy = max(32.0*life/lifetime, 0.0)
+    pass
+
+var life
+
+func _process(delta):
+    life -= delta
+    $OmniLight.light_energy = max(32.0*life/lifetime, 0.0)
+    if life < 0.0:
+        queue_free()
+"
+
+[node name="RocketParticles" type="CPUParticles"]
+transform = Transform( 0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0 )
+emitting = false
+lifetime = 0.4
+one_shot = true
+explosiveness = 1.0
+lifetime_randomness = 0.38
+mesh = SubResource( 3 )
+emission_shape = 1
+emission_sphere_radius = 0.21
+direction = Vector3( 0, 1, 0 )
+spread = 180.0
+gravity = Vector3( 0, 0, 0 )
+initial_velocity = 16.0
+initial_velocity_random = 1.0
+scale_amount = 0.2
+scale_amount_random = 1.0
+scale_amount_curve = SubResource( 5 )
+color_ramp = SubResource( 4 )
+script = SubResource( 6 )
+
+[node name="OmniLight" type="OmniLight" parent="."]
+light_color = Color( 0.952941, 0.682353, 0.658824, 1 )
+light_energy = 16.0
+omni_range = 16.0

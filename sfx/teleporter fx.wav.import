@@ -1,0 +1,23 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/teleporter fx.wav-daf92b9742525cd62d37ac7196a49e04.sample"
+
+[deps]
+
+source_file="res://sfx/teleporter fx.wav"
+dest_files=[ "res://.import/teleporter fx.wav-daf92b9742525cd62d37ac7196a49e04.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=0

@@ -1,0 +1,2701 @@
+[gd_scene load_steps=28 format=2]
+
+[ext_resource path="res://art/texture/blockmesh texture blue.png" type="Texture" id=1]
+[ext_resource path="res://MyChar.tscn" type="PackedScene" id=2]
+[ext_resource path="res://art/texture/blockmesh texture black.png" type="Texture" id=3]
+[ext_resource path="res://art/texture/blockmesh texture green.png" type="Texture" id=4]
+[ext_resource path="res://art/texture/blockmesh texture.png" type="Texture" id=5]
+[ext_resource path="res://art/texture/blockmesh texture red.png" type="Texture" id=6]
+[ext_resource path="res://art/texture/blockmesh texture yellow.png" type="Texture" id=7]
+[ext_resource path="res://Teleporter.tscn" type="PackedScene" id=8]
+[ext_resource path="res://JumpPad.tscn" type="PackedScene" id=9]
+[ext_resource path="res://ForceNonWalkable.tscn" type="PackedScene" id=10]
+[ext_resource path="res://art/texture/blockmesh texture darkgray.png" type="Texture" id=11]
+[ext_resource path="res://KinematicBody.gd" type="Script" id=12]
+[ext_resource path="res://KinematicBody2.gd" type="Script" id=13]
+[ext_resource path="res://KinematicBody3.gd" type="Script" id=14]
+
+[sub_resource type="ProceduralSky" id=45]
+radiance_size = 0
+sky_top_color = Color( 0.203922, 0.247059, 0.352941, 1 )
+sky_horizon_color = Color( 0.866667, 0.921569, 1, 1 )
+sky_curve = 0.0516914
+ground_bottom_color = Color( 0, 0, 0, 1 )
+ground_horizon_color = Color( 0.462745, 0.443137, 0.423529, 1 )
+ground_curve = 0.12996
+sun_color = Color( 1, 0.909804, 0.639216, 1 )
+sun_latitude = 51.79
+sun_longitude = 45.0
+sun_angle_min = 0.0
+sun_curve = 0.0406126
+
+[sub_resource type="Environment" id=46]
+background_mode = 2
+background_sky = SubResource( 45 )
+ambient_light_color = Color( 0.270588, 0.270588, 0.270588, 1 )
+ambient_light_sky_contribution = 0.0
+tonemap_white = 16.0
+auto_exposure_scale = 0.2
+auto_exposure_speed = 1.0
+ss_reflections_fade_in = 1.42705
+adjustment_contrast = 0.95
+adjustment_saturation = 1.31
+
+[sub_resource type="SpatialMaterial" id=48]
+flags_world_triplanar = true
+albedo_texture = ExtResource( 3 )
+metallic_specular = 1.0
+uv1_scale = Vector3( 0.25, 0.25, 0.25 )
+uv1_triplanar = true
+
+[sub_resource type="SpatialMaterial" id=47]
+flags_world_triplanar = true
+albedo_texture = ExtResource( 1 )
+metallic_specular = 1.0
+uv1_scale = Vector3( 0.25, 0.25, 0.25 )
+uv1_triplanar = true
+uv1_triplanar_sharpness = 10.0
+
+[sub_resource type="SpatialMaterial" id=51]
+flags_world_triplanar = true
+albedo_texture = ExtResource( 6 )
+metallic_specular = 1.0
+uv1_scale = Vector3( 0.25, 0.25, 0.25 )
+uv1_triplanar = true
+
+[sub_resource type="SpatialMaterial" id=50]
+flags_world_triplanar = true
+albedo_texture = ExtResource( 5 )
+metallic_specular = 1.0
+uv1_scale = Vector3( 0.25, 0.25, 0.25 )
+uv1_triplanar = true
+
+[sub_resource type="SpatialMaterial" id=62]
+albedo_texture = ExtResource( 1 )
+metallic_specular = 1.0
+uv1_scale = Vector3( 0.25, 0.25, 0.25 )
+uv1_triplanar = true
+uv1_triplanar_sharpness = 10.0
+
+[sub_resource type="CylinderShape" id=63]
+margin = 0.001
+height = 1.0
+radius = 4.0
+
+[sub_resource type="BoxShape" id=64]
+margin = 0.001
+extents = Vector3( 4, 0.375, 4 )
+
+[sub_resource type="SpatialMaterial" id=56]
+flags_world_triplanar = true
+albedo_texture = ExtResource( 11 )
+metallic_specular = 1.0
+uv1_scale = Vector3( 0.25, 0.25, 0.25 )
+uv1_triplanar = true
+
+[sub_resource type="SpatialMaterial" id=49]
+flags_world_triplanar = true
+albedo_texture = ExtResource( 4 )
+metallic_specular = 1.0
+uv1_scale = Vector3( 0.25, 0.25, 0.25 )
+uv1_triplanar = true
+uv1_triplanar_sharpness = 100.0
+
+[sub_resource type="SpatialMaterial" id=61]
+flags_world_triplanar = true
+albedo_texture = ExtResource( 6 )
+metallic_specular = 1.0
+uv1_scale = Vector3( 0.25, 0.25, 0.25 )
+uv1_triplanar = true
+
+[sub_resource type="SpatialMaterial" id=52]
+flags_world_triplanar = true
+albedo_texture = ExtResource( 7 )
+uv1_scale = Vector3( 0.25, 0.25, 0.25 )
+uv1_triplanar = true
+uv1_triplanar_sharpness = 100.0
+
+[node name="Demo Scene 2" type="Spatial"]
+
+[node name="Stuff" type="Spatial" parent="."]
+
+[node name="DirectionalLight" type="DirectionalLight" parent="Stuff"]
+transform = Transform( -0.362168, -0.82543, 0.433012, -0.086824, 0.492403, 0.866026, -0.92806, 0.276051, -0.25, 16.7764, 26.3169, -14.0476 )
+light_energy = 3.0
+light_cull_mask = 4293918721
+shadow_enabled = true
+directional_shadow_split_1 = 0.03
+directional_shadow_split_2 = 0.1
+directional_shadow_split_3 = 0.3
+directional_shadow_blend_splits = true
+directional_shadow_max_distance = 200.0
+
+[node name="DirectionalLight2" type="DirectionalLight" parent="Stuff"]
+transform = Transform( -0.333844, -0.902663, 0.271566, 0.923826, -0.256059, 0.284569, -0.187332, 0.345881, 0.919387, 16.8541, 26.3169, -13.8466 )
+light_color = Color( 0.411765, 0.411765, 0.411765, 1 )
+light_energy = 0.5
+light_indirect_energy = 0.0
+light_negative = true
+light_specular = 0.0
+light_cull_mask = 4293918721
+directional_shadow_blend_splits = true
+directional_shadow_max_distance = 200.0
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Stuff"]
+environment = SubResource( 46 )
+
+[node name="MyChar" parent="Stuff" instance=ExtResource( 2 )]
+process_priority = 1
+transform = Transform( -0.573575, 0, -0.819153, 0, 1, 0, 0.819153, 0, -0.573575, 48.283, 0.934016, 5.44974 )
+stair_height = 0.563
+moving_platform_mode = 1
+
+[node name="CSGStuff" type="Spatial" parent="Stuff"]
+
+[node name="CSGBox26" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0 )
+use_collision = true
+width = 256.0
+depth = 256.0
+material = SubResource( 48 )
+
+[node name="CSGBox54" type="CSGBox" parent="Stuff/CSGStuff/CSGBox26"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 149.75, 0 )
+visible = false
+use_collision = true
+width = 256.0
+height = 4.0
+depth = 256.0
+material = SubResource( 48 )
+
+[node name="CSGBox55" type="CSGBox" parent="Stuff/CSGStuff/CSGBox26"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 130, 84.5, 0 )
+visible = false
+use_collision = true
+width = 4.0
+height = 135.0
+depth = 256.0
+material = SubResource( 48 )
+
+[node name="CSGBox56" type="CSGBox" parent="Stuff/CSGStuff/CSGBox26"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -130, 84.5, 0 )
+visible = false
+use_collision = true
+width = 4.0
+height = 135.0
+depth = 256.0
+material = SubResource( 48 )
+
+[node name="CSGBox57" type="CSGBox" parent="Stuff/CSGStuff/CSGBox26"]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -5.68248e-06, 84.5, 130 )
+visible = false
+use_collision = true
+width = 4.0
+height = 135.0
+depth = 256.0
+material = SubResource( 48 )
+
+[node name="CSGBox58" type="CSGBox" parent="Stuff/CSGStuff/CSGBox26"]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 5.68248e-06, 84.5, -130 )
+visible = false
+use_collision = true
+width = 4.0
+height = 135.0
+depth = 256.0
+material = SubResource( 48 )
+
+[node name="CSGBox59" type="CSGBox" parent="Stuff/CSGStuff/CSGBox26"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 130, 9, 0 )
+use_collision = true
+width = 4.0
+height = 16.0
+depth = 256.0
+material = SubResource( 48 )
+
+[node name="CSGBox60" type="CSGBox" parent="Stuff/CSGStuff/CSGBox26"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -130, 9, 0 )
+use_collision = true
+width = 4.0
+height = 16.0
+depth = 256.0
+material = SubResource( 48 )
+
+[node name="CSGBox61" type="CSGBox" parent="Stuff/CSGStuff/CSGBox26"]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -5.68248e-06, 9, 130 )
+use_collision = true
+width = 4.0
+height = 16.0
+depth = 256.0
+material = SubResource( 48 )
+
+[node name="CSGBox62" type="CSGBox" parent="Stuff/CSGStuff/CSGBox26"]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 5.68248e-06, 9, -130 )
+use_collision = true
+width = 4.0
+height = 16.0
+depth = 256.0
+material = SubResource( 48 )
+
+[node name="CSGBox27" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -2.25, 0.5, 2.75 )
+use_collision = true
+width = 1.0
+height = 1.0
+depth = 1.0
+material = SubResource( 47 )
+
+[node name="Label3D" type="Label3D" parent="Stuff/CSGStuff/CSGBox27"]
+transform = Transform( 1.31134e-07, 0, -1, 0, 1, 0, 1, 0, 1.31134e-07, -0.526119, -0.0308266, -0.0181208 )
+pixel_size = 0.05
+text = "32"
+
+[node name="CSGBox63" type="CSGPolygon" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 2.25, 2.5, 13 )
+use_collision = true
+polygon = PoolVector2Array( 0, -0.375, 0, 0.5, 0.25, 0.5, 0.25, -0.5 )
+depth = 4.0
+material = SubResource( 51 )
+
+[node name="Label3D" type="Label3D" parent="Stuff/CSGStuff/CSGBox63"]
+transform = Transform( 1.31134e-07, 0, -1, 0, 1, 0, 1, 0, 1.31134e-07, -0.0146344, -0.0308266, -1.91635 )
+pixel_size = 0.02
+text = "1x2 head bump double jump
+tester"
+
+[node name="CSGBox65" type="CSGPolygon" parent="Stuff/CSGStuff"]
+transform = Transform( -4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 6.5, 2.5, 13.25 )
+use_collision = true
+polygon = PoolVector2Array( 0, -0.25, 0, 0.5, 0.25, 0.5, 0.25, -0.5 )
+depth = 4.0
+material = SubResource( 51 )
+
+[node name="Label3D" type="Label3D" parent="Stuff/CSGStuff/CSGBox65"]
+transform = Transform( 1.31134e-07, 0, -1, 0, 1, 0, 1, 0, 1.31134e-07, -0.0146341, -0.0308266, -2.06374 )
+pixel_size = 0.02
+text = "1x1 head bump double  jump
+tester"
+
+[node name="CSGBox33" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 8.5, 6 )
+use_collision = true
+width = 1.0
+height = 1.0
+depth = 1.0
+material = SubResource( 47 )
+
+[node name="CSGBox34" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 8.5, 6.5 )
+use_collision = true
+width = 1.0
+height = 1.0
+depth = 1.0
+material = SubResource( 47 )
+
+[node name="CSGBox35" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 9.5, 6.25 )
+use_collision = true
+width = 1.0
+height = 1.0
+depth = 1.0
+material = SubResource( 47 )
+
+[node name="CSGBox36" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 10.5, 7.5 )
+use_collision = true
+width = 1.0
+height = 1.0
+depth = 1.0
+material = SubResource( 47 )
+
+[node name="CSGBox29" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 2.75, 1, -0.25 )
+use_collision = true
+material = SubResource( 47 )
+
+[node name="CSGBox42" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.25, 1, -0.75 )
+use_collision = true
+material = SubResource( 47 )
+
+[node name="Label3D" type="Label3D" parent="Stuff/CSGStuff/CSGBox42"]
+transform = Transform( 1.31134e-07, 0, -1, 0, 1, 0, 1, 0, 1.31134e-07, -1.03273, -0.0930464, -0.0613749 )
+pixel_size = 0.05
+text = "64"
+
+[node name="Label3D3" type="Label3D" parent="Stuff/CSGStuff"]
+transform = Transform( -1, 0, -8.74228e-08, -8.74228e-08, -4.37114e-08, 1, -3.82137e-15, 1, 4.37114e-08, -3.59958, 0.0229049, -2.14227 )
+pixel_size = 0.05
+text = "16x32"
+
+[node name="Label3D2" type="Label3D" parent="Stuff/CSGStuff"]
+transform = Transform( -1, 0, -8.74228e-08, -8.74228e-08, -4.37114e-08, 1, -3.82137e-15, 1, 4.37114e-08, -5.82647, 0.0229049, -2.14227 )
+pixel_size = 0.05
+text = "8x16"
+
+[node name="Label3D4" type="Label3D" parent="Stuff/CSGStuff"]
+transform = Transform( -1, 0, -8.74228e-08, -8.74228e-08, -4.37114e-08, 1, -3.82137e-15, 1, 4.37114e-08, -7.8261, 0.0229049, -2.14227 )
+pixel_size = 0.05
+text = "4x8"
+
+[node name="CSGBox50" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -3.75, 0.25, -1.25 )
+use_collision = true
+height = 0.5
+depth = 1.0
+material = SubResource( 50 )
+
+[node name="CSGBox51" type="CSGBox" parent="Stuff/CSGStuff/CSGBox50"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 1 )
+use_collision = true
+height = 1.0
+depth = 1.0
+material = SubResource( 50 )
+
+[node name="CSGBox49" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -5.75, 0.125, -1.5 )
+use_collision = true
+height = 0.25
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/CSGBox49"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0.5 )
+use_collision = true
+height = 0.5
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox51" type="CSGBox" parent="Stuff/CSGStuff/CSGBox49"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 1 )
+use_collision = true
+height = 0.75
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox52" type="CSGBox" parent="Stuff/CSGStuff/CSGBox49"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, 1.5 )
+use_collision = true
+height = 1.0
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="stairs" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -21, 2.75, 9 )
+use_collision = true
+width = 6.0
+height = 1.0
+material = SubResource( 50 )
+
+[node name="CSGBox56" type="CSGBox" parent="Stuff/CSGStuff/stairs"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2 )
+use_collision = true
+width = 6.0
+height = 1.0
+material = SubResource( 50 )
+
+[node name="CSGBox57" type="CSGBox" parent="Stuff/CSGStuff/stairs"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 2 )
+use_collision = true
+width = 6.0
+height = 1.0
+material = SubResource( 50 )
+
+[node name="CSGBox52" type="CSGBox" parent="Stuff/CSGStuff/stairs"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.375, -2.75 )
+use_collision = true
+width = 6.0
+height = 0.25
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs/CSGBox52"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0.5 )
+use_collision = true
+width = 6.0
+height = 0.5
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox51" type="CSGBox" parent="Stuff/CSGStuff/stairs/CSGBox52"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 1 )
+use_collision = true
+width = 6.0
+height = 0.75
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox52" type="CSGBox" parent="Stuff/CSGStuff/stairs/CSGBox52"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, 1.5 )
+use_collision = true
+width = 6.0
+height = 1.0
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, -0.75 )
+use_collision = true
+width = 6.0
+height = 0.25
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs/CSGBox53"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0.5 )
+use_collision = true
+width = 6.0
+height = 0.5
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox51" type="CSGBox" parent="Stuff/CSGStuff/stairs/CSGBox53"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 1 )
+use_collision = true
+width = 6.0
+height = 0.75
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox52" type="CSGBox" parent="Stuff/CSGStuff/stairs/CSGBox53"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, 1.5 )
+use_collision = true
+width = 6.0
+height = 1.0
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox54" type="CSGBox" parent="Stuff/CSGStuff/stairs"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.625, 1.25 )
+use_collision = true
+width = 6.0
+height = 0.25
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs/CSGBox54"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0.5 )
+use_collision = true
+width = 6.0
+height = 0.5
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox51" type="CSGBox" parent="Stuff/CSGStuff/stairs/CSGBox54"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 1 )
+use_collision = true
+width = 6.0
+height = 0.75
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox52" type="CSGBox" parent="Stuff/CSGStuff/stairs/CSGBox54"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, 1.5 )
+use_collision = true
+width = 6.0
+height = 1.0
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="stairs2" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -15, -0.25, 9 )
+use_collision = true
+width = 6.0
+height = 1.0
+material = SubResource( 50 )
+
+[node name="CSGBox56" type="CSGBox" parent="Stuff/CSGStuff/stairs2"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2 )
+use_collision = true
+width = 6.0
+height = 1.0
+material = SubResource( 50 )
+
+[node name="CSGBox57" type="CSGBox" parent="Stuff/CSGStuff/stairs2"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 2 )
+use_collision = true
+width = 6.0
+height = 1.0
+material = SubResource( 50 )
+
+[node name="CSGBox52" type="CSGBox" parent="Stuff/CSGStuff/stairs2"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.375, -2.75 )
+use_collision = true
+width = 6.0
+height = 0.137892
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs2/CSGBox52"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0.5 )
+use_collision = true
+width = 6.0
+height = 0.5
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox51" type="CSGBox" parent="Stuff/CSGStuff/stairs2/CSGBox52"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 1 )
+use_collision = true
+width = 6.0
+height = 0.575352
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox52" type="CSGBox" parent="Stuff/CSGStuff/stairs2/CSGBox52"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, 1.5 )
+use_collision = true
+width = 6.0
+height = 1.0
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs2"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, -0.75 )
+use_collision = true
+width = 6.0
+height = 0.25
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs2/CSGBox53"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0.5 )
+use_collision = true
+width = 6.0
+height = 0.5
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox51" type="CSGBox" parent="Stuff/CSGStuff/stairs2/CSGBox53"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 1 )
+use_collision = true
+width = 6.0
+height = 0.75
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox52" type="CSGBox" parent="Stuff/CSGStuff/stairs2/CSGBox53"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, 1.5 )
+use_collision = true
+width = 6.0
+height = 1.0
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox54" type="CSGBox" parent="Stuff/CSGStuff/stairs2"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.625, 1.25 )
+use_collision = true
+width = 6.0
+height = 0.25
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs2/CSGBox54"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0.5 )
+use_collision = true
+width = 6.0
+height = 0.5
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox51" type="CSGBox" parent="Stuff/CSGStuff/stairs2/CSGBox54"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 1 )
+use_collision = true
+width = 6.0
+height = 0.75
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox52" type="CSGBox" parent="Stuff/CSGStuff/stairs2/CSGBox54"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, 1.5 )
+use_collision = true
+width = 6.0
+height = 1.0
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox41" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -7.75, 0.0625, -1.625 )
+use_collision = true
+height = 0.125
+depth = 0.25
+material = SubResource( 50 )
+
+[node name="CSGBox42" type="CSGBox" parent="Stuff/CSGStuff/CSGBox41"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0625, 0.25 )
+use_collision = true
+height = 0.25
+depth = 0.25
+material = SubResource( 50 )
+
+[node name="CSGBox43" type="CSGBox" parent="Stuff/CSGStuff/CSGBox41"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0.5 )
+use_collision = true
+height = 0.375
+depth = 0.25
+material = SubResource( 50 )
+
+[node name="CSGBox44" type="CSGBox" parent="Stuff/CSGStuff/CSGBox41"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1875, 0.75 )
+use_collision = true
+height = 0.5
+depth = 0.25
+material = SubResource( 50 )
+
+[node name="CSGBox45" type="CSGBox" parent="Stuff/CSGStuff/CSGBox41"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 1 )
+use_collision = true
+height = 0.625
+depth = 0.25
+material = SubResource( 50 )
+
+[node name="CSGBox46" type="CSGBox" parent="Stuff/CSGStuff/CSGBox41"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3125, 1.25 )
+use_collision = true
+height = 0.75
+depth = 0.25
+material = SubResource( 50 )
+
+[node name="CSGBox47" type="CSGBox" parent="Stuff/CSGStuff/CSGBox41"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, 1.5 )
+use_collision = true
+height = 0.875
+depth = 0.25
+material = SubResource( 50 )
+
+[node name="CSGBox48" type="CSGBox" parent="Stuff/CSGStuff/CSGBox41"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4375, 1.75 )
+use_collision = true
+height = 1.0
+depth = 0.25
+material = SubResource( 50 )
+
+[node name="CSGBox32" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 9, 7 )
+use_collision = true
+material = SubResource( 47 )
+
+[node name="CSGBox38" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 9, 8.5 )
+use_collision = true
+material = SubResource( 47 )
+
+[node name="CSGBox39" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 11, 7.5 )
+use_collision = true
+material = SubResource( 47 )
+
+[node name="CSGBox28" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 2, 6 )
+use_collision = true
+width = 4.0
+height = 4.0
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="Label3D" type="Label3D" parent="Stuff/CSGStuff/CSGBox28"]
+transform = Transform( 1.31134e-07, 0, -1, 0, 1, 0, 1, 0, 1.31134e-07, -2.07323, -0.0930464, 0.0221796 )
+pixel_size = 0.05
+text = "128"
+
+[node name="CSGBox30" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 2, 8.5 )
+use_collision = true
+width = 4.0
+height = 4.0
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="CSGBox57" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 11.5, 2, 8.5 )
+use_collision = true
+width = 1.0
+height = 0.25
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="Spatial" type="Spatial" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 0.980785, 0.19509, 0, -0.19509, 0.980785, 9, 0.5, 18 )
+
+[node name="KinematicBody" type="KinematicBody" parent="Stuff/CSGStuff/Spatial"]
+collision/safe_margin = 0.04
+script = ExtResource( 12 )
+__meta__ = {
+"_edit_group_": true
+}
+
+[node name="CSGCylinder3" type="CSGCylinder" parent="Stuff/CSGStuff/Spatial/KinematicBody"]
+radius = 4.0
+sides = 16
+material = SubResource( 62 )
+
+[node name="CollisionShape" type="CollisionShape" parent="Stuff/CSGStuff/Spatial/KinematicBody"]
+shape = SubResource( 63 )
+
+[node name="KinematicBody4" type="KinematicBody" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 18.375, 0.5, 18 )
+collision/safe_margin = 0.04
+script = ExtResource( 12 )
+
+[node name="CSGCylinder3" type="CSGBox" parent="Stuff/CSGStuff/KinematicBody4"]
+width = 8.0
+height = 0.75
+depth = 8.0
+material = SubResource( 62 )
+
+[node name="CollisionShape" type="CollisionShape" parent="Stuff/CSGStuff/KinematicBody4"]
+shape = SubResource( 64 )
+
+[node name="KinematicBody2" type="KinematicBody" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 1, 27.625 )
+script = ExtResource( 13 )
+
+[node name="CSGCylinder3" type="CSGBox" parent="Stuff/CSGStuff/KinematicBody2"]
+width = 8.0
+depth = 8.0
+material = SubResource( 62 )
+
+[node name="CollisionShape" type="CollisionShape" parent="Stuff/CSGStuff/KinematicBody2"]
+shape = SubResource( 64 )
+
+[node name="KinematicBody3" type="KinematicBody" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 2.375, 38.375 )
+script = ExtResource( 14 )
+
+[node name="CSGCylinder3" type="CSGBox" parent="Stuff/CSGStuff/KinematicBody3"]
+width = 8.0
+height = 0.75
+depth = 8.0
+material = SubResource( 62 )
+
+[node name="CollisionShape" type="CollisionShape" parent="Stuff/CSGStuff/KinematicBody3"]
+shape = SubResource( 64 )
+
+[node name="stairs3" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( -4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 57, 0.25, 5 )
+use_collision = true
+width = 6.0
+height = 1.0
+material = SubResource( 50 )
+__meta__ = {
+"_edit_group_": true
+}
+
+[node name="CSGBox56" type="CSGBox" parent="Stuff/CSGStuff/stairs3"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2 )
+use_collision = true
+width = 6.0
+height = 1.0
+material = SubResource( 50 )
+
+[node name="CSGBox57" type="CSGBox" parent="Stuff/CSGStuff/stairs3"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 2 )
+use_collision = true
+width = 6.0
+height = 1.0
+material = SubResource( 50 )
+
+[node name="CSGBox52" type="CSGBox" parent="Stuff/CSGStuff/stairs3"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.375, -2.75 )
+use_collision = true
+width = 6.0
+height = 0.243086
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs3/CSGBox52"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0.5 )
+use_collision = true
+width = 6.0
+height = 0.5
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox51" type="CSGBox" parent="Stuff/CSGStuff/stairs3/CSGBox52"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 1 )
+use_collision = true
+width = 6.0
+height = 0.75
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox52" type="CSGBox" parent="Stuff/CSGStuff/stairs3/CSGBox52"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, 1.5 )
+use_collision = true
+width = 6.0
+height = 1.0
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs3"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, -0.75 )
+use_collision = true
+width = 6.0
+height = 0.25
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs3/CSGBox53"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0.5 )
+use_collision = true
+width = 6.0
+height = 0.5
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox51" type="CSGBox" parent="Stuff/CSGStuff/stairs3/CSGBox53"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 1 )
+use_collision = true
+width = 6.0
+height = 0.75
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox52" type="CSGBox" parent="Stuff/CSGStuff/stairs3/CSGBox53"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, 1.5 )
+use_collision = true
+width = 6.0
+height = 1.0
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox54" type="CSGBox" parent="Stuff/CSGStuff/stairs3"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.625, 1.25 )
+use_collision = true
+width = 6.0
+height = 0.25
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs3/CSGBox54"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0.5 )
+use_collision = true
+width = 6.0
+height = 0.5
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox51" type="CSGBox" parent="Stuff/CSGStuff/stairs3/CSGBox54"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 1 )
+use_collision = true
+width = 6.0
+height = 0.75
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox52" type="CSGBox" parent="Stuff/CSGStuff/stairs3/CSGBox54"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, 1.5 )
+use_collision = true
+width = 6.0
+height = 1.0
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="OmniLight" type="OmniLight" parent="Stuff/CSGStuff"]
+transform = Transform( -4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 50.4669, 7.49977, -19.0609 )
+light_energy = 8.0
+omni_range = 16.0
+
+[node name="OmniLight2" type="OmniLight" parent="Stuff/CSGStuff"]
+transform = Transform( -4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 52.0757, 7.49977, 2.5724 )
+light_energy = 8.0
+omni_range = 16.0
+
+[node name="OmniLight4" type="OmniLight" parent="Stuff/CSGStuff"]
+transform = Transform( -4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 32.3257, 6.43858, -7.06438 )
+light_energy = 2.0
+omni_range = 16.0
+
+[node name="OmniLight6" type="SpotLight" parent="Stuff/CSGStuff"]
+transform = Transform( 0.690124, -0.675577, -0.259469, 0.351923, -4.09151e-08, 0.936029, -0.63236, -0.737289, 0.237751, 28.9267, 18.1886, 10.2873 )
+light_energy = 16.0
+spot_range = 32.0
+
+[node name="OmniLight5" type="OmniLight" parent="Stuff/CSGStuff"]
+transform = Transform( -4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 37.8987, 9.09712, -5.36909 )
+light_energy = 2.0
+omni_range = 16.0
+
+[node name="OmniLight3" type="OmniLight" parent="Stuff/CSGStuff"]
+transform = Transform( -4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 53.8242, 7.9577, 23.9473 )
+light_energy = 8.0
+omni_range = 16.0
+
+[node name="stairs4" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 57, 3.5, 23 )
+use_collision = true
+width = 6.0
+height = 1.0
+material = SubResource( 50 )
+__meta__ = {
+"_edit_group_": true
+}
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs4"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.375, -2.75 )
+use_collision = true
+width = 6.0
+height = 0.25
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs4/CSGBox53"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0.5 )
+use_collision = true
+width = 6.0
+height = 0.5
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox51" type="CSGBox" parent="Stuff/CSGStuff/stairs4/CSGBox53"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 1 )
+use_collision = true
+width = 6.0
+height = 0.75
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox52" type="CSGBox" parent="Stuff/CSGStuff/stairs4/CSGBox53"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, 1.5 )
+use_collision = true
+width = 6.0
+height = 1.0
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox54" type="CSGBox" parent="Stuff/CSGStuff/stairs4"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, -0.75 )
+use_collision = true
+width = 6.0
+height = 0.25
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs4/CSGBox54"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0.5 )
+use_collision = true
+width = 6.0
+height = 0.5
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox51" type="CSGBox" parent="Stuff/CSGStuff/stairs4/CSGBox54"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 1 )
+use_collision = true
+width = 6.0
+height = 0.75
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox52" type="CSGBox" parent="Stuff/CSGStuff/stairs4/CSGBox54"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, 1.5 )
+use_collision = true
+width = 6.0
+height = 1.0
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="stairs7" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 58, 5.5, -11 )
+use_collision = true
+width = 6.0
+height = 1.0
+material = SubResource( 50 )
+__meta__ = {
+"_edit_group_": true
+}
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs7"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.375, -2.75 )
+use_collision = true
+width = 6.0
+height = 0.25
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs7/CSGBox53"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0.5 )
+use_collision = true
+width = 6.0
+height = 0.5
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox51" type="CSGBox" parent="Stuff/CSGStuff/stairs7/CSGBox53"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 1 )
+use_collision = true
+width = 6.0
+height = 0.75
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox52" type="CSGBox" parent="Stuff/CSGStuff/stairs7/CSGBox53"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, 1.5 )
+use_collision = true
+width = 6.0
+height = 1.0
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox54" type="CSGBox" parent="Stuff/CSGStuff/stairs7"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, -0.75 )
+use_collision = true
+width = 6.0
+height = 0.25
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs7/CSGBox54"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0.5 )
+use_collision = true
+width = 6.0
+height = 0.5
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox51" type="CSGBox" parent="Stuff/CSGStuff/stairs7/CSGBox54"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 1 )
+use_collision = true
+width = 6.0
+height = 0.75
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox52" type="CSGBox" parent="Stuff/CSGStuff/stairs7/CSGBox54"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, 1.5 )
+use_collision = true
+width = 6.0
+height = 1.0
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="stairs6" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( -1, 0, 8.74228e-08, 0, 1, 0, -8.74228e-08, 0, -1, 69, 3.5, -7 )
+use_collision = true
+width = 6.0
+height = 1.0
+material = SubResource( 50 )
+__meta__ = {
+"_edit_group_": true
+}
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs6"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.375, -2.75 )
+use_collision = true
+width = 6.0
+height = 0.25
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs6/CSGBox53"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0.5 )
+use_collision = true
+width = 6.0
+height = 0.5
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox51" type="CSGBox" parent="Stuff/CSGStuff/stairs6/CSGBox53"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 1 )
+use_collision = true
+width = 6.0
+height = 0.75
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox52" type="CSGBox" parent="Stuff/CSGStuff/stairs6/CSGBox53"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, 1.5 )
+use_collision = true
+width = 6.0
+height = 1.0
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox54" type="CSGBox" parent="Stuff/CSGStuff/stairs6"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, -0.75 )
+use_collision = true
+width = 6.0
+height = 0.25
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs6/CSGBox54"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0.5 )
+use_collision = true
+width = 6.0
+height = 0.5
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox51" type="CSGBox" parent="Stuff/CSGStuff/stairs6/CSGBox54"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 1 )
+use_collision = true
+width = 6.0
+height = 0.75
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox52" type="CSGBox" parent="Stuff/CSGStuff/stairs6/CSGBox54"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, 1.5 )
+use_collision = true
+width = 6.0
+height = 1.0
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="stairs9" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 0.5, 0, -1.19209e-07, 0, 1, 0, 5.96047e-08, 0, 1, 31.5, 7.5, 19 )
+use_collision = true
+width = 6.0
+height = 1.0
+material = SubResource( 50 )
+__meta__ = {
+"_edit_group_": true
+}
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs9"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.375, -2.75 )
+use_collision = true
+width = 6.0
+height = 0.25
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs9/CSGBox53"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0.5 )
+use_collision = true
+width = 6.0
+height = 0.5
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox51" type="CSGBox" parent="Stuff/CSGStuff/stairs9/CSGBox53"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 1 )
+use_collision = true
+width = 6.0
+height = 0.75
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox52" type="CSGBox" parent="Stuff/CSGStuff/stairs9/CSGBox53"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, 1.5 )
+use_collision = true
+width = 6.0
+height = 1.0
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox54" type="CSGBox" parent="Stuff/CSGStuff/stairs9"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, -0.75 )
+use_collision = true
+width = 6.0
+height = 0.25
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs9/CSGBox54"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0.5 )
+use_collision = true
+width = 6.0
+height = 0.5
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox51" type="CSGBox" parent="Stuff/CSGStuff/stairs9/CSGBox54"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 1 )
+use_collision = true
+width = 6.0
+height = 0.75
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox52" type="CSGBox" parent="Stuff/CSGStuff/stairs9/CSGBox54"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, 1.5 )
+use_collision = true
+width = 6.0
+height = 1.0
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="stairs10" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 0.5, 0, -1.19209e-07, 0, 1, 0, 5.96047e-08, 0, 1, 31.5, 9.5, 29 )
+use_collision = true
+width = 6.0
+height = 1.0
+material = SubResource( 50 )
+__meta__ = {
+"_edit_group_": true
+}
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs10"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.375, -2.75 )
+use_collision = true
+width = 6.0
+height = 0.25
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs10/CSGBox53"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0.5 )
+use_collision = true
+width = 6.0
+height = 0.5
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox51" type="CSGBox" parent="Stuff/CSGStuff/stairs10/CSGBox53"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 1 )
+use_collision = true
+width = 6.0
+height = 0.75
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox52" type="CSGBox" parent="Stuff/CSGStuff/stairs10/CSGBox53"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, 1.5 )
+use_collision = true
+width = 6.0
+height = 1.0
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox54" type="CSGBox" parent="Stuff/CSGStuff/stairs10"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, -0.75 )
+use_collision = true
+width = 6.0
+height = 0.25
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs10/CSGBox54"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0.5 )
+use_collision = true
+width = 6.0
+height = 0.5
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox51" type="CSGBox" parent="Stuff/CSGStuff/stairs10/CSGBox54"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 1 )
+use_collision = true
+width = 6.0
+height = 0.75
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox52" type="CSGBox" parent="Stuff/CSGStuff/stairs10/CSGBox54"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, 1.5 )
+use_collision = true
+width = 6.0
+height = 1.0
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="stairs8" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( -1, 0, 8.74228e-08, 0, 1, 0, -8.74228e-08, 0, -1, 52, 0.5, -10.75 )
+use_collision = true
+width = 4.0
+height = 1.0
+depth = 1.513
+material = SubResource( 50 )
+__meta__ = {
+"_edit_group_": true
+}
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs8"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.375, -2.5 )
+use_collision = true
+width = 6.0
+height = 0.25
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs8/CSGBox53"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0.5 )
+use_collision = true
+width = 6.0
+height = 0.5
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox51" type="CSGBox" parent="Stuff/CSGStuff/stairs8/CSGBox53"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 1 )
+use_collision = true
+width = 6.0
+height = 0.75
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox52" type="CSGBox" parent="Stuff/CSGStuff/stairs8/CSGBox53"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, 1.5 )
+use_collision = true
+width = 6.0
+height = 1.0
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox54" type="CSGBox" parent="Stuff/CSGStuff/stairs8"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, -0.5 )
+use_collision = true
+width = 6.0
+height = 0.25
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs8/CSGBox54"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0.5 )
+use_collision = true
+width = 6.0
+height = 0.5
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox51" type="CSGBox" parent="Stuff/CSGStuff/stairs8/CSGBox54"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 1 )
+use_collision = true
+width = 4.0
+height = 0.75
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="stairs5" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 47, 5.5, 27 )
+use_collision = true
+width = 6.0
+height = 1.0
+material = SubResource( 50 )
+__meta__ = {
+"_edit_group_": true
+}
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs5"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.375, -2.75 )
+use_collision = true
+width = 6.0
+height = 0.25
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs5/CSGBox53"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0.5 )
+use_collision = true
+width = 6.0
+height = 0.5
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox51" type="CSGBox" parent="Stuff/CSGStuff/stairs5/CSGBox53"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 1 )
+use_collision = true
+width = 6.0
+height = 0.75
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox52" type="CSGBox" parent="Stuff/CSGStuff/stairs5/CSGBox53"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, 1.5 )
+use_collision = true
+width = 6.0
+height = 1.0
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox54" type="CSGBox" parent="Stuff/CSGStuff/stairs5"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, -0.75 )
+use_collision = true
+width = 6.0
+height = 0.25
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs5/CSGBox54"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0.5 )
+use_collision = true
+width = 6.0
+height = 0.5
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox51" type="CSGBox" parent="Stuff/CSGStuff/stairs5/CSGBox54"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 1 )
+use_collision = true
+width = 6.0
+height = 0.75
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox52" type="CSGBox" parent="Stuff/CSGStuff/stairs5/CSGBox54"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, 1.5 )
+use_collision = true
+width = 6.0
+height = 1.0
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox64" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 63, 1.5, 6 )
+use_collision = true
+width = 6.0
+height = 3.0
+depth = 20.0
+material = SubResource( 47 )
+
+[node name="CSGBox101" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 69, 1.5, 6 )
+use_collision = true
+width = 6.0
+height = 3.0
+depth = 20.0
+material = SubResource( 47 )
+
+[node name="CSGBox98" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 49, 1, -16 )
+use_collision = true
+width = 16.0
+depth = 16.0
+material = SubResource( 56 )
+
+[node name="CSGBox99" type="CSGBox" parent="Stuff/CSGStuff/CSGBox98"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 6.25 )
+operation = 2
+use_collision = true
+width = 4.0
+depth = 3.5
+material = SubResource( 47 )
+
+[node name="CSGPolygon10" type="CSGPolygon" parent="Stuff/CSGStuff/CSGBox98"]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -3, 1, -0.5 )
+use_collision = true
+polygon = PoolVector2Array( 0, 0, 0, 1.5, 0.5, 2, 0.5, 0 )
+depth = 2.0
+material = SubResource( 49 )
+
+[node name="CSGBox54" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 52.375, 3, -21.375 )
+use_collision = true
+material = SubResource( 47 )
+
+[node name="CSGBox55" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 59, 1, 9 )
+use_collision = true
+width = 3.25
+height = 2.25
+depth = 3.25
+material = SubResource( 47 )
+
+[node name="CSGBox56" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 59, 1, 1 )
+use_collision = true
+width = 3.25
+height = 2.25
+depth = 3.25
+material = SubResource( 47 )
+
+[node name="CSGBox125" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 38.5, 1, -19 )
+use_collision = true
+width = 5.0
+depth = 10.0
+material = SubResource( 56 )
+
+[node name="CSGBox66" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 63, 1.5, 23 )
+use_collision = true
+width = 6.0
+height = 3.0
+depth = 6.0
+material = SubResource( 47 )
+
+[node name="CSGBox85" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 69, 2.5, -11 )
+use_collision = true
+width = 6.0
+height = 5.0
+depth = 6.0
+material = SubResource( 47 )
+
+[node name="CSGBox102" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 63.5, 2.5, -9 )
+use_collision = true
+width = 5.0
+height = 5.0
+depth = 10.0
+material = SubResource( 47 )
+
+[node name="CSGBox164" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 63, 4, -4.375 )
+use_collision = true
+width = 4.0
+height = 1.5
+depth = 0.25
+material = SubResource( 47 )
+
+[node name="CSGBox160" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 63, 2.625, -2 )
+use_collision = true
+width = 5.5
+height = 0.25
+depth = 3.75
+material = SubResource( 47 )
+
+[node name="CSGBox103" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 60.5, 2.5, -5 )
+use_collision = true
+width = 1.0
+height = 5.0
+material = SubResource( 47 )
+
+[node name="CSGBox133" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 13, -18 )
+use_collision = true
+width = 14.0
+depth = 24.0
+material = SubResource( 47 )
+
+[node name="CSGBox156" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 15, -6.375 )
+use_collision = true
+width = 6.0
+depth = 12.75
+material = SubResource( 47 )
+
+[node name="CSGBox140" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 68, 13, -18 )
+use_collision = true
+width = 14.0
+depth = 8.0
+material = SubResource( 47 )
+
+[node name="CSGBox110" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 56, 16, 24 )
+use_collision = true
+width = 20.0
+height = 8.0
+depth = 16.0
+material = SubResource( 47 )
+
+[node name="CSGBox86" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 59, 2.5, -11 )
+use_collision = true
+width = 4.0
+height = 5.0
+depth = 6.0
+material = SubResource( 47 )
+
+[node name="CSGBox122" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 44.5, 4.5, -11 )
+use_collision = true
+width = 5.0
+height = 5.0
+depth = 6.0
+material = SubResource( 47 )
+
+[node name="CSGBox124" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 38.5, 6, -11 )
+use_collision = true
+width = 7.0
+depth = 6.0
+material = SubResource( 47 )
+
+[node name="SpiralStairs" type="CSGPolygon" parent="Stuff/CSGStuff"]
+transform = Transform( 2.98023e-08, 1, 4.37114e-08, 0, -4.37114e-08, 1, 1, -2.98023e-08, 8.88178e-16, 35, 6.75, -6 )
+use_collision = true
+polygon = PoolVector2Array( -0.25, 1, -0.5, 5, 0.5, 5, 0.25, 1 )
+depth = 0.5
+material = SubResource( 50 )
+__meta__ = {
+"_edit_group_": true
+}
+
+[node name="CSGPolygon12" type="CSGPolygon" parent="Stuff/CSGStuff/SpiralStairs"]
+transform = Transform( 0.980785, 0.19509, 8.52767e-09, -0.19509, 0.980785, -8.39904e-10, -8.52767e-09, -8.39904e-10, 1, 0, 0, -0.25 )
+polygon = PoolVector2Array( -0.25, 1, -0.5, 5, 0.5, 5, 0.25, 1 )
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGPolygon13" type="CSGPolygon" parent="Stuff/CSGStuff/SpiralStairs"]
+transform = Transform( 0.923879, 0.382683, 1.67276e-08, -0.382683, 0.923879, -3.32733e-09, -1.67276e-08, -3.32734e-09, 1, 0, 0, -0.5 )
+polygon = PoolVector2Array( -0.25, 1, -0.5, 5, 0.5, 5, 0.25, 1 )
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGPolygon14" type="CSGPolygon" parent="Stuff/CSGStuff/SpiralStairs"]
+transform = Transform( 0.831469, 0.55557, 2.42847e-08, -0.55557, 0.831469, -7.3667e-09, -2.42847e-08, -7.3667e-09, 1, 0, 0, -0.75 )
+polygon = PoolVector2Array( -0.25, 1, -0.5, 5, 0.5, 5, 0.25, 1 )
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGPolygon15" type="CSGPolygon" parent="Stuff/CSGStuff/SpiralStairs"]
+transform = Transform( 0.707107, 0.707107, 3.09086e-08, -0.707107, 0.707107, -1.28027e-08, -3.09086e-08, -1.28028e-08, 1, 0, 0, -0.999999 )
+polygon = PoolVector2Array( -0.25, 1, -0.5, 5, 0.5, 5, 0.25, 1, -0.134716, 0.976124 )
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGPolygon16" type="CSGPolygon" parent="Stuff/CSGStuff/SpiralStairs"]
+transform = Transform( 0.55557, 0.83147, 3.63447e-08, -0.83147, 0.55557, -1.94266e-08, -3.63447e-08, -1.94267e-08, 1, 0, 0, -1.25 )
+polygon = PoolVector2Array( -0.25, 1, -0.5, 5, 0.5, 5, 0.25, 1 )
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGPolygon17" type="CSGPolygon" parent="Stuff/CSGStuff/SpiralStairs"]
+transform = Transform( 0.382683, 0.923879, 4.03841e-08, -0.923879, 0.382683, -2.69838e-08, -4.03841e-08, -2.69838e-08, 1, 0, 0, -1.5 )
+polygon = PoolVector2Array( -0.25, 1, -0.5, 5, 0.5, 5, 0.25, 1 )
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGPolygon18" type="CSGPolygon" parent="Stuff/CSGStuff/SpiralStairs"]
+transform = Transform( 0.19509, 0.980785, 4.28715e-08, -0.980785, 0.19509, -3.51837e-08, -4.28715e-08, -3.51837e-08, 1, 0, 0, -1.75 )
+polygon = PoolVector2Array( -0.25, 1, -0.5, 5, 0.5, 5, 0.25, 1 )
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGPolygon19" type="CSGPolygon" parent="Stuff/CSGStuff/SpiralStairs"]
+transform = Transform( -1.63913e-07, 1, 4.37114e-08, -1, -1.63913e-07, -4.37114e-08, -4.37114e-08, -4.37114e-08, 1, 0, 0, -1.99999 )
+polygon = PoolVector2Array( -0.25, 1, -0.5, 5, 0.5, 5, 0.25, 1 )
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGPolygon20" type="CSGPolygon" parent="Stuff/CSGStuff/SpiralStairs"]
+transform = Transform( -0.19509, 0.980785, 4.28715e-08, -0.980785, -0.19509, -5.22391e-08, -4.28715e-08, -5.22391e-08, 1, 0, 2.38419e-07, -2.24999 )
+polygon = PoolVector2Array( -0.25, 1, -0.5, 5, 0.5, 5, 0.25, 1 )
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGPolygon21" type="CSGPolygon" parent="Stuff/CSGStuff/SpiralStairs"]
+transform = Transform( -0.382683, 0.923879, 4.0384e-08, -0.923879, -0.382683, -6.0439e-08, -4.0384e-08, -6.0439e-08, 1, 0, 2.38419e-07, -2.49999 )
+polygon = PoolVector2Array( -0.25, 1, -0.5, 5, 0.5, 5, 0.25, 1 )
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGPolygon22" type="CSGPolygon" parent="Stuff/CSGStuff/SpiralStairs"]
+transform = Transform( -0.55557, 0.831469, 3.63447e-08, -0.831469, -0.55557, -6.79961e-08, -3.63447e-08, -6.79961e-08, 1, 0, 2.38419e-07, -2.74999 )
+polygon = PoolVector2Array( -0.25, 1, -0.5, 5, 0.5, 5, 0.25, 1 )
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGPolygon23" type="CSGPolygon" parent="Stuff/CSGStuff/SpiralStairs"]
+transform = Transform( -0.707107, 0.707106, 3.09086e-08, -0.707106, -0.707107, -7.462e-08, -3.09086e-08, -7.462e-08, 1, 0, 2.38419e-07, -2.99999 )
+polygon = PoolVector2Array( -0.25, 1, -0.5, 5, 0.5, 5, 0.25, 1 )
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGPolygon24" type="CSGPolygon" parent="Stuff/CSGStuff/SpiralStairs"]
+transform = Transform( -0.831469, 0.55557, 2.42847e-08, -0.55557, -0.831469, -8.00561e-08, -2.42847e-08, -8.00561e-08, 1, 0, 2.38419e-07, -3.24999 )
+polygon = PoolVector2Array( -0.25, 1, -0.5, 5, 0.5, 5, 0.25, 1 )
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGPolygon25" type="CSGPolygon" parent="Stuff/CSGStuff/SpiralStairs"]
+transform = Transform( -0.923879, 0.382683, 1.67276e-08, -0.382683, -0.923879, -8.40954e-08, -1.67276e-08, -8.40954e-08, 1, 0, 2.38419e-07, -3.49999 )
+polygon = PoolVector2Array( -0.25, 1, -0.5, 5, 0.5, 5, 0.25, 1 )
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGPolygon26" type="CSGPolygon" parent="Stuff/CSGStuff/SpiralStairs"]
+transform = Transform( -0.980785, 0.19509, 8.52766e-09, -0.19509, -0.980785, -8.65829e-08, -8.52765e-09, -8.65829e-08, 1, 0, 2.38419e-07, -3.74999 )
+polygon = PoolVector2Array( -0.25, 1, -0.5, 5, 0.5, 5, 0.25, 1 )
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGPolygon27" type="CSGPolygon" parent="Stuff/CSGStuff/SpiralStairs"]
+transform = Transform( -0.999999, -3.27826e-07, -7.10543e-15, 3.27826e-07, -0.999999, -8.74228e-08, 1.43297e-14, -8.74228e-08, 1, 0, 2.38419e-07, -3.99999 )
+polygon = PoolVector2Array( -0.25, 1, -0.5, 5, 0.5, 5, 0.25, 1 )
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGPolygon28" type="CSGPolygon" parent="Stuff/CSGStuff/SpiralStairs"]
+transform = Transform( -0.980785, -0.195091, -8.52767e-09, 0.195091, -0.980785, -8.65829e-08, 8.52768e-09, -8.65828e-08, 1, 0, 2.38419e-07, -4.24999 )
+polygon = PoolVector2Array( -0.25, 1, -0.5, 5, 0.5, 5, 0.25, 1 )
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGPolygon29" type="CSGPolygon" parent="Stuff/CSGStuff/SpiralStairs"]
+transform = Transform( -0.923879, -0.382684, -1.67276e-08, 0.382684, -0.923879, -8.40955e-08, 1.67276e-08, -8.40954e-08, 1, 0, 0, -4.49999 )
+polygon = PoolVector2Array( -0.25, 1, -0.5, 5, 0.5, 5, 0.25, 1 )
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGPolygon30" type="CSGPolygon" parent="Stuff/CSGStuff/SpiralStairs"]
+transform = Transform( -0.831469, -0.555571, -2.42848e-08, 0.555571, -0.831469, -8.00561e-08, 2.42848e-08, -8.0056e-08, 1, 0, 0, -4.74999 )
+polygon = PoolVector2Array( -0.25, 1, -0.5, 5, 0.5, 5, 0.25, 1 )
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGPolygon31" type="CSGPolygon" parent="Stuff/CSGStuff/SpiralStairs"]
+transform = Transform( -0.707106, -0.707107, -3.09086e-08, 0.707107, -0.707106, -7.462e-08, 3.09086e-08, -7.46199e-08, 1, 0, 0, -4.99999 )
+polygon = PoolVector2Array( -0.25, 1, -0.5, 5, 0.5, 5, 0.25, 1 )
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGPolygon32" type="CSGPolygon" parent="Stuff/CSGStuff/SpiralStairs"]
+transform = Transform( -0.555569, -0.83147, -3.63447e-08, 0.83147, -0.555569, -6.79962e-08, 3.63447e-08, -6.7996e-08, 1, 0, 0, -5.24999 )
+polygon = PoolVector2Array( -0.25, 1, -0.5, 5, 0.5, 5, 0.25, 1 )
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGPolygon33" type="CSGPolygon" parent="Stuff/CSGStuff/SpiralStairs"]
+transform = Transform( -0.382683, -0.92388, -4.03841e-08, 0.92388, -0.382683, -6.0439e-08, 4.03841e-08, -6.04389e-08, 1, 0, 0, -5.49999 )
+polygon = PoolVector2Array( -0.25, 1, -0.5, 5, 0.5, 5, 0.25, 1 )
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGPolygon34" type="CSGPolygon" parent="Stuff/CSGStuff/SpiralStairs"]
+transform = Transform( -0.195089, -0.980785, -4.28715e-08, 0.980785, -0.195089, -5.22391e-08, 4.28715e-08, -5.22389e-08, 1, 0, 0, -5.74999 )
+polygon = PoolVector2Array( -0.25, 1, -0.5, 5, 0.5, 5, 0.25, 1 )
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGPolygon35" type="CSGPolygon" parent="Stuff/CSGStuff/SpiralStairs"]
+transform = Transform( 8.50358e-07, -1, -4.37114e-08, 1, 8.50358e-07, -4.37114e-08, 4.37114e-08, -4.37113e-08, 1, 0, 0, -5.99999 )
+polygon = PoolVector2Array( -0.25, 1, -0.5, 5, 0.5, 5, 0.25, 1 )
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGPolygon36" type="CSGPolygon" parent="Stuff/CSGStuff/SpiralStairs"]
+transform = Transform( 0.195091, -0.980785, -4.28715e-08, 0.980785, 0.195091, -3.51837e-08, 4.28715e-08, -3.51836e-08, 1, 0, 0, -6.24999 )
+polygon = PoolVector2Array( -0.25, 1, -0.5, 5, 0.5, 5, 0.25, 1 )
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGPolygon37" type="CSGPolygon" parent="Stuff/CSGStuff/SpiralStairs"]
+transform = Transform( 0.382684, -0.923879, -4.0384e-08, 0.923879, 0.382684, -2.69838e-08, 4.0384e-08, -2.69837e-08, 1, 0, 0, -6.49999 )
+polygon = PoolVector2Array( -0.25, 1, -0.5, 5, 0.5, 5, 0.25, 1 )
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGCylinder" type="CSGCylinder" parent="Stuff/CSGStuff"]
+transform = Transform( -2.25001e-15, 1.77636e-14, -1, 2.98023e-08, 1, -7.10543e-15, 1, -2.98023e-08, -3.88235e-23, 35, 6.75, -6 )
+use_collision = true
+radius = 1.125
+height = 14.5
+sides = 16
+material = SubResource( 47 )
+
+[node name="CSGCylinder2" type="CSGCylinder" parent="Stuff/CSGStuff"]
+transform = Transform( -2.25001e-15, 1.77636e-14, -1, 2.98023e-08, 1, -7.10543e-15, 1, -2.98023e-08, -3.88235e-23, 35, 6.75, -6 )
+use_collision = true
+radius = 6.0
+height = 14.5
+sides = 16
+material = SubResource( 47 )
+
+[node name="CSGCylinder3" type="CSGCylinder" parent="Stuff/CSGStuff/CSGCylinder2"]
+transform = Transform( 1, 0, 6.31089e-30, 0, 1, 1.15703e-30, 0, 1.76112e-21, 1, 0, 0, 0 )
+operation = 2
+use_collision = true
+radius = 5.0
+height = 14.5
+sides = 16
+material = SubResource( 47 )
+
+[node name="CSGBox137" type="CSGBox" parent="Stuff/CSGStuff/CSGCylinder2"]
+transform = Transform( 1, 0, 1.26218e-28, 0, 1, 1.15703e-30, 0, 3.39484e-20, 1, 9.53674e-07, 4.24, -3.25 )
+operation = 2
+use_collision = true
+width = 12.25
+height = 8.0
+depth = 6.5
+material = SubResource( 47 )
+
+[node name="CSGBox138" type="CSGBox" parent="Stuff/CSGStuff/CSGCylinder2"]
+transform = Transform( 1, 0, 1.83016e-28, 0, 1, 1.15703e-30, 0, 4.9195e-20, 1, 3.75, -3.385, -3.25 )
+operation = 2
+use_collision = true
+width = 7.5
+height = 8.0
+depth = 6.5
+material = SubResource( 47 )
+
+[node name="CSGBox137" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 38.5, 6, -7 )
+use_collision = true
+width = 7.0
+material = SubResource( 47 )
+
+[node name="CSGBox150" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 41.5, 2.5, -7 )
+use_collision = true
+width = 1.0
+height = 5.0
+material = SubResource( 47 )
+
+[node name="CSGBox152" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 34.75, 2.125, -3 )
+use_collision = true
+width = 0.5
+height = 4.25
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="CSGBox153" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 34.75, 11.875, -2.875 )
+use_collision = true
+width = 0.5
+height = 4.25
+depth = 4.25
+material = SubResource( 47 )
+
+[node name="CSGBox123" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 46, 4.5, -15 )
+use_collision = true
+height = 5.0
+material = SubResource( 47 )
+
+[node name="CSGBox127" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 48, 4.5, -15 )
+use_collision = true
+height = 5.0
+material = SubResource( 47 )
+
+[node name="CSGBox134" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 48, 9.5, -15 )
+use_collision = true
+height = 5.0
+material = SubResource( 47 )
+
+[node name="CSGBox135" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 56, 9.5, -15 )
+use_collision = true
+height = 5.0
+material = SubResource( 47 )
+
+[node name="CSGBox128" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 56, 4.5, -15 )
+use_collision = true
+height = 5.0
+material = SubResource( 47 )
+
+[node name="CSGBox126" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 37, 4.5, -15 )
+use_collision = true
+width = 4.0
+height = 5.0
+material = SubResource( 47 )
+
+[node name="CSGBox151" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 2.5, -13 )
+use_collision = true
+width = 4.0
+height = 5.0
+material = SubResource( 47 )
+
+[node name="JumpPad" parent="Stuff/CSGStuff" instance=ExtResource( 9 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 42, 2.125, -17 )
+
+[node name="JumpPad2" parent="Stuff/CSGStuff" instance=ExtResource( 9 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 36, 0.125, 10 )
+velocity = Vector3( 0, 22, 5 )
+
+[node name="CSGBox89" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 52, 6.875, -11 )
+use_collision = true
+width = 6.0
+height = 0.25
+depth = 3.0
+material = SubResource( 61 )
+
+[node name="CSGBox117" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 53, 4.875, 15 )
+use_collision = true
+width = 6.0
+height = 0.25
+material = SubResource( 61 )
+
+[node name="CSGBox115" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 64.875, 4.875, -0.125 )
+use_collision = true
+width = 0.25
+height = 3.75
+depth = 0.25
+material = SubResource( 61 )
+
+[node name="CSGBox116" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 61.125, 4.875, -0.125 )
+use_collision = true
+width = 0.25
+height = 3.75
+depth = 0.25
+material = SubResource( 61 )
+
+[node name="CSGPolygon11" type="CSGPolygon" parent="Stuff/CSGStuff"]
+transform = Transform( -4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 65, 6.5, 0 )
+use_collision = true
+polygon = PoolVector2Array( 0, 0.25, 0, 0.5, 4, -1.5, 4, -1.75 )
+depth = 4.0
+material = SubResource( 61 )
+
+[node name="CSGBox90" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 56, 6.875, -11 )
+use_collision = true
+height = 0.25
+depth = 6.0
+material = SubResource( 61 )
+
+[node name="CSGBox91" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 48, 6.875, -11 )
+use_collision = true
+height = 0.25
+depth = 6.0
+material = SubResource( 61 )
+
+[node name="CSGBox71" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 63, 1.5, 18 )
+use_collision = true
+width = 6.0
+height = 3.0
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="CSGBox84" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 69, 1.5, -6 )
+use_collision = true
+width = 6.0
+height = 3.0
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="CSGBox68" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 58, 1.5, 23 )
+use_collision = true
+width = 4.0
+height = 3.0
+depth = 6.0
+material = SubResource( 47 )
+
+[node name="CSGBox69" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 58, 6, 18 )
+use_collision = true
+width = 4.0
+height = 12.0
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="CSGBox99" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 60.375, 6, 18 )
+use_collision = true
+width = 1.0
+height = 6.0
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="CSGBox100" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 65.5, 6, 18 )
+use_collision = true
+width = 1.0
+height = 6.0
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="CSGBox87" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 58.5, 6, -7 )
+use_collision = true
+width = 5.0
+height = 12.0
+material = SubResource( 47 )
+
+[node name="CSGBox96" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 45, 6, -7 )
+use_collision = true
+width = 6.0
+height = 12.0
+material = SubResource( 47 )
+
+[node name="CSGBox97" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 44.5, 13, -7 )
+use_collision = true
+width = 5.0
+material = SubResource( 47 )
+
+[node name="ForceNonWalkable" parent="Stuff/CSGStuff" instance=ExtResource( 10 )]
+
+[node name="ForceNonWalkable2" parent="Stuff/CSGStuff" instance=ExtResource( 10 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 59, 13, 9 )
+
+[node name="ForceNonWalkable3" parent="Stuff/CSGStuff" instance=ExtResource( 10 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 47, 13, 1 )
+
+[node name="ForceNonWalkable4" parent="Stuff/CSGStuff" instance=ExtResource( 10 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 47, 13, 9 )
+
+[node name="CSGBox94" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 59, 6, 1 )
+use_collision = true
+height = 12.0
+material = SubResource( 47 )
+
+[node name="CSGBox108" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 59, 6, 9 )
+use_collision = true
+height = 12.0
+material = SubResource( 47 )
+
+[node name="CSGBox109" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 47, 6, 9 )
+use_collision = true
+height = 12.0
+material = SubResource( 47 )
+
+[node name="CSGBox95" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 47, 6, 1 )
+use_collision = true
+height = 12.0
+material = SubResource( 47 )
+
+[node name="CSGBox130" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 44, 6, 1 )
+use_collision = true
+width = 4.0
+height = 12.0
+material = SubResource( 47 )
+
+[node name="CSGBox92" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 6, -26 )
+use_collision = true
+width = 16.0
+height = 12.0
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="CSGBox129" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 41, 6, -26 )
+use_collision = true
+width = 10.0
+height = 12.0
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="CSGBox139" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 34.5, 10.5, -13 )
+use_collision = true
+width = 1.0
+height = 7.0
+depth = 14.0
+material = SubResource( 47 )
+
+[node name="CSGBox138" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 37, 7, -20 )
+use_collision = true
+width = 4.0
+height = 10.0
+depth = 8.0
+material = SubResource( 47 )
+
+[node name="CSGBox93" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 61.5, 6, -19 )
+use_collision = true
+width = 9.0
+height = 12.0
+depth = 10.0
+material = SubResource( 47 )
+
+[node name="CSGBox111" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 70.5, 6, -19 )
+use_collision = true
+width = 9.0
+height = 12.0
+depth = 10.0
+material = SubResource( 47 )
+
+[node name="CSGBox112" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 74, 6, -6 )
+use_collision = true
+width = 4.0
+height = 12.0
+depth = 16.0
+material = SubResource( 47 )
+
+[node name="CSGBox113" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 74, 6, 9 )
+use_collision = true
+width = 4.0
+height = 12.0
+depth = 14.0
+material = SubResource( 47 )
+
+[node name="CSGBox121" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 44, 6, 13 )
+use_collision = true
+width = 4.0
+height = 12.0
+depth = 10.0
+material = SubResource( 47 )
+
+[node name="CSGBox132" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 43, 8, 5 )
+use_collision = true
+height = 8.0
+depth = 6.0
+material = SubResource( 47 )
+
+[node name="CSGBox142" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 44, 16, 6 )
+use_collision = true
+width = 4.0
+height = 8.0
+depth = 24.0
+material = SubResource( 47 )
+
+[node name="CSGBox141" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 42.875, 2, 5 )
+use_collision = true
+width = 1.75
+height = 4.0
+depth = 6.0
+material = SubResource( 47 )
+
+[node name="Teleporter" parent="Stuff/CSGStuff" instance=ExtResource( 8 )]
+
+[node name="Target" parent="Stuff/CSGStuff/Teleporter" index="0"]
+transform = Transform( -1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -20.875, 5.875, 0 )
+
+[node name="Teleporter2" parent="Stuff/CSGStuff" instance=ExtResource( 8 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 25.125, 2, 5 )
+
+[node name="Target" parent="Stuff/CSGStuff/Teleporter2" index="0"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -6.125, -1.25, 0 )
+
+[node name="Teleporter3" parent="Stuff/CSGStuff" instance=ExtResource( 8 )]
+transform = Transform( -1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 20.875, 2, 5 )
+
+[node name="Target" parent="Stuff/CSGStuff/Teleporter3" index="0"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -6, -1.25, 0 )
+
+[node name="TeleportSFX" parent="Stuff/CSGStuff/Teleporter3/Target" index="0"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 4.76837e-07 )
+
+[node name="CSGBox161" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 45, 2.5, -3 )
+use_collision = true
+height = 5.0
+depth = 6.0
+material = SubResource( 47 )
+
+[node name="CSGBox131" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 45, 8.5, -3 )
+use_collision = true
+height = 7.0
+depth = 6.0
+material = SubResource( 47 )
+
+[node name="CSGBox157" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 43, 6, -3 )
+use_collision = true
+height = 12.0
+depth = 6.0
+material = SubResource( 47 )
+
+[node name="CSGBox114" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 71, 6, 18 )
+use_collision = true
+width = 10.0
+height = 12.0
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="CSGBox118" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 61, 6, 28 )
+use_collision = true
+width = 10.0
+height = 12.0
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="CSGBox120" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 51, 6, 32 )
+use_collision = true
+width = 10.0
+height = 12.0
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="CSGBox147" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 14, 36.5 )
+use_collision = true
+width = 16.0
+height = 12.0
+depth = 3.0
+material = SubResource( 47 )
+
+[node name="CSGBox149" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 13.5, 25 )
+use_collision = true
+width = 4.0
+height = 13.0
+depth = 26.0
+material = SubResource( 47 )
+
+[node name="CSGBox162" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 13.5, 14 )
+use_collision = true
+width = 4.0
+height = 13.0
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="CSGBox148" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 45, 15.5, 33.5 )
+use_collision = true
+height = 9.0
+depth = 3.0
+material = SubResource( 47 )
+
+[node name="CSGBox119" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 68, 6, 25 )
+use_collision = true
+width = 4.0
+height = 12.0
+depth = 10.0
+material = SubResource( 47 )
+
+[node name="CSGBox74" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 48, 6, 18 )
+use_collision = true
+width = 4.0
+height = 12.0
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="CSGBox72" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 63, 10.5, 18 )
+use_collision = true
+width = 6.0
+height = 3.0
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="CSGBox73" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 53, 10.5, 18 )
+use_collision = true
+width = 6.0
+height = 3.0
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="CSGBox78" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 55.5, 7, 18 )
+use_collision = true
+width = 1.0
+height = 4.0
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="CSGBox79" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 50.5, 7, 18 )
+use_collision = true
+width = 1.0
+height = 4.0
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="CSGBox77" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 12.5, -7 )
+use_collision = true
+width = 6.0
+height = 3.0
+material = SubResource( 47 )
+
+[node name="CSGBox80" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 40.5, 9, -7 )
+use_collision = true
+width = 1.0
+height = 4.0
+material = SubResource( 47 )
+
+[node name="CSGBox136" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 41.5, 10.5, -7 )
+use_collision = true
+width = 1.0
+height = 7.0
+material = SubResource( 47 )
+
+[node name="CSGBox88" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 35.5, 9, -7 )
+use_collision = true
+width = 1.0
+height = 4.0
+material = SubResource( 47 )
+
+[node name="CSGBox81" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 52, 9, -6 )
+use_collision = true
+width = 8.0
+height = 10.0
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="CSGBox82" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 55, 2, -6 )
+use_collision = true
+height = 4.0
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="CSGBox83" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 49, 2, -6 )
+use_collision = true
+height = 4.0
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="CSGBox70" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 53, 2.5, 18 )
+use_collision = true
+width = 6.0
+height = 5.0
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="CSGBox106" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 48, 2.5, 22 )
+use_collision = true
+width = 4.0
+height = 5.0
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="CSGBox107" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 48, 8.5, 22 )
+use_collision = true
+width = 4.0
+height = 7.0
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="CSGBox67" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 53, 2.5, 23 )
+use_collision = true
+width = 6.0
+height = 5.0
+depth = 6.0
+material = SubResource( 47 )
+
+[node name="CSGBox104" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 53, 2.5, 28 )
+use_collision = true
+width = 6.0
+height = 5.0
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="CSGBox143" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 5.5, 33.5 )
+use_collision = true
+width = 16.0
+height = 11.0
+depth = 3.0
+material = SubResource( 50 )
+
+[node name="CSGBox144" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 31.5, 5.5, 31 )
+use_collision = true
+width = 3.0
+height = 11.0
+material = SubResource( 50 )
+
+[node name="CSGBox146" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 31.5, 8, 25 )
+use_collision = true
+width = 3.0
+depth = 10.0
+material = SubResource( 50 )
+
+[node name="CSGBox105" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 39.5, 3.5, 25 )
+use_collision = true
+width = 13.0
+height = 7.0
+depth = 14.0
+material = SubResource( 47 )
+
+[node name="CSGBox158" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 3.5, 25 )
+use_collision = true
+width = 4.0
+height = 7.0
+depth = 26.0
+material = SubResource( 47 )
+
+[node name="CSGBox154" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 23.5, 3.5, 6 )
+use_collision = true
+width = 3.0
+height = 7.0
+depth = 12.0
+material = SubResource( 47 )
+
+[node name="CSGPolygon10" type="CSGPolygon" parent="Stuff/CSGStuff"]
+transform = Transform( -4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 35, 4.5, 1 )
+use_collision = true
+polygon = PoolVector2Array( 0.125, 1, 1, 2.5, 1, -4.5, 0.125, -4.5 )
+depth = 10.0
+material = SubResource( 52 )
+
+[node name="CSGBox159" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 27.5, 3.5, 10.5 )
+use_collision = true
+width = 5.0
+height = 7.0
+depth = 3.0
+material = SubResource( 47 )
+
+[node name="CSGBox155" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 28.5, 7, -0.5 )
+use_collision = true
+width = 13.0
+height = 14.0
+depth = 1.0
+material = SubResource( 47 )
+
+[node name="CSGBox163" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 21.5, 7, 5.75 )
+use_collision = true
+width = 13.5
+height = 14.0
+depth = 1.0
+material = SubResource( 47 )
+
+[node name="CSGBox145" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 36, 3.5, 13.5 )
+use_collision = true
+width = 12.0
+height = 7.0
+depth = 9.0
+material = SubResource( 47 )
+
+[node name="CSGBox150" type="CSGBox" parent="Stuff/CSGStuff/CSGBox145"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -2.5 )
+operation = 2
+use_collision = true
+width = 6.0
+height = 7.0
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="CSGBox75" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 48, 2.5, 27 )
+use_collision = true
+width = 4.0
+height = 5.0
+depth = 6.0
+material = SubResource( 47 )
+
+[node name="CSGBox44" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 4.5, 3 )
+use_collision = true
+width = 4.0
+height = 9.0
+material = SubResource( 47 )
+
+[node name="Label3D" type="Label3D" parent="Stuff/CSGStuff/CSGBox44"]
+transform = Transform( -1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0.00914669, -0.61731, -1.0841 )
+pixel_size = 0.05
+text = "cpm15
+double jump
+(easy one)"
+
+[node name="CSGPolygon2" type="CSGPolygon" parent="Stuff/CSGStuff/CSGBox44"]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -2, 4.5, -1 )
+use_collision = true
+polygon = PoolVector2Array( 0, 0, 0.5, 0.25, 2, 0.25, 2, 0 )
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="CSGBox46" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 5.625, 3 )
+use_collision = true
+width = 4.0
+height = 11.25
+material = SubResource( 47 )
+
+[node name="Label3D" type="Label3D" parent="Stuff/CSGStuff/CSGBox46"]
+transform = Transform( -1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0.00914669, -0.61731, -1.0841 )
+pixel_size = 0.05
+text = "cpm15
+double jump
+(hard one)"
+
+[node name="CSGBox37" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 2, 11 )
+use_collision = true
+width = 4.0
+height = 4.0
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="CSGBox40" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -26, 2.75, 9 )
+use_collision = true
+width = 6.0
+height = 5.5
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="CSGBox43" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -26, 2.75, 5 )
+use_collision = true
+height = 5.5
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="CSGBox48" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -22.625, 2.75, 5 )
+use_collision = true
+height = 5.5
+depth = 2.75
+material = SubResource( 47 )
+
+[node name="CSGBox51" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -17.125, 8.5, 5 )
+use_collision = true
+height = 6.0
+depth = 8.25
+material = SubResource( 47 )
+
+[node name="CSGBox52" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -17.125, 2.75, 5 )
+use_collision = true
+height = 5.5
+depth = 8.25
+material = SubResource( 47 )
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -11.25, 5.75, 5 )
+use_collision = true
+height = 11.5
+depth = 3.5
+material = SubResource( 47 )
+
+[node name="CSGBox47" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -11.25, 6.75, 9 )
+use_collision = true
+width = 6.0
+height = 1.0
+depth = 3.5
+material = SubResource( 47 )
+
+[node name="CSGBox45" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -16, 5, 13 )
+use_collision = true
+height = 10.0
+depth = 24.0
+material = SubResource( 47 )
+
+[node name="Label3D" type="Label3D" parent="Stuff/CSGStuff/CSGBox45"]
+transform = Transform( 1.31134e-07, 0, -1, 0, 1, 0, 1, 0, 1.31134e-07, -1.12166, -0.61731, -8.78362 )
+pixel_size = 0.05
+text = "Aerowalk (cpm22)
+RA stair Jump"
+
+[node name="Label3D2" type="Label3D" parent="Stuff/CSGStuff/CSGBox45"]
+transform = Transform( 1, 0, 1.74845e-07, 0, 1, 0, -1.74845e-07, 0, 1, -7.87167, -0.11731, -36.9905 )
+pixel_size = 0.05
+text = "Realistic Test Level"
+
+[node name="Label3D3" type="Label3D" parent="Stuff/CSGStuff/CSGBox45"]
+transform = Transform( -1, 0, -2.62268e-07, 0, 1, 0, 2.62268e-07, 0, -1, -7.87167, -0.11731, -41.0194 )
+pixel_size = 0.05
+text = "Debug/Test Area"
+
+[node name="CSGBox31" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 6, 7.5 )
+use_collision = true
+width = 4.0
+height = 4.0
+depth = 4.0
+material = SubResource( 47 )
+
+[node name="CSGPolygon" type="CSGPolygon" parent="Stuff/CSGStuff"]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -0.75, 0, -5.75 )
+use_collision = true
+polygon = PoolVector2Array( 0, 0, 4, 2, 4, 0 )
+depth = 4.0
+material = SubResource( 49 )
+
+[node name="CSGPolygon9" type="CSGPolygon" parent="Stuff/CSGStuff"]
+transform = Transform( -4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 4, 0, -12 )
+use_collision = true
+polygon = PoolVector2Array( 0, 0, 4, 4, 4, 0 )
+depth = 4.0
+material = SubResource( 49 )
+
+[node name="CSGPolygon5" type="CSGPolygon" parent="Stuff/CSGStuff"]
+transform = Transform( -1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -4, 0, -24 )
+use_collision = true
+polygon = PoolVector2Array( 0, 0, 2, 3, 2, 0 )
+depth = 16.0
+material = SubResource( 52 )
+
+[node name="CSGPolygon6" type="CSGPolygon" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 1.74846e-07, 0, 1, 0, -1.74846e-07, 0, 1, -8, 0, -8 )
+use_collision = true
+polygon = PoolVector2Array( 0, 0, 2, 4, 2, 0 )
+depth = 16.0
+material = SubResource( 52 )
+
+[node name="Label3D" type="Label3D" parent="Stuff/CSGStuff/CSGPolygon6"]
+transform = Transform( 1, 0, 1.74846e-07, 0, 1, 0, -1.74846e-07, 0, 1, 2.00764, 1.10595, 0.0146413 )
+pixel_size = 0.05
+modulate = Color( 0, 0, 0, 1 )
+text = "surf
+testers"
+
+[node name="CSGPolygon7" type="CSGPolygon" parent="Stuff/CSGStuff"]
+transform = Transform( 1, 0, 1.06581e-14, 0, 1, 0, -1.06581e-14, 0, 1, -16, 0, -8 )
+use_collision = true
+polygon = PoolVector2Array( 0, 0, 2, 6, 2, 0 )
+depth = 16.0
+material = SubResource( 52 )
+
+[node name="Label3D2" type="Label3D" parent="Stuff/CSGStuff/CSGPolygon7"]
+transform = Transform( 1, 0, 1.74846e-07, 0, 1, 0, -1.74846e-07, 0, 1, 1.88264, 1.10595, 0.0146399 )
+pixel_size = 0.05
+modulate = Color( 0, 0, 0, 1 )
+text = "surf
+testers"
+
+[node name="CSGPolygon8" type="CSGPolygon" parent="Stuff/CSGStuff"]
+transform = Transform( -1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -12, 0, -24 )
+use_collision = true
+polygon = PoolVector2Array( 0, 0, 2, 5, 2, 0 )
+depth = 16.0
+material = SubResource( 52 )
+
+[node name="CSGPolygon2" type="CSGPolygon" parent="Stuff/CSGStuff"]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 4, 0, 3.5 )
+use_collision = true
+polygon = PoolVector2Array( 0, 0, 0, 1.5, 0.5, 2, 0.5, 0 )
+depth = 2.0
+material = SubResource( 49 )
+
+[node name="CSGPolygon3" type="CSGPolygon" parent="Stuff/CSGStuff"]
+transform = Transform( 1.91069e-15, 1, 4.37114e-08, 4.37114e-08, -4.37114e-08, 1, 1, 0, -4.37114e-08, -12, 1.625, 2 )
+use_collision = true
+polygon = PoolVector2Array( -0.25, -1, -0.25, 0.75, 0, 1.25, 0, -1.5 )
+depth = 1.63
+material = SubResource( 49 )
+
+[node name="CSGPolygon4" type="CSGPolygon" parent="Stuff/CSGStuff/CSGPolygon3"]
+transform = Transform( 1, 4.37114e-08, -4.37114e-08, -4.37114e-08, -4.37114e-08, -1, -4.37114e-08, 1, -4.37114e-08, -0.249998, -1.5, -1.75 )
+operation = 1
+use_collision = true
+polygon = PoolVector2Array( -0.25, 0, -0.25, 1.25, 0.5, 2, 0.5, 0 )
+depth = 2.75
+material = SubResource( 49 )
+
+[node name="CSGPolygon4" type="CSGPolygon" parent="Stuff/CSGStuff"]
+transform = Transform( 1.91069e-15, 1, 4.37114e-08, 4.37114e-08, -4.37114e-08, 1, 1, 0, -4.37114e-08, -16, 1.625, 2 )
+use_collision = true
+polygon = PoolVector2Array( -0.25, -1, -0.25, 0.75, 0, 1.25, 0, -1.5 )
+depth = 1.63
+material = SubResource( 49 )
+
+[node name="CSGPolygon4" type="CSGPolygon" parent="Stuff/CSGStuff/CSGPolygon4"]
+transform = Transform( 1, 4.37114e-08, -4.37114e-08, -4.37114e-08, -4.37114e-08, -1, -4.37114e-08, 1, -4.37114e-08, -0.249998, -1.5, -1.75 )
+operation = 1
+use_collision = true
+polygon = PoolVector2Array( -0.25, 0, -0.25, 1.25, 0.5, 2, 0.5, 0 )
+depth = 2.75
+material = SubResource( 49 )
+
+[editable path="Stuff/CSGStuff/Teleporter"]
+[editable path="Stuff/CSGStuff/Teleporter2"]
+[editable path="Stuff/CSGStuff/Teleporter3"]

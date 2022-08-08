@@ -1,0 +1,104 @@
+[gd_scene load_steps=9 format=2]
+
+[ext_resource path="res://MyChar.gd" type="Script" id=1]
+[ext_resource path="res://Camera.gd" type="Script" id=2]
+[ext_resource path="res://art/texture/blockmesh texture red.png" type="Texture" id=3]
+[ext_resource path="res://sfx/HybridFoley.wav" type="AudioStream" id=4]
+[ext_resource path="res://art/texture/blockmesh texture white.png" type="Texture" id=6]
+
+[sub_resource type="SpatialMaterial" id=2]
+albedo_color = Color( 0.823529, 0.643137, 0.533333, 1 )
+albedo_texture = ExtResource( 3 )
+metallic = 0.23
+metallic_specular = 0.0
+roughness = 0.81
+uv1_scale = Vector3( 16, 16, 16 )
+uv1_triplanar = true
+
+[sub_resource type="SpatialMaterial" id=3]
+albedo_texture = ExtResource( 6 )
+metallic = 1.0
+roughness = 0.46
+uv1_scale = Vector3( 16, 16, 16 )
+uv1_triplanar = true
+uv2_triplanar = true
+
+[sub_resource type="BoxShape" id=1]
+margin = 0.001
+extents = Vector3( 0.468, 0.875, 0.468 )
+
+[node name="MyChar" type="KinematicBody" groups=["Player"]]
+collision_layer = 2
+script = ExtResource( 1 )
+stair_height = 1.125
+stair_query_fallback_distance = 0.1
+
+[node name="JumpSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 4 )
+bus = "SFX"
+
+[node name="CameraHolder" type="Spatial" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, 0 )
+
+[node name="Camera" type="Camera" parent="CameraHolder"]
+process_priority = 1
+doppler_tracking = 1
+current = true
+fov = 90.0
+far = 1000.0
+script = ExtResource( 2 )
+
+[node name="RemoteTransform" type="RemoteTransform" parent="CameraHolder/Camera"]
+remote_path = NodePath("../../../CamRelative")
+
+[node name="CamRelative" type="Spatial" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, 0 )
+
+[node name="RayCast" type="RayCast" parent="CamRelative"]
+cast_to = Vector3( 0, 0, -1000 )
+
+[node name="WeaponHolder" type="Spatial" parent="CamRelative"]
+
+[node name="CSGPolygon" type="CSGPolygon" parent="CamRelative/WeaponHolder"]
+transform = Transform( 0.5, 0, 0, 0, -2.18557e-08, 0.5, 0, -0.5, -2.18557e-08, 0.022588, -0.250202, -0.114826 )
+polygon = PoolVector2Array( 0, -0.375, 0.0875275, 0.30735, 0.125, 0.25, 0.138081, -0.230629, 0.109615, -0.517753, 0.212263, -0.876467, 0.165949, -0.894575 )
+mode = 1
+spin_degrees = 360.0
+spin_sides = 8
+material = SubResource( 2 )
+
+[node name="CSGPolygon" type="CSGPolygon" parent="CamRelative/WeaponHolder/CSGPolygon"]
+polygon = PoolVector2Array( 0, 0, 0, 0.5, 0.0961555, 0.69313, 0.0960757, 0.785035, 0.122223, 0.821768, 0.136189, 0.819724, 0.117769, 0.756881, 0.125, 0.375 )
+mode = 1
+spin_degrees = 360.0
+spin_sides = 8
+material = SubResource( 3 )
+
+[node name="CSGBox" type="CSGBox" parent="CamRelative/WeaponHolder/CSGPolygon/CSGPolygon"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.741904, 0.344993 )
+operation = 2
+calculate_tangents = false
+width = 0.571
+height = 0.044
+depth = 0.649
+material = SubResource( 3 )
+
+[node name="CSGBox2" type="CSGBox" parent="CamRelative/WeaponHolder/CSGPolygon/CSGPolygon"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.787902, 0.130895 )
+calculate_tangents = false
+width = 0.02
+height = 0.043
+depth = 0.037
+material = SubResource( 3 )
+
+[node name="RocketOrigin" type="Spatial" parent="CamRelative"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.125 )
+
+[node name="Hull" type="CollisionShape" parent="."]
+shape = SubResource( 1 )
+
+[node name="CSGCylinder" type="CSGCylinder" parent="Hull"]
+layers = 0
+cast_shadow = 0
+radius = 0.5
+height = 1.7

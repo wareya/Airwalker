@@ -1,0 +1,8 @@
+.import/
+.builds/
+.trash/
+test/
+temp/
+*.flac
+*.7z
+*.zip
