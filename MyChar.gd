@@ -28,7 +28,7 @@ func reset_stair_camera_offset():
 # Called when the node enters the scene tree for the first time.
 func _ready():
     $CameraHolder.rotation.y = rotation.y
-    $"CamRelative/WeaponHolder/rocket launcher/Cylinder".cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
+    $"CamRelative/WeaponHolder/CSGPolygon".cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
     rotation.y = 0
     Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
     pass # Replace with function body.

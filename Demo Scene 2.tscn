@@ -994,6 +994,22 @@ height = 1.0
 depth = 0.5
 material = SubResource( 50 )
 
+[node name="stairs11" type="CSGBox" parent="Stuff/CSGStuff"]
+transform = Transform( -1, 0, 8.74228e-08, 0, 1, 0, -8.74228e-08, 0, -1, 53, 5.25, 16.25 )
+use_collision = true
+width = 4.0
+height = 0.5
+depth = 0.5
+material = SubResource( 50 )
+
+[node name="CSGBox53" type="CSGBox" parent="Stuff/CSGStuff/stairs11"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.125, -0.5 )
+use_collision = true
+width = 4.0
+height = 0.25
+depth = 0.5
+material = SubResource( 50 )
+
 [node name="stairs7" type="CSGBox" parent="Stuff/CSGStuff"]
 transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 58, 5.5, -11 )
 use_collision = true
@@ -1470,7 +1486,7 @@ depth = 2.0
 material = SubResource( 49 )
 
 [node name="CSGBox54" type="CSGBox" parent="Stuff/CSGStuff"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 52.375, 3, -21.375 )
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 52.875, 3, -20.5 )
 use_collision = true
 material = SubResource( 47 )
 
@@ -1894,7 +1910,7 @@ depth = 3.0
 material = SubResource( 61 )
 
 [node name="CSGBox117" type="CSGBox" parent="Stuff/CSGStuff"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 53, 4.875, 15 )
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 53, 5.375, 15 )
 use_collision = true
 width = 6.0
 height = 0.25
