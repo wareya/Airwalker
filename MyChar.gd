@@ -49,7 +49,7 @@ func check_first_person_visibility():
             $"CamRelative/WeaponHolder/CSGPolygon".cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
             weapon_offset.x = 0.3
             weapon_offset.y = 0.1
-            $CameraHolder/CamBasePos.translation = Vector3(0, 0.5, 2)
+            $CameraHolder/CamBasePos.translation = Vector3(0, 0.5 * cos($CameraHolder.rotation.x), 2)
         else:
             for child in $"thj8 char/Armature/Skeleton".get_children():
                 child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_SHADOWS_ONLY
@@ -81,12 +81,8 @@ func update_from_camera_smoothing():
         print(amount)
     $"thj8 char".translation.y = base_model_offset.y + amount
     $CamRelative.visible = true
-    if third_person:
-        $CamRelative.global_transform = $CameraHolder.global_transform
-        $CamRelative.global_translation.y += amount
-    else:
-        $CamRelative.global_transform = $CameraHolder.global_transform
-        $CamRelative.global_translation.y += amount
+    $CamRelative.global_transform = $CameraHolder.global_transform
+    $CamRelative.global_translation.y += amount
 
 func alice_visible(whether : bool):
     $"thj8 char/Armature/Skeleton/ribbon alice".visible = whether
@@ -103,15 +99,17 @@ func cirno_visible(whether : bool):
 
 
 var anim_lock_time = 0.0
-func play_no_self_override(anim, speed) -> bool:
+func play_no_self_override(anim, speed, blendmult) -> bool:
     for anim in ["Walk", "Idle"]:
         $"thj8 char/AnimationPlayer".get_animation(anim).loop = true
+    for anim in ["Land", "Jump"]:
+        $"thj8 char/AnimationPlayer".get_animation(anim).loop = false
     if anim_lock_time > 0.0:
         return false
     if $"thj8 char/AnimationPlayer".current_animation != anim:
         #print($"thj8 char/AnimationPlayer".current_animation)
         #print(anim)
-        var blendrate = 0.1
+        var blendrate = 0.1 * blendmult
         blendrate *= abs(speed)
         $"thj8 char/AnimationPlayer".play(anim, blendrate, 1.0)
         $"thj8 char/AnimationPlayer".advance(0.0)
@@ -126,13 +124,18 @@ func play_no_self_override(anim, speed) -> bool:
 
 func play_animation(anim : String, speed : float = 1.0):
     var anim_table = {
-        "idle" :  {name="Idle", speed=0.333},
-        "walk" :  {name="Walk", speed=2.0},
-        "jump" :  {name="Jump", speed=1.0},
-        "land" :  {name="Land", speed=1.0, lock = 0.25},
+        "idle"  :  {name="Idle" , speed=0.333},
+        "float" :  {name="Float", speed=1.0, blend=2.0},
+        "air"   :  {name="Air"  , speed=1.0},
+        "walk"  :  {name="Walk" , speed=2.0},
+        "jump"  :  {name="Land" , speed=2.0, blend=0.5},
+        "land"  :  {name="Land" , speed=1.5, lock=0.25},
     }
     if anim in anim_table:
-        if play_no_self_override(anim_table[anim].name, speed*anim_table[anim].speed):
+        var blendmult = 1.0
+        if "blend" in anim_table[anim]:
+            blendmult = anim_table[anim]["blend"]
+        if play_no_self_override(anim_table[anim].name, speed*anim_table[anim].speed, blendmult):
             if "lock" in anim_table[anim]:
                 anim_lock_time = anim_table[anim].lock
 
@@ -165,7 +168,7 @@ func do_evil_anim_things(delta):
     var offset_amount = -0.05
     var xform2 = Transform.IDENTITY
     var xform3 = Transform.IDENTITY.rotated(Vector3.UP, offset_angle/2.0)
-    var xform4 = Transform.IDENTITY.rotated(Vector3.UP, -offset_angle/2.0).rotated(Vector3.RIGHT, -$CameraHolder.rotation.x/6.0).rotated(Vector3.UP, offset_angle/2.0)
+    var xform4 = Transform.IDENTITY.rotated(Vector3.UP, -offset_angle/2.0).rotated(Vector3.RIGHT, -$CameraHolder.rotation.x/8.0).rotated(Vector3.UP, offset_angle/2.0)
     
     for target in [lower_chest, upper_chest, neck, root, leg_L, leg_R]:
         var xform : Transform = skele.get_bone_global_pose(target)
@@ -183,6 +186,8 @@ func do_evil_anim_things(delta):
             xform = xform3 * xform * xform3
         skele.set_bone_global_pose_override(target, xform, 1.0, true)
     
+    #$"thj8 char".translation.x = -0.25 * sin($CameraHolder.rotation.y) * sin($CameraHolder.rotation.x)
+    #$"thj8 char".translation.z = -0.25 * cos($CameraHolder.rotation.y) * sin($CameraHolder.rotation.x)
     pass
 
 func angle_diff(a, b):
@@ -433,7 +438,9 @@ func _process(delta):
             floor_velocity = (foot_location - old_foot_location)/delta
     
     var floor_collision_before_jump = floor_collision
+    var did_jump = false
     if is_on_floor() and want_to_jump:
+        did_jump = true
         sway_rate_multiplier = 1.0
         #EmitterFactory.emit("HybridFoley")
         if !$JumpSound.playing or $JumpSound.get_playback_position() > 0.20 or can_doublejump:
@@ -733,8 +740,13 @@ func _process(delta):
             play_animation("walk", walkspeed)
         else:
             play_animation("idle", 1.0)
-    else:
+    elif did_jump:
         play_animation("jump", 1.0)
+    elif !$"thj8 char/AnimationPlayer".is_playing() or $"thj8 char/AnimationPlayer".current_animation == "Walk":
+        if velocity.y*unit_scale < -100.0:
+            play_animation("float", 1.0)
+        else:
+            play_animation("air", 1.0)
     do_evil_anim_things(delta)
     
     velocity += vel_delta/2
