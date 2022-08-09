@@ -469,8 +469,7 @@ func _process(delta):
     
     HUD.get_node("Peak").text = "%s\n%s\n%s\n%s\n%s\n%s\n%s" % \
         [(peak*unit_scale),
-        vector_reject(velocity,
-        Vector3.DOWN).length()*unit_scale,
+        (velocity * Vector3(1,0,1)).length()*unit_scale,
         velocity.length()*unit_scale,
         is_on_floor(),
         global_translation*unit_scale,
