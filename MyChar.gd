@@ -69,8 +69,8 @@ func check_first_person_visibility():
         weapon_offset.x = 0.3
         weapon_offset.y = 0.1
         
-        cirno_visible(false)
-        alice_visible(true)
+        alice_visible(false)
+        cirno_visible(true)
         camera.current = false
         camera.input_enabled = false
     $"thj8 char".rotation.y = $CameraHolder.rotation.y + PI - offset_angle
@@ -100,6 +100,11 @@ func cirno_visible(whether : bool):
 
 var anim_lock_time = 0.0
 func play_no_self_override(anim, speed, blendmult) -> bool:
+    for anim_name in $"thj8 char/AnimationPlayer".get_animation_list():
+        var _anim : Animation = $"thj8 char/AnimationPlayer".get_animation(anim_name)
+        for t in _anim.get_track_count():
+            _anim.track_set_interpolation_type(t, Animation.INTERPOLATION_LINEAR)
+            _anim.track_set_interpolation_loop_wrap(t, true)
     for anim in ["Walk", "Idle"]:
         $"thj8 char/AnimationPlayer".get_animation(anim).loop = true
     for anim in ["Land", "Jump"]:
@@ -124,17 +129,19 @@ func play_no_self_override(anim, speed, blendmult) -> bool:
 
 func play_animation(anim : String, speed : float = 1.0):
     var anim_table = {
-        "idle"  :  {name="Idle" , speed=0.333},
+        "idle"  :  {name="Idle" , speed=0.25},
         "float" :  {name="Float", speed=1.0, blend=2.0},
-        "air"   :  {name="Air"  , speed=1.0},
+        "air"   :  {name="Air"  , speed=1.0, blend=2.0},
         "walk"  :  {name="Walk" , speed=2.0},
-        "jump"  :  {name="Jump" , speed=2.0, blend=0.5},
-        "land"  :  {name="Land" , speed=1.5, lock=0.25},
+        "jump"  :  {name="Jump" , speed=1.0, blend=0.5, override_lock=true},
+        "land"  :  {name="Land" , speed=1.5, lock=0.2},
     }
     if anim in anim_table:
         var blendmult = 1.0
         if "blend" in anim_table[anim]:
             blendmult = anim_table[anim]["blend"]
+        if "override_lock" in anim_table[anim]:
+            anim_lock_time = 0.0
         if play_no_self_override(anim_table[anim].name, speed*anim_table[anim].speed, blendmult):
             if "lock" in anim_table[anim]:
                 anim_lock_time = anim_table[anim].lock

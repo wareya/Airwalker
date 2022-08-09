@@ -747,6 +747,7 @@ script = ExtResource( 13 )
 
 [node name="CSGCylinder3" type="CSGBox" parent="Stuff/CSGStuff/KinematicBody2"]
 width = 8.0
+height = 0.75
 depth = 8.0
 material = SubResource( 62 )
 
