@@ -128,7 +128,7 @@ func play_animation(anim : String, speed : float = 1.0):
         "float" :  {name="Float", speed=1.0, blend=2.0},
         "air"   :  {name="Air"  , speed=1.0},
         "walk"  :  {name="Walk" , speed=2.0},
-        "jump"  :  {name="Land" , speed=2.0, blend=0.5},
+        "jump"  :  {name="Jump" , speed=2.0, blend=0.5},
         "land"  :  {name="Land" , speed=1.5, lock=0.25},
     }
     if anim in anim_table:
@@ -742,8 +742,8 @@ func _process(delta):
             play_animation("idle", 1.0)
     elif did_jump:
         play_animation("jump", 1.0)
-    elif !$"thj8 char/AnimationPlayer".is_playing() or $"thj8 char/AnimationPlayer".current_animation == "Walk":
-        if velocity.y*unit_scale < -100.0:
+    elif !$"thj8 char/AnimationPlayer".current_animation == "Jump":
+        if abs(velocity.y*unit_scale) > 320.0:
             play_animation("float", 1.0)
         else:
             play_animation("air", 1.0)
