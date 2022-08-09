@@ -147,7 +147,8 @@ environment = SubResource( 46 )
 [node name="MyChar" parent="Stuff" instance=ExtResource( 2 )]
 process_priority = 1
 transform = Transform( -0.573575, 0, -0.819153, 0, 1, 0, 0.819153, 0, -0.573575, 48.283, 0.934016, 5.44974 )
-moving_platform_mode = 2
+moving_platform_mode = 1
+is_player = true
 
 [node name="CSGStuff" type="Spatial" parent="Stuff"]
 
@@ -1532,22 +1533,6 @@ height = 5.0
 depth = 10.0
 material = SubResource( 47 )
 
-[node name="CSGBox164" type="CSGBox" parent="Stuff/CSGStuff"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 63, 4, -4.375 )
-use_collision = true
-width = 4.0
-height = 1.5
-depth = 0.25
-material = SubResource( 47 )
-
-[node name="CSGBox160" type="CSGBox" parent="Stuff/CSGStuff"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 63, 2.625, -2 )
-use_collision = true
-width = 5.5
-height = 0.25
-depth = 3.75
-material = SubResource( 47 )
-
 [node name="CSGBox103" type="CSGBox" parent="Stuff/CSGStuff"]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 60.5, 2.5, -5 )
 use_collision = true
@@ -2144,6 +2129,10 @@ width = 4.0
 height = 8.0
 depth = 24.0
 material = SubResource( 47 )
+
+[node name="Camera" type="Camera" parent="Stuff/CSGStuff"]
+transform = Transform( 0.707107, 0.270598, -0.653282, 0, 0.92388, 0.382683, 0.707107, -0.270598, 0.653282, 47.375, 19.25, 14.5 )
+current = true
 
 [node name="CSGBox141" type="CSGBox" parent="Stuff/CSGStuff"]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 42.875, 2, 5 )

@@ -1,9 +1,10 @@
-[gd_scene load_steps=9 format=2]
+[gd_scene load_steps=10 format=2]
 
 [ext_resource path="res://MyChar.gd" type="Script" id=1]
 [ext_resource path="res://Camera.gd" type="Script" id=2]
 [ext_resource path="res://art/texture/blockmesh texture red.png" type="Texture" id=3]
 [ext_resource path="res://sfx/HybridFoley.wav" type="AudioStream" id=4]
+[ext_resource path="res://3d/char/thj8 char.glb" type="PackedScene" id=5]
 [ext_resource path="res://art/texture/blockmesh texture white.png" type="Texture" id=6]
 
 [sub_resource type="SpatialMaterial" id=2]
@@ -31,6 +32,9 @@ extents = Vector3( 0.468, 0.875, 0.468 )
 collision_layer = 2
 script = ExtResource( 1 )
 
+[node name="thj8 char" parent="." instance=ExtResource( 5 )]
+transform = Transform( -0.666, 0, -5.82236e-08, 0, 0.666, 0, 5.82236e-08, 0, -0.666, 0, -0.875, 0 )
+
 [node name="JumpSound" type="AudioStreamPlayer" parent="."]
 stream = ExtResource( 4 )
 bus = "SFX"
@@ -38,16 +42,14 @@ bus = "SFX"
 [node name="CameraHolder" type="Spatial" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, 0 )
 
-[node name="Camera" type="Camera" parent="CameraHolder"]
+[node name="CamBasePos" type="Spatial" parent="CameraHolder"]
+
+[node name="Camera" type="ClippedCamera" parent="CameraHolder/CamBasePos"]
 process_priority = 1
 doppler_tracking = 1
-current = true
 fov = 90.0
 far = 1000.0
 script = ExtResource( 2 )
-
-[node name="RemoteTransform" type="RemoteTransform" parent="CameraHolder/Camera"]
-remote_path = NodePath("../../../CamRelative")
 
 [node name="CamRelative" type="Spatial" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, 0 )

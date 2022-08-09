@@ -14,8 +14,8 @@ enum {
 
 export var moving_platform_mode : int = MOVING_PLATFORM_IGNORE
 export var moving_platform_jump_ignore_vertical : bool = false
-
 export var pogostick_jumping : bool = true
+export var is_player : bool = false
 
 func set_rotation(y):
     $CameraHolder.rotation.y = y
@@ -25,15 +25,165 @@ func add_rotation(y):
     $CameraHolder.rotation.y += y
 
 func reset_stair_camera_offset():
-    $CameraHolder/Camera.reset_stair_offset()
+    camera.reset_stair_offset()
+    pass
 
-# Called when the node enters the scene tree for the first time.
+onready var base_model_offset = $"thj8 char".translation
 func _ready():
     $CameraHolder.rotation.y = rotation.y
-    $"CamRelative/WeaponHolder/CSGPolygon".cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
     rotation.y = 0
-    Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-    pass # Replace with function body.
+    check_first_person_visibility()
+
+var third_person = false
+
+var weapon_offset = Vector3()
+
+onready var camera : Camera = $CameraHolder/CamBasePos/Camera
+
+func check_first_person_visibility():
+    third_person = false
+    if is_player:
+        if third_person:
+            for child in $"thj8 char/Armature/Skeleton".get_children():
+                child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
+            $"CamRelative/WeaponHolder/CSGPolygon".cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
+            weapon_offset.x = 0.3
+            weapon_offset.y = 0.1
+            $CameraHolder/CamBasePos.translation = Vector3(0, 0.5, 2)
+        else:
+            for child in $"thj8 char/Armature/Skeleton".get_children():
+                child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+            $"CamRelative/WeaponHolder/CSGPolygon".cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
+            weapon_offset.x = 0
+            weapon_offset.y = 0
+            $CameraHolder/CamBasePos.translation = Vector3()
+        
+        alice_visible(true)
+        cirno_visible(false)
+        camera.current = true
+        camera.input_enabled = true
+    else:
+        for child in $"thj8 char/Armature/Skeleton".get_children():
+            child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
+        $CamRelative/WeaponHolder/CSGPolygon.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
+        weapon_offset.x = 0.3
+        weapon_offset.y = 0.1
+        
+        cirno_visible(false)
+        alice_visible(true)
+        camera.current = false
+        camera.input_enabled = false
+    $"thj8 char".rotation.y = $CameraHolder.rotation.y + PI - offset_angle
+    
+func update_from_camera_smoothing():
+    var amount = camera.smoothing_amount
+    if amount > 0.0001:
+        print(amount)
+    $"thj8 char".translation.y = base_model_offset.y + amount
+    $CamRelative.visible = true
+    if third_person:
+        $CamRelative.global_transform = $CameraHolder.global_transform
+        $CamRelative.global_translation.y += amount
+    else:
+        $CamRelative.global_transform = $CameraHolder.global_transform
+        $CamRelative.global_translation.y += amount
+
+func alice_visible(whether : bool):
+    $"thj8 char/Armature/Skeleton/ribbon alice".visible = whether
+    $"thj8 char/Armature/Skeleton/dress alice".visible = whether
+    $"thj8 char/Armature/Skeleton/bow alice".visible = whether
+    $"thj8 char/Armature/Skeleton/ribbon alice".visible = whether
+    $"thj8 char/Armature/Skeleton/hair alice".visible = whether
+func cirno_visible(whether : bool):
+    $"thj8 char/Armature/Skeleton/ribbon".visible = whether
+    $"thj8 char/Armature/Skeleton/dress".visible = whether
+    $"thj8 char/Armature/Skeleton/bowtie".visible = whether
+    $"thj8 char/Armature/Skeleton/ribbon".visible = whether
+    $"thj8 char/Armature/Skeleton/hair".visible = whether
+
+
+var anim_lock_time = 0.0
+func play_no_self_override(anim, speed) -> bool:
+    for anim in ["Walk", "Idle"]:
+        $"thj8 char/AnimationPlayer".get_animation(anim).loop = true
+    if anim_lock_time > 0.0:
+        return false
+    if $"thj8 char/AnimationPlayer".current_animation != anim:
+        #print($"thj8 char/AnimationPlayer".current_animation)
+        #print(anim)
+        var blendrate = 0.1
+        blendrate *= abs(speed)
+        $"thj8 char/AnimationPlayer".play(anim, blendrate, 1.0)
+        $"thj8 char/AnimationPlayer".advance(0.0)
+        $"thj8 char/AnimationPlayer".playback_speed = speed
+        #$"thj8 char/AnimationPlayer".play_backwards()
+        #print(speed)
+        #print(blendrate)
+        return true
+    else:
+        $"thj8 char/AnimationPlayer".playback_speed = speed
+        return false
+
+func play_animation(anim : String, speed : float = 1.0):
+    var anim_table = {
+        "idle" :  {name="Idle", speed=0.333},
+        "walk" :  {name="Walk", speed=2.0},
+        "jump" :  {name="Jump", speed=1.0},
+        "land" :  {name="Land", speed=1.0, lock = 0.25},
+    }
+    if anim in anim_table:
+        if play_no_self_override(anim_table[anim].name, speed*anim_table[anim].speed):
+            if "lock" in anim_table[anim]:
+                anim_lock_time = anim_table[anim].lock
+
+var last_offset_angle = 0.0
+var offset_angle = 0.0
+var anim_walk_backwards = false
+func do_evil_anim_things(delta):
+    anim_walk_backwards = false
+    offset_angle = 0.0
+    if wishdir.length_squared() > 0.0:
+        offset_angle = Vector2().angle_to_point(Vector2(wishdir.z, -wishdir.x))
+    if wishdir.z > 0:
+        anim_walk_backwards = true
+        offset_angle = Vector2().angle_to_point(Vector2(-wishdir.z, wishdir.x))
+    
+    offset_angle = lerp(last_offset_angle, offset_angle, 1.0 - pow(0.0001, delta))
+    
+    last_offset_angle = offset_angle
+    
+    var skele : Skeleton = $"thj8 char/Armature/Skeleton"
+    var root = skele.find_bone("Bone")
+    var leg_L = skele.find_bone("Bone_L.002")
+    var leg_R = skele.find_bone("Bone_R.002")
+    var lower_chest = skele.find_bone("Bone.002")
+    var upper_chest = skele.find_bone("Bone.003")
+    var neck = skele.find_bone("Bone.004")
+    
+    skele.clear_bones_global_pose_override()
+    
+    var offset_amount = -0.05
+    var xform2 = Transform.IDENTITY
+    var xform3 = Transform.IDENTITY.rotated(Vector3.UP, offset_angle/2.0)
+    var xform4 = Transform.IDENTITY.rotated(Vector3.UP, -offset_angle/2.0).rotated(Vector3.RIGHT, -$CameraHolder.rotation.x/6.0).rotated(Vector3.UP, offset_angle/2.0)
+    
+    for target in [lower_chest, upper_chest, neck, root, leg_L, leg_R]:
+        var xform : Transform = skele.get_bone_global_pose(target)
+        if target == lower_chest:
+            xform = xform2 * xform3 * xform * xform3 * xform2.inverse()
+        elif target == upper_chest:
+            xform = xform2 * xform4 * xform * xform4 * xform2.inverse()
+        elif target == leg_L or target == leg_R:
+            xform = xform3.inverse() * xform
+        elif target == root:
+            xform = xform3 * xform
+        elif target == neck:
+            xform = xform4 * xform * xform4
+        else:
+            xform = xform3 * xform * xform3
+        skele.set_bone_global_pose_override(target, xform, 1.0, true)
+    
+    pass
 
 func angle_diff(a, b):
     var ret = a - b
@@ -122,6 +272,46 @@ var can_doublejump = false
 func calculate_foot_position():
     return global_translation + Vector3.DOWN*$Hull.shape.extents.y
 
+class Inputs extends Reference:
+    var jump : bool
+    var jump_pressed : bool
+    var jump_released : bool
+    var m1 : bool
+    var m1_pressed : bool
+    var m1_released : bool
+    var m2 : bool
+    var m2_pressed : bool
+    var m2_released : bool
+
+var wishdir = Vector3()
+var inputs : Inputs = Inputs.new()
+
+func update_inputs():
+    if is_player:
+        inputs.jump = Input.is_action_pressed("jump")
+        inputs.jump_pressed = Input.is_action_just_pressed("jump")
+        inputs.jump_released = Input.is_action_just_released("jump")
+        
+        inputs.m1 = Input.is_action_pressed("m1")
+        inputs.m1_pressed = Input.is_action_just_pressed("m1")
+        inputs.m1_released = Input.is_action_just_released("m1")
+        
+        inputs.m2 = false
+        inputs.m2_pressed = false
+        inputs.m2_released = false
+        
+        wishdir = Vector3()
+        if Input.is_action_pressed("ui_up"):
+            wishdir += Vector3.FORWARD
+        if Input.is_action_pressed("ui_down"):
+            wishdir += Vector3.BACK
+        if Input.is_action_pressed("ui_right"):
+            wishdir += Vector3.RIGHT
+        if Input.is_action_pressed("ui_left"):
+            wishdir += Vector3.LEFT
+        if wishdir.length_squared() > 0:
+            wishdir = wishdir.normalized()
+
 var previous_on_floor = false
 var previous_velocity = velocity
 var want_to_jump = false
@@ -132,18 +322,16 @@ var cam_sway_memory = Vector2()
 var sway_strength = 0.5
 var force_sway_to = 0.0
 var force_sway_amount = 0.0
-var wishdir = Vector3()
 var prev_floor_transform = null
 var prev_floor_collision = null
 func _process(delta):
     time_alive += delta
-    if Input.is_action_just_pressed("jump"):
-        want_to_jump = true
-        can_doublejump = true
-    if Input.is_action_just_released("jump"):
-        can_doublejump = false
-        want_to_jump = false
+    anim_lock_time -= delta
     
+    check_first_person_visibility()
+    update_inputs()
+    
+    # FIXME move to hud
     if Input.is_action_just_pressed("ui_page_up"):
         if get_viewport().debug_draw:
             get_viewport().debug_draw = 0
@@ -151,8 +339,15 @@ func _process(delta):
             get_viewport().debug_draw = Viewport.DEBUG_DRAW_OVERDRAW
         pass
     
+    if inputs.jump_pressed:
+        want_to_jump = true
+        can_doublejump = true
+    if inputs.jump_released:
+        can_doublejump = false
+        want_to_jump = false
+    
     if pogostick_jumping:
-        want_to_jump = Input.is_action_pressed("jump")
+        want_to_jump = inputs.jump
     
     var prev_simtimer = simtimer
     simtimer += delta
@@ -171,18 +366,6 @@ func _process(delta):
     if jump_state_timer > 0:
         jump_state_timer -= delta
     
-    wishdir = Vector3()
-    if Input.is_action_pressed("ui_up"):
-        wishdir += Vector3.FORWARD
-    if Input.is_action_pressed("ui_down"):
-        wishdir += Vector3.BACK
-    if Input.is_action_pressed("ui_right"):
-        wishdir += Vector3.RIGHT
-    if Input.is_action_pressed("ui_left"):
-        wishdir += Vector3.LEFT
-    if wishdir.length_squared() > 0:
-        wishdir = wishdir.normalized()
-    
     var closest_ground = null
     closest_ground = my_move_and_collide(Vector3.DOWN*stair_height, true, true)
     
@@ -195,9 +378,9 @@ func _process(delta):
             floor_boost = vector_project(floor_collision.collider_velocity, floor_collision.normal)
         if moving_platform_jump_ignore_vertical:
             floor_boost.y = 0.0
-        print(floor_boost)
+        #print(floor_boost)
         velocity -= floor_boost
-        print("subtracting... " + str(floor_boost))
+        #print("subtracting... " + str(floor_boost))
         
         if previous_velocity.y < -7.5:
             time_of_landing = time_alive
@@ -208,9 +391,10 @@ func _process(delta):
             else:
                 force_sway_to = PI
             force_sway_amount = 1.0
+            play_animation("land")
     
     reload = reload-delta
-    if Input.is_action_pressed("m1") and reload <= 0.0:
+    if inputs.m1 and reload <= 0.0:
         time_of_shot = time_alive
         reload += 0.8
         var rocket : Spatial = load("res://Rocket.tscn").instance()
@@ -264,8 +448,8 @@ func _process(delta):
         #print(velocity*unit_scale)
         #print(floor_collision.normal)
         velocity = vector_reject(velocity, floor_collision.normal)
-        print("-----")
-        print(floor_collision.collider_velocity)
+        #print("-----")
+        #print(floor_collision.collider_velocity)
         #print(velocity*unit_scale)
         
         var my_jumpstr = jumpstr
@@ -403,7 +587,7 @@ func _process(delta):
     $CamRelative/WeaponHolder.transform = Transform.IDENTITY
     
     var kickback_amount = clamp(time_of_shot + 0.5 - time_alive, 0.0, 1.0) / 0.5
-    $CamRelative/WeaponHolder.transform.origin.z += lerp(0.0, 0.4, kickback_amount*kickback_amount)
+    $CamRelative/WeaponHolder.translation.z += lerp(0.0, 0.4, kickback_amount*kickback_amount)
     $CamRelative/WeaponHolder.transform.basis = Basis.IDENTITY.rotated(Vector3.RIGHT, smoothstep(0.0, 1.0, kickback_amount)*0.1)
     
     var kickdown_amount = clamp(time_of_landing + 1.0 - time_alive, 0.0, 1.0) / 1.0
@@ -413,7 +597,10 @@ func _process(delta):
     kickdown_amount = kickdown_amount*kickdown_amount
     kickdown_amount = kickdown_amount * (1.0-kickdown_amount) * 4.0
     kickdown_amount = kickdown_amount*kickdown_amount
-    $CamRelative/WeaponHolder.transform.origin.y -= lerp(0.0, 0.05, kickdown_amount)
+    $CamRelative/WeaponHolder.translation.y -= lerp(0.0, 0.05, kickdown_amount)
+    $CamRelative/WeaponHolder.translation += weapon_offset
+    if third_person:
+        $CamRelative/WeaponHolder.global_translation += Transform.IDENTITY.rotated(Vector3.RIGHT, $CameraHolder.rotation.x+PI/2.0).rotated(Vector3.UP, $CameraHolder.rotation.y).xform(Vector3(0, 0, -0.5))*Vector3(1, 0, 1)
     
     if is_on_floor():
         sway_rate_multiplier = 1.0
@@ -470,6 +657,8 @@ func _process(delta):
     
     force_update_transform()
     
+    # FIXME move to HUD
+    
     HUD.get_node("Peak").text = "%s\n%s\n%s\n%s\n%s\n%s\n%s" % \
         [(peak*unit_scale),
         (velocity * Vector3(1,0,1)).length()*unit_scale,
@@ -483,7 +672,7 @@ func _process(delta):
     HUD.get_node("ArrowDown").visible = wishdir.z > 0
     HUD.get_node("ArrowLeft").visible = wishdir.x < 0
     HUD.get_node("ArrowRight").visible = wishdir.x > 0
-    HUD.get_node("ArrowJump").visible = Input.is_action_pressed("jump")
+    HUD.get_node("ArrowJump").visible = inputs.jump
     if can_doublejump and jump_state_timer > 0:
         HUD.get_node("ArrowJump").modulate = Color.turquoise
     else:
@@ -516,13 +705,13 @@ func _process(delta):
             floor_boost = vector_project(floor_collision_before_jump.collider_velocity, floor_collision_before_jump.normal)
         if moving_platform_jump_ignore_vertical:
             floor_boost.y = 0.0
-        print(floor_boost)
+        #print(floor_boost)
         velocity += floor_boost
     
     stair_height = actual_stair_height
     
     if did_stairs:
-        stair_cooldown = $CameraHolder/Camera.correction_window
+        stair_cooldown = camera.correction_window
         print("stepped")
     
     if !is_on_floor() or stair_cooldown == 0.0:
@@ -533,6 +722,20 @@ func _process(delta):
     #    print("before stairs: ", before_velocity*unit_scale)
     #    print("after stairs : ", velocity*unit_scale)
     #    print("would-be delta : ", vel_delta/2*unit_scale)
+    
+    var floorspeed = (velocity*Vector3(1, 0, 1)).length()
+    
+    if is_on_floor():
+        if floorspeed*unit_scale > 30:
+            var walkspeed = clamp(floorspeed*unit_scale/320, 0.0, 1.0)
+            if anim_walk_backwards:
+                walkspeed *= -1.0
+            play_animation("walk", walkspeed)
+        else:
+            play_animation("idle", 1.0)
+    else:
+        play_animation("jump", 1.0)
+    do_evil_anim_things(delta)
     
     velocity += vel_delta/2
     
