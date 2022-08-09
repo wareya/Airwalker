@@ -136,13 +136,6 @@ var wishdir = Vector3()
 var prev_floor_transform = null
 var prev_floor_collision = null
 func _process(delta):
-    stair_query_fallback_distance = 0.05
-    use_fallback_stair_logic = true
-    #if Input.is_action_pressed("m1"):
-    #    Engine.time_scale = 0.1
-    #else:
-    #    Engine.time_scale = 1.0
-    
     time_alive += delta
     if Input.is_action_just_pressed("jump"):
         want_to_jump = true
@@ -423,7 +416,6 @@ func _process(delta):
         sway_rate_multiplier = 1.0
     else:
         sway_rate_multiplier = move_toward(sway_rate_multiplier, 0.25, delta*0.25)
-        print(sway_rate_multiplier)
     if force_sway_amount > 0.0:
         sway_timer = fmod(sway_timer, PI*2.0)
         var target = fmod(force_sway_to, PI*2.0)
@@ -504,11 +496,11 @@ func _process(delta):
     
     # hack to make badly placed jumppads work
     var minspeed = 0.1
-    if !is_on_floor() and velocity.y > 0.0 and abs(new_velocity.x) < minspeed and abs(velocity.x) > minspeed:
+    if false and !is_on_floor() and velocity.y > 0.0 and abs(new_velocity.x) < minspeed and abs(velocity.x) > minspeed:
         velocity.x = sign(velocity.x)*minspeed
     else:
         velocity.x = new_velocity.x
-    if !is_on_floor() and velocity.y > 0.0 and abs(new_velocity.z) < minspeed and abs(velocity.z) > minspeed:
+    if false and !is_on_floor() and velocity.y > 0.0 and abs(new_velocity.z) < minspeed and abs(velocity.z) > minspeed:
         velocity.z = sign(velocity.z)*minspeed
     else:
         velocity.z = new_velocity.z
