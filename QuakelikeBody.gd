@@ -103,10 +103,10 @@ func my_move_and_collide(motion : Vector3, infinite_inertia : bool = true, test_
 var floor_collision = null
 var wall_collision = null
 
-export var stair_height = 0.25
+export var stair_height = 18.0/32.0
 export var floor_search_distance = 0.05
 #export var stair_query_fallback_distance = 0.05
-export var stair_query_fallback_distance = 0.05
+export var stair_query_fallback_distance = 0.06
 # allows 45.5ish degrees and shallower (rad2deg(acos(0.7)) is about 45.573 degrees)
 export var floor_normal_threshold = 0.7
 

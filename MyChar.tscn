@@ -30,8 +30,6 @@ extents = Vector3( 0.468, 0.875, 0.468 )
 [node name="MyChar" type="KinematicBody" groups=["Player"]]
 collision_layer = 2
 script = ExtResource( 1 )
-stair_height = 1.125
-stair_query_fallback_distance = 0.1
 
 [node name="JumpSound" type="AudioStreamPlayer" parent="."]
 stream = ExtResource( 4 )

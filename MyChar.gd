@@ -187,6 +187,18 @@ func _process(delta):
     closest_ground = my_move_and_collide(Vector3.DOWN*stair_height, true, true)
     
     if !previous_on_floor and floor_collision:
+        velocity = vector_reject(velocity, floor_collision.normal)
+        var floor_boost = Vector3()
+        if moving_platform_mode == 2:
+            floor_boost = floor_collision.collider_velocity
+        elif moving_platform_mode == 3:
+            floor_boost = vector_project(floor_collision.collider_velocity, floor_collision.normal)
+        if moving_platform_jump_ignore_vertical:
+            floor_boost.y = 0.0
+        print(floor_boost)
+        velocity -= floor_boost
+        print("subtracting... " + str(floor_boost))
+        
         if previous_velocity.y < -7.5:
             time_of_landing = time_alive
             EmitterFactory.emit("HybridFoley4").volume_db = -9
@@ -236,6 +248,7 @@ func _process(delta):
             var old_foot_location = prev_floor_transform.xform(foreign_foot_location)
             floor_velocity = (foot_location - old_foot_location)/delta
     
+    var floor_collision_before_jump = floor_collision
     if is_on_floor() and want_to_jump:
         sway_rate_multiplier = 1.0
         #EmitterFactory.emit("HybridFoley")
@@ -273,16 +286,6 @@ func _process(delta):
         else: 
             velocity.y = max(velocity.y, my_jumpstr*Vector3.UP.y)
         #print(velocity*unit_scale)
-        
-        var floor_boost = Vector3()
-        if moving_platform_mode == 2:
-            floor_boost = floor_collision.collider_velocity
-        elif moving_platform_mode == 3:
-            floor_boost = vector_project(floor_collision.collider_velocity, floor_collision.normal)
-        if moving_platform_jump_ignore_vertical:
-            floor_boost.y = 0.0
-        print(floor_boost)
-        velocity += floor_boost
         
         #print(my_jumpstr)
         floor_collision = null
@@ -495,14 +498,26 @@ func _process(delta):
     
     # hack to make badly placed jumppads work
     var minspeed = 0.1
-    if false and !is_on_floor() and velocity.y > 0.0 and abs(new_velocity.x) < minspeed and abs(velocity.x) > minspeed:
+    if !is_on_floor() and velocity.y > 0.0 and abs(new_velocity.x) < minspeed and abs(velocity.x) > minspeed:
         velocity.x = sign(velocity.x)*minspeed
     else:
         velocity.x = new_velocity.x
-    if false and !is_on_floor() and velocity.y > 0.0 and abs(new_velocity.z) < minspeed and abs(velocity.z) > minspeed:
+    if !is_on_floor() and velocity.y > 0.0 and abs(new_velocity.z) < minspeed and abs(velocity.z) > minspeed:
         velocity.z = sign(velocity.z)*minspeed
     else:
         velocity.z = new_velocity.z
+    
+    # check for having left the floor (jump or otherwise)
+    if !floor_collision and floor_collision_before_jump:
+        var floor_boost = Vector3()
+        if moving_platform_mode == 2:
+            floor_boost = floor_collision_before_jump.collider_velocity
+        elif moving_platform_mode == 3:
+            floor_boost = vector_project(floor_collision_before_jump.collider_velocity, floor_collision_before_jump.normal)
+        if moving_platform_jump_ignore_vertical:
+            floor_boost.y = 0.0
+        print(floor_boost)
+        velocity += floor_boost
     
     stair_height = actual_stair_height
     

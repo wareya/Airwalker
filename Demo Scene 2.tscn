@@ -147,8 +147,7 @@ environment = SubResource( 46 )
 [node name="MyChar" parent="Stuff" instance=ExtResource( 2 )]
 process_priority = 1
 transform = Transform( -0.573575, 0, -0.819153, 0, 1, 0, 0.819153, 0, -0.573575, 48.283, 0.934016, 5.44974 )
-stair_height = 0.563
-moving_platform_mode = 1
+moving_platform_mode = 2
 
 [node name="CSGStuff" type="Spatial" parent="Stuff"]
 
