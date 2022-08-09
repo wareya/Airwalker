@@ -42,14 +42,14 @@ bus = "SFX"
 [node name="CameraHolder" type="Spatial" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, 0 )
 
-[node name="CamBasePos" type="Spatial" parent="CameraHolder"]
-
-[node name="Camera" type="ClippedCamera" parent="CameraHolder/CamBasePos"]
+[node name="Camera" type="ClippedCamera" parent="CameraHolder"]
 process_priority = 1
 doppler_tracking = 1
 fov = 90.0
 far = 1000.0
 script = ExtResource( 2 )
+
+[node name="CamBasePos" type="Spatial" parent="CameraHolder"]
 
 [node name="CamRelative" type="Spatial" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, 0 )

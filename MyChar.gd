@@ -38,10 +38,10 @@ var third_person = false
 
 var weapon_offset = Vector3()
 
-onready var camera : Camera = $CameraHolder/CamBasePos/Camera
+onready var camera : Camera = $CameraHolder/Camera
 
 func check_first_person_visibility():
-    third_person = false
+    third_person = true
     if is_player:
         if third_person:
             for child in $"thj8 char/Armature/Skeleton".get_children():

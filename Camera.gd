@@ -14,7 +14,7 @@ func _ready():
 var mouselook_speed = -0.022*3.0
 var mouse_motion = Vector2()
 
-onready var holder = get_parent().get_parent()
+onready var holder = get_parent()
 
 var input_enabled = false
 
@@ -49,7 +49,7 @@ var prev_global_position = null
 var prev_ydelta = null
 
 func reset_stair_offset():
-    var basic_position = get_parent().get_parent().global_translation
+    var basic_position = get_parent().global_translation
     prev_global_position = basic_position
 
 var correction_speed = 5
@@ -84,7 +84,8 @@ func _process(delta):
     smoothing_amount = move_toward(smoothing_amount, 0.0, correction_speed*delta)
     smoothing_amount = clamp(smoothing_amount, -correction_range_clamp, correction_range_clamp)
     
-    translation.y = smoothing_amount
+    translation = holder.get_node("CamBasePos").translation
+    global_translation.y += smoothing_amount
     
     holder.get_parent().update_from_camera_smoothing()
     
