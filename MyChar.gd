@@ -47,9 +47,9 @@ func check_first_person_visibility():
     camera.input_enabled = is_player
     var player_check = !is_player or third_person
     
-    camera.current = is_player
+    camera.current = !is_player
     
-    if player_check:
+    if !player_check:
         for child in $Model/Armature/Skeleton.get_children():
             child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
             child.visible = true
@@ -321,18 +321,56 @@ func update_inputs():
     if wishdir.length_squared() > 1.0:
         wishdir = wishdir.normalized()
 
-func angle_move_toward(a : float, b : float, amount : float) -> float:
+func angle_get_delta(a : float, b : float) -> float:
     a = fposmod(a, PI*2.0)
     b = fposmod(b, PI*2.0)
-    var motion = clamp(b-a, -amount, amount)
-    if abs(a-b) > PI:
-        motion = -motion
-    return fposmod(a+motion + PI*2.0, PI*2.0)
-    pass
+    var delta = b-a
+    if delta < -PI:
+        delta += PI*2.0
+    elif delta > PI:
+        delta -= PI*2.0
+    return delta
+
+func angle_move_toward(a : float, b : float, amount : float) -> float:
+    var delta = angle_get_delta(a, b)
+    var motion = clamp(delta, -amount, amount)
+    return fposmod(a+motion, PI*2.0)
+
+var ai_angle_inertia = 0.0
+var ai_angle_accel = PI*16.0
+var ai_turn_rate_limit = PI*2.0
+func ai_apply_turn_logic(target_angle, delta):
+    ai_angle_accel = PI*12.0
+    var old_angle = $CameraHolder.rotation.y
+    var new_angle = angle_move_toward(old_angle, target_angle, ai_turn_rate_limit*delta)
+    var target_angle_velocity = -angle_get_delta(new_angle, old_angle)/delta
+    
+    var actual_accel = ai_angle_accel
+    
+    var to_target = angle_get_delta(old_angle, target_angle)
+    
+    var stopping_distance = ai_angle_inertia*ai_angle_inertia / (2.0*actual_accel)
+    
+    #if Engine.get_frames_drawn() % 10 == 0:
+    #    print([round(rad2deg(to_target)), round(rad2deg(stopping_distance))])
+    if abs(to_target) < abs(stopping_distance):
+        target_angle_velocity = 0.0
+    
+    ai_angle_inertia = move_toward(ai_angle_inertia, target_angle_velocity, actual_accel*delta)
+    $CameraHolder.rotation.y = old_angle + ai_angle_inertia*delta
 
 var last_used_nav_pos = Vector3()
 func do_ai(delta):
-    #print(angle_move_toward(0.0, PI+0.1, 0.1))
+    #if Engine.time_scale > 0.5:
+    #    print("----")
+    #    print(angle_get_delta(0.0, PI*1.01))
+    #    print(angle_get_delta(0.0, PI*0.99))
+    #    print(angle_get_delta(PI*1.01, 0.0))
+    #    print(angle_get_delta(PI*0.99, 0.0))
+    #    print(angle_get_delta(PI+0.0, PI+PI*1.01))
+    #    print(angle_get_delta(PI+0.0, PI+PI*0.99))
+    #    print(angle_get_delta(PI+PI*1.01, PI+0.0))
+    #    print(angle_get_delta(PI+PI*0.99, PI+0.0))
     $CSGBox.visible = false
     if is_player:
         return
@@ -390,11 +428,14 @@ func do_ai(delta):
         $CSGBox.global_translation = new_next_pos
     var diff = next_pos - global_translation
     var horiz_diff = Vector3(target_diff.x, 0, target_diff.z)
+    #if abs(ai_angle_inertia) > PI and Engine.time_scale > 0.5:
+    #    print(ai_angle_inertia)
     if horiz_diff.length() > 0.1:
         if target_diff.length() > 6.0 or !found_player:
-            var new_angle = Vector2().angle_to_point(Vector2(diff.z, diff.x))
-            $CameraHolder.rotation.y = angle_move_toward($CameraHolder.rotation.y, new_angle, PI*delta*2.0)
-            var angle_diff = new_angle - $CameraHolder.rotation.y
+            var target_angle = Vector2().angle_to_point(Vector2(diff.z, diff.x))
+            ai_apply_turn_logic(target_angle, delta)
+            
+            var angle_diff = target_angle - $CameraHolder.rotation.y
             while angle_diff < -PI:
                 angle_diff += PI*2.0
             while angle_diff > PI:
@@ -407,8 +448,9 @@ func do_ai(delta):
             elif angle_diff < 0.0 and angle_diff > -90.0:
                 wishdir = Vector3.FORWARD + Vector3.RIGHT
         else:
-            var new_angle = Vector2().angle_to_point(Vector2(target_diff.z, target_diff.x))
-            $CameraHolder.rotation.y = angle_move_toward($CameraHolder.rotation.y, new_angle, PI*delta*2.0)
+            var target_angle = Vector2().angle_to_point(Vector2(target_diff.z, target_diff.x))
+            ai_apply_turn_logic(target_angle, delta)
+            
             var strafe_time = 2.0
             var strafe_timer = fmod(time_alive, strafe_time*3.0)/strafe_time*2.0
             var strafe_dir = 0.0 
@@ -443,13 +485,20 @@ func _process(delta):
     update_inputs()
     do_ai(delta)
     
-    # FIXME move to hud
-    if Input.is_action_just_pressed("ui_page_up"):
-        if get_viewport().debug_draw:
-            get_viewport().debug_draw = 0
-        else:
-            get_viewport().debug_draw = Viewport.DEBUG_DRAW_OVERDRAW
-        pass
+    if is_player:
+        if Input.is_action_just_pressed("ui_page_down"):
+            if Engine.time_scale > 0.5:
+                Engine.time_scale = 0.00001
+            else:
+                Engine.time_scale = 1.0
+        
+        # FIXME move to hud
+        if Input.is_action_just_pressed("ui_page_up"):
+            if get_viewport().debug_draw:
+                get_viewport().debug_draw = 0
+            else:
+                get_viewport().debug_draw = Viewport.DEBUG_DRAW_OVERDRAW
+            pass
     
     if inputs.jump_pressed:
         want_to_jump = true
