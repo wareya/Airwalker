@@ -43,26 +43,22 @@ var weapon_offset = Vector3()
 onready var camera : Camera = $CameraHolder/Camera
 
 func check_first_person_visibility():
-    third_person = false
+    third_person = true
     if is_player:
-        alice_visible(true)
-        cirno_visible(false)
-        
         if third_person:
-            #for child in $"thj8 char/Armature/Skeleton".get_children():
-            #    child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
+            for child in $Model/Armature/Skeleton.get_children():
+                child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
+                child.visible = true
             $Model.visible = true
-            $Model.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
             $"CamRelative/WeaponHolder/CSGPolygon".cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
             weapon_offset.x = 0.3
             weapon_offset.y = 0.1
             $CameraHolder/CamBasePos.translation = Vector3(0, 0.5 * cos($CameraHolder.rotation.x), 2)
         else:
-            #for child in $"thj8 char/Armature/Skeleton".get_children():
-            #    child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
-            #    child.visible = false
+            for child in $Model/Armature/Skeleton.get_children():
+                child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
+                child.visible = false
             $Model.visible = false
-            $Model.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
             $"CamRelative/WeaponHolder/CSGPolygon".cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
             weapon_offset.x = 0
             weapon_offset.y = 0
@@ -71,20 +67,15 @@ func check_first_person_visibility():
         camera.current = true
         camera.input_enabled = true
     else:
-        alice_visible(false)
-        cirno_visible(true)
-        
-        #for child in $"thj8 char/Armature/Skeleton".get_children():
-        #    child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
+        for child in $Model/Armature/Skeleton.get_children():
+            child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
         $Model.visible = true
-        $Model.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
         $CamRelative/WeaponHolder/CSGPolygon.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
         weapon_offset.x = 0.3
         weapon_offset.y = 0.1
         
         camera.current = false
         camera.input_enabled = false
-    #$"thj8 char".rotation.y = $CameraHolder.rotation.y + PI - offset_angle
     $Model.rotation.y = $CameraHolder.rotation.y + PI - offset_angle
     
 func update_from_camera_smoothing():
@@ -96,54 +87,29 @@ func update_from_camera_smoothing():
     $CamRelative.global_transform = $CameraHolder.global_transform
     $CamRelative.global_translation.y += amount
 
-func alice_visible(whether : bool):
-    return
-    $"thj8 char/Armature/Skeleton/eyes".visible = true
-    $"thj8 char/Armature/Skeleton/dead eyes".visible = false
-    $"thj8 char/Armature/Skeleton/crossed eyes".visible = false
-    
-    $"thj8 char/Armature/Skeleton/ribbon".visible = whether
-    $"thj8 char/Armature/Skeleton/ribbon alice".visible = whether
-    $"thj8 char/Armature/Skeleton/dress alice".visible = whether
-    $"thj8 char/Armature/Skeleton/bow alice".visible = false
-    $"thj8 char/Armature/Skeleton/hair alice".visible = whether
-func cirno_visible(whether : bool):
-    return
-    $"thj8 char/Armature/Skeleton/bowtie".visible = whether
-    $"thj8 char/Armature/Skeleton/dress".visible = whether
-    $"thj8 char/Armature/Skeleton/bowtie".visible = whether
-    $"thj8 char/Armature/Skeleton/ribbon".visible = whether
-    $"thj8 char/Armature/Skeleton/hair".visible = whether
-
 
 var anim_lock_time = 0.0
 func play_no_self_override(anim, speed, blendmult) -> bool:
-    return true
-    for anim_name in $"thj8 char/AnimationPlayer".get_animation_list():
-        var _anim : Animation = $"thj8 char/AnimationPlayer".get_animation(anim_name)
+    for anim_name in $Model/AnimationPlayer.get_animation_list():
+        var _anim : Animation = $Model/AnimationPlayer.get_animation(anim_name)
         for t in _anim.get_track_count():
             _anim.track_set_interpolation_type(t, Animation.INTERPOLATION_LINEAR)
             _anim.track_set_interpolation_loop_wrap(t, true)
-    for anim in ["Walk", "Idle"]:
-        $"thj8 char/AnimationPlayer".get_animation(anim).loop = true
-    for anim in ["Land", "Jump"]:
-        $"thj8 char/AnimationPlayer".get_animation(anim).loop = false
+    for anim in ["Walk", "Idle", "Run", "Air", "Float"]:
+        $Model/AnimationPlayer.get_animation(anim).loop = true
+    for anim in ["Land", "Jump", "ArmSwing"]:
+        $Model/AnimationPlayer.get_animation(anim).loop = false
     if anim_lock_time > 0.0:
         return false
-    if $"thj8 char/AnimationPlayer".current_animation != anim:
-        #print($"thj8 char/AnimationPlayer".current_animation)
-        #print(anim)
+    if $Model/AnimationPlayer.current_animation != anim:
         var blendrate = 0.1 * blendmult
         blendrate *= abs(speed)
-        $"thj8 char/AnimationPlayer".play(anim, blendrate, 1.0)
-        $"thj8 char/AnimationPlayer".advance(0.0)
-        $"thj8 char/AnimationPlayer".playback_speed = speed
-        #$"thj8 char/AnimationPlayer".play_backwards()
-        #print(speed)
-        #print(blendrate)
+        $Model/AnimationPlayer.play(anim, blendrate, 1.0)
+        $Model/AnimationPlayer.advance(0.0)
+        $Model/AnimationPlayer.playback_speed = speed
         return true
     else:
-        $"thj8 char/AnimationPlayer".playback_speed = speed
+        $Model/AnimationPlayer.playback_speed = speed
         return false
 
 func play_animation(anim : String, speed : float = 1.0):
@@ -152,6 +118,7 @@ func play_animation(anim : String, speed : float = 1.0):
         "float" :  {name="Float", speed=1.0, blend=2.0},
         "air"   :  {name="Air"  , speed=1.0, blend=2.0},
         "walk"  :  {name="Walk" , speed=2.0},
+        "run"   :  {name="Run" , speed=2.0},
         "jump"  :  {name="Jump" , speed=1.0, blend=0.5, override_lock=true},
         "land"  :  {name="Land" , speed=1.5, lock=0.2},
     }
@@ -169,7 +136,6 @@ var last_offset_angle = 0.0
 var offset_angle = 0.0
 var anim_walk_backwards = false
 func do_evil_anim_things(delta):
-    return
     anim_walk_backwards = false
     offset_angle = 0.0
     if wishdir.length_squared() > 0.0:
@@ -182,7 +148,7 @@ func do_evil_anim_things(delta):
     
     last_offset_angle = offset_angle
     
-    var skele : Skeleton = $"thj8 char/Armature/Skeleton"
+    var skele : Skeleton = $Model/Armature/Skeleton
     var root = skele.find_bone("Bone")
     var leg_L = skele.find_bone("Bone_L.002")
     var leg_R = skele.find_bone("Bone_R.002")
@@ -212,9 +178,6 @@ func do_evil_anim_things(delta):
             xform = xform3 * xform * xform3
         skele.set_bone_global_pose_override(target, xform, 1.0, true)
     
-    #$"thj8 char".translation.x = -0.25 * sin($CameraHolder.rotation.y) * sin($CameraHolder.rotation.x)
-    #$"thj8 char".translation.z = -0.25 * cos($CameraHolder.rotation.y) * sin($CameraHolder.rotation.x)
-    pass
 
 func angle_diff(a, b):
     var ret = a - b
@@ -227,7 +190,7 @@ func angle_diff(a, b):
 const unit_scale = 32.0
 
 var maxspeed = 320.0/unit_scale
-var accel = maxspeed*15.0
+var accel_ratio = 15.0
 var gravity = 800/unit_scale
 var jumpstr = 270.0/unit_scale
 
@@ -307,12 +270,17 @@ class Inputs extends Reference:
     var jump : bool
     var jump_pressed : bool
     var jump_released : bool
+    
     var m1 : bool
     var m1_pressed : bool
     var m1_released : bool
+    
     var m2 : bool
     var m2_pressed : bool
     var m2_released : bool
+    
+    var walk : bool
+    
     func clear():
         jump = false
         jump_pressed = false
@@ -325,6 +293,8 @@ class Inputs extends Reference:
         m2 = false
         m2_pressed = false
         m2_released = false
+        
+        walk = false
 
 var wishdir = Vector3()
 var inputs : Inputs = Inputs.new()
@@ -343,6 +313,8 @@ func update_inputs():
     inputs.m2 = false
     inputs.m2_pressed = false
     inputs.m2_released = false
+    
+    inputs.walk = Input.is_action_pressed("walk")
     
     wishdir = Vector3()
     if Input.is_action_pressed("ui_up"):
@@ -642,8 +614,10 @@ func _process(delta):
         #print(wishdir)
         #print(acceldirspeed)
         #print(maxspeed)
-        var actual_accel = accel
         var actual_maxspeed = maxspeed
+        if inputs.walk:
+            actual_maxspeed *= 160.0/320.0
+        var actual_accel = actual_maxspeed*accel_ratio
         if !is_on_floor() and air_control_disabled_this_frame:
             actual_accel *= 0.0
         if !is_on_floor() and !air_control_disabled_this_frame:
@@ -860,7 +834,12 @@ func _process(delta):
     var floorspeed = (velocity*Vector3(1, 0, 1)).length()
     
     if is_on_floor():
-        if floorspeed*unit_scale > 30:
+        if floorspeed*unit_scale > 280:
+            var walkspeed = clamp(floorspeed*unit_scale/320, 0.0, 1.0)
+            if anim_walk_backwards:
+                walkspeed *= -1.0
+            play_animation("run", walkspeed)
+        elif floorspeed*unit_scale > 0.5:
             var walkspeed = clamp(floorspeed*unit_scale/320, 0.0, 1.0)
             if anim_walk_backwards:
                 walkspeed *= -1.0
@@ -869,7 +848,7 @@ func _process(delta):
             play_animation("idle", 1.0)
     elif did_jump:
         play_animation("jump", 1.0)
-    elif true:#!$"thj8 char/AnimationPlayer".current_animation == "Jump":
+    elif $Model/AnimationPlayer.current_animation != "Jump":
         if abs(velocity.y*unit_scale) > 320.0:
             play_animation("float", 1.0)
         else:
