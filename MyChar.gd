@@ -345,6 +345,7 @@ func update_inputs():
     if wishdir.length_squared() > 1.0:
         wishdir = wishdir.normalized()
 
+var last_used_nav_pos = Vector3()
 func do_ai(delta):
     $CSGBox.visible = false
     if is_player:
@@ -366,18 +367,32 @@ func do_ai(delta):
     #print($Navigation/Agent.get_navigation_map().get_id())
     #$Navigation/Agent.
     #$Navigation/Agent.set_navigation_map()
+    #$CSGBox.visible = true
     if navigable_floor_is_up_to_date:
+        $CSGBox.global_translation = navigable_floor
         $Navigation.global_translation = navigable_floor
-    else:
-        $Navigation.global_translation = global_translation
+        
     $Navigation/Agent.set_target_location(player.navigable_floor)
     var next_pos = $Navigation/Agent.get_next_location()
     var target_pos = $Navigation/Agent.get_target_location()
+    
     if !$Navigation/Agent.is_target_reachable():
-        print("not reachable")
+        if (last_used_nav_pos - navigable_floor).length() > 0.1:
+            print("resetting", last_used_nav_pos, navigable_floor)
+        navigable_floor = last_used_nav_pos
+        $CSGBox.global_translation = last_used_nav_pos
+        $Navigation.global_translation = last_used_nav_pos
+        $Navigation/Agent.set_target_location(player.navigable_floor)
+        next_pos = $Navigation/Agent.get_next_location()
+        target_pos = $Navigation/Agent.get_target_location()
+    
+    #else:
+    #    $Navigation.global_translation = global_translation
+    if !$Navigation/Agent.is_target_reachable():
+        #print("not reachable")
         return
-    $CSGBox.global_translation = next_pos
-    #$CSGBox.visible = true
+    last_used_nav_pos = $Navigation.global_translation
+    
     var target_diff = player.global_translation - global_translation
     var diff = next_pos - global_translation
     var horiz_diff = Vector3(target_diff.x, 0, target_diff.z)
