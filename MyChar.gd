@@ -42,14 +42,15 @@ var weapon_offset = Vector3()
 
 onready var camera : Camera = $CameraHolder/Camera
 
+var is_perspective = false
 func check_first_person_visibility():
     third_person = false
     camera.input_enabled = is_player
-    var player_check = !is_player or third_person
     
-    camera.current = !is_player
+    is_perspective = is_player
+    camera.current = is_perspective
     
-    if !player_check:
+    if !is_perspective or third_person:
         for child in $Model/Armature/Skeleton.get_children():
             child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
             child.visible = true
@@ -290,6 +291,7 @@ class Inputs extends Reference:
         walk = false
 
 var wishdir = Vector3()
+var global_wishdir = Vector3()
 var inputs : Inputs = Inputs.new()
 
 func update_inputs():
@@ -361,16 +363,6 @@ func ai_apply_turn_logic(target_angle, delta):
 
 var last_used_nav_pos = Vector3()
 func do_ai(delta):
-    #if Engine.time_scale > 0.5:
-    #    print("----")
-    #    print(angle_get_delta(0.0, PI*1.01))
-    #    print(angle_get_delta(0.0, PI*0.99))
-    #    print(angle_get_delta(PI*1.01, 0.0))
-    #    print(angle_get_delta(PI*0.99, 0.0))
-    #    print(angle_get_delta(PI+0.0, PI+PI*1.01))
-    #    print(angle_get_delta(PI+0.0, PI+PI*0.99))
-    #    print(angle_get_delta(PI+PI*1.01, PI+0.0))
-    #    print(angle_get_delta(PI+PI*0.99, PI+0.0))
     $CSGBox.visible = false
     if is_player:
         return
@@ -385,10 +377,8 @@ func do_ai(delta):
             break
     if !player:
         return
-    #if !is_on_floor():
-    #    return
-    
     #$CSGBox.visible = true
+    
     if navigable_floor_is_up_to_date:
         $CSGBox.global_translation = navigable_floor
         $Navigation.global_translation = navigable_floor
@@ -422,16 +412,26 @@ func do_ai(delta):
     
     # try to avoid getting stuck when the navigation system deletes essential points
     if is_on_wall():
-        var new_next_pos = next_pos + $Model.global_transform.basis.xform(Vector3(2.0 * sign(sin(time_alive*4.0)), 0.0, 1.0 * sign(sin(time_alive*7.1))))
+        var new_next_pos = next_pos# + $Model.global_transform.basis.xform(Vector3(2.0 * sign(sin(time_alive*4.0)), 0.0, 1.0 * sign(sin(time_alive*7.1))))
         next_pos = new_next_pos
         $CSGBox.visible = true
         $CSGBox.global_translation = new_next_pos
+    
+    if found_player and target_diff.length() < 50.0 and target_diff.y < 2.0:
+        next_pos = player.global_translation
+    
     var diff = next_pos - global_translation
     var horiz_diff = Vector3(target_diff.x, 0, target_diff.z)
+    
     #if abs(ai_angle_inertia) > PI and Engine.time_scale > 0.5:
     #    print(ai_angle_inertia)
     if horiz_diff.length() > 0.1:
         if target_diff.length() > 6.0 or !found_player:
+            if is_on_wall():
+                if (velocity * Vector3(1, 0, 1)).normalized().dot(horiz_diff) > 0.5:
+                    inputs.jump_pressed = true
+                    inputs.jump = true
+            
             var target_angle = Vector2().angle_to_point(Vector2(diff.z, diff.x))
             ai_apply_turn_logic(target_angle, delta)
             
@@ -441,7 +441,7 @@ func do_ai(delta):
             while angle_diff > PI:
                 angle_diff -= PI*2.0
             angle_diff = rad2deg(angle_diff)
-            if abs(angle_diff) < 22.5:
+            if abs(angle_diff) < 22.5 or !is_on_floor():
                 wishdir = Vector3.FORWARD
             elif angle_diff > 0.0 and angle_diff < 90.0:
                 wishdir = Vector3.FORWARD + Vector3.LEFT
@@ -545,7 +545,7 @@ func _process(delta):
         
         if previous_velocity.y < -7.5:
             time_of_landing = time_alive
-            if is_player:
+            if is_perspective:
                 EmitterFactory.emit("HybridFoley4").volume_db = -9.0
             else:
                 var effect : AudioStreamPlayer3D = EmitterFactory.emit("HybridFoley4", self)
@@ -578,7 +578,7 @@ func _process(delta):
             rocket.global_transform = $CamRelative/RayCast.global_transform
         
         rocket.add_exception(self)
-        if is_player:
+        if is_perspective:
             EmitterFactory.emit("rocketshot").volume_db = -9.0
         else:
             (EmitterFactory.emit("rocketshot", self) as AudioStreamPlayer3D).unit_db -= 9.0
@@ -654,7 +654,7 @@ func _process(delta):
         forward = vector_reject(forward, floor_collision.normal).normalized()
         right   = vector_reject(right  , floor_collision.normal).normalized()
     
-    var global_wishdir = wishdir.x*right - wishdir.z*forward
+    global_wishdir = wishdir.x*right - wishdir.z*forward
     
     #print(velocity.y)
     
@@ -833,7 +833,7 @@ func _process(delta):
     
     # FIXME move to HUD
     
-    if is_player:
+    if is_perspective:
         HUD.get_node("Peak").text = "%s\n%s\n%s\n%s\n%s\n%s\n%s" % \
             [(peak*unit_scale),
             (velocity * Vector3(1,0,1)).length()*unit_scale,
