@@ -143,3 +143,5 @@ width = 0.5
 height = 0.5
 depth = 0.5
 material = SubResource( 5 )
+
+[node name="TargetFinder" type="RayCast" parent="."]

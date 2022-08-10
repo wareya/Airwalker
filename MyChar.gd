@@ -43,39 +43,32 @@ var weapon_offset = Vector3()
 onready var camera : Camera = $CameraHolder/Camera
 
 func check_first_person_visibility():
-    third_person = true
-    if is_player:
-        if third_person:
-            for child in $Model/Armature/Skeleton.get_children():
-                child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
-                child.visible = true
-            $Model.visible = true
-            $"CamRelative/WeaponHolder/CSGPolygon".cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
-            weapon_offset.x = 0.3
-            weapon_offset.y = 0.1
-            $CameraHolder/CamBasePos.translation = Vector3(0, 0.5 * cos($CameraHolder.rotation.x), 2)
-        else:
-            for child in $Model/Armature/Skeleton.get_children():
-                child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
-                child.visible = false
-            $Model.visible = false
-            $"CamRelative/WeaponHolder/CSGPolygon".cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
-            weapon_offset.x = 0
-            weapon_offset.y = 0
-            $CameraHolder/CamBasePos.translation = Vector3()
-        
-        camera.current = true
-        camera.input_enabled = true
-    else:
+    third_person = false
+    camera.input_enabled = is_player
+    var player_check = !is_player or third_person
+    
+    camera.current = is_player
+    
+    if player_check:
         for child in $Model/Armature/Skeleton.get_children():
             child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
+            child.visible = true
         $Model.visible = true
-        $CamRelative/WeaponHolder/CSGPolygon.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
+        $"CamRelative/WeaponHolder/CSGPolygon".cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
         weapon_offset.x = 0.3
         weapon_offset.y = 0.1
-        
-        camera.current = false
-        camera.input_enabled = false
+        $CameraHolder/CamBasePos.translation = Vector3(0, 0.5 * cos($CameraHolder.rotation.x), 2)
+    else:
+        for _child in $Model/Armature/Skeleton.get_children():
+            var child : MeshInstance = _child
+            child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
+            child.visible = false
+        $Model.visible = false
+        $"CamRelative/WeaponHolder/CSGPolygon".cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
+        weapon_offset.x = 0
+        weapon_offset.y = 0
+        $CameraHolder/CamBasePos.translation = Vector3()
+    
     $Model.rotation.y = $CameraHolder.rotation.y + PI - offset_angle
     
 func update_from_camera_smoothing():
@@ -328,8 +321,18 @@ func update_inputs():
     if wishdir.length_squared() > 1.0:
         wishdir = wishdir.normalized()
 
+func angle_move_toward(a : float, b : float, amount : float) -> float:
+    a = fposmod(a, PI*2.0)
+    b = fposmod(b, PI*2.0)
+    var motion = clamp(b-a, -amount, amount)
+    if abs(a-b) > PI:
+        motion = -motion
+    return fposmod(a+motion + PI*2.0, PI*2.0)
+    pass
+
 var last_used_nav_pos = Vector3()
 func do_ai(delta):
+    #print(angle_move_toward(0.0, PI+0.1, 0.1))
     $CSGBox.visible = false
     if is_player:
         return
@@ -347,9 +350,6 @@ func do_ai(delta):
     #if !is_on_floor():
     #    return
     
-    #print($Navigation/Agent.get_navigation_map().get_id())
-    #$Navigation/Agent.
-    #$Navigation/Agent.set_navigation_map()
     #$CSGBox.visible = true
     if navigable_floor_is_up_to_date:
         $CSGBox.global_translation = navigable_floor
@@ -369,23 +369,31 @@ func do_ai(delta):
         next_pos = $Navigation/Agent.get_next_location()
         target_pos = $Navigation/Agent.get_target_location()
     
-    #else:
-    #    $Navigation.global_translation = global_translation
     if !$Navigation/Agent.is_target_reachable():
         #print("not reachable")
         return
     last_used_nav_pos = $Navigation.global_translation
     
     var target_diff = player.global_translation - global_translation
+    $TargetFinder.collision_mask = 3
+    $TargetFinder.cast_to = target_diff
+    $TargetFinder.force_raycast_update()
+    var found_player = null
+    if $TargetFinder.is_colliding() and $TargetFinder.get_collider() == player:
+        found_player = player
+    
+    # try to avoid getting stuck when the navigation system deletes essential points
+    if is_on_wall():
+        var new_next_pos = next_pos + $Model.global_transform.basis.xform(Vector3(2.0 * sign(sin(time_alive*4.0)), 0.0, 1.0 * sign(sin(time_alive*7.1))))
+        next_pos = new_next_pos
+        $CSGBox.visible = true
+        $CSGBox.global_translation = new_next_pos
     var diff = next_pos - global_translation
     var horiz_diff = Vector3(target_diff.x, 0, target_diff.z)
-    var new_angle = Vector2().angle_to_point(Vector2(diff.z, diff.x))
-    $CameraHolder.rotation.y = lerp_angle($CameraHolder.rotation.y, new_angle, 1.0 - pow(0.001, delta))
-    $CameraHolder.rotation.y = fposmod($CameraHolder.rotation.y, PI*2.0)
-    #print(horiz_diff.length())
     if horiz_diff.length() > 0.1:
-        if target_diff.length() > 6.0:
-            #wishdir = horiz_diff.normalized()
+        if target_diff.length() > 6.0 or !found_player:
+            var new_angle = Vector2().angle_to_point(Vector2(diff.z, diff.x))
+            $CameraHolder.rotation.y = angle_move_toward($CameraHolder.rotation.y, new_angle, PI*delta*2.0)
             var angle_diff = new_angle - $CameraHolder.rotation.y
             while angle_diff < -PI:
                 angle_diff += PI*2.0
@@ -399,9 +407,19 @@ func do_ai(delta):
             elif angle_diff < 0.0 and angle_diff > -90.0:
                 wishdir = Vector3.FORWARD + Vector3.RIGHT
         else:
-            $CameraHolder.rotation.y = new_angle
-            var strafe_time = 0.8
-            wishdir = Vector3.RIGHT * (fmod(time_alive, strafe_time) - strafe_time/2.0)
+            var new_angle = Vector2().angle_to_point(Vector2(target_diff.z, target_diff.x))
+            $CameraHolder.rotation.y = angle_move_toward($CameraHolder.rotation.y, new_angle, PI*delta*2.0)
+            var strafe_time = 2.0
+            var strafe_timer = fmod(time_alive, strafe_time*3.0)/strafe_time*2.0
+            var strafe_dir = 0.0 
+            if strafe_timer < 2.0:
+                strafe_dir = sin(strafe_timer*PI) + sin(strafe_timer*PI*3.0)*1.5
+            elif strafe_timer < 4.0:
+                strafe_dir = cos(strafe_timer*PI) + cos(strafe_timer*PI*3.0)*0.5
+            else:
+                strafe_dir = sin(strafe_timer*PI*2.0)
+                
+            wishdir = Vector3.RIGHT * strafe_dir
             
         wishdir = wishdir.normalized()
 
