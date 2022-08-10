@@ -12,7 +12,7 @@ enum {
     MOVING_PLATFORM_PHYSICAL,
 }
 
-export var moving_platform_mode : int = MOVING_PLATFORM_IGNORE
+export var moving_platform_mode : int = MOVING_PLATFORM_NO_INHERIT
 export var moving_platform_jump_ignore_vertical : bool = false
 export var pogostick_jumping : bool = true
 export var is_player : bool = false
@@ -30,9 +30,11 @@ func reset_stair_camera_offset():
 
 onready var base_model_offset = $"thj8 char".translation
 func _ready():
+    #NavigationServer.region_bake_navmesh()
     $CameraHolder.rotation.y = rotation.y
     rotation.y = 0
     check_first_person_visibility()
+    $Hull2.queue_free()
 
 var third_person = false
 
@@ -41,8 +43,11 @@ var weapon_offset = Vector3()
 onready var camera : Camera = $CameraHolder/Camera
 
 func check_first_person_visibility():
-    third_person = true
+    third_person = false
     if is_player:
+        alice_visible(true)
+        cirno_visible(false)
+        
         if third_person:
             for child in $"thj8 char/Armature/Skeleton".get_children():
                 child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
@@ -52,25 +57,25 @@ func check_first_person_visibility():
             $CameraHolder/CamBasePos.translation = Vector3(0, 0.5 * cos($CameraHolder.rotation.x), 2)
         else:
             for child in $"thj8 char/Armature/Skeleton".get_children():
-                child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+                child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
+                child.visible = false
             $"CamRelative/WeaponHolder/CSGPolygon".cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
             weapon_offset.x = 0
             weapon_offset.y = 0
             $CameraHolder/CamBasePos.translation = Vector3()
         
-        alice_visible(true)
-        cirno_visible(false)
         camera.current = true
         camera.input_enabled = true
     else:
+        alice_visible(false)
+        cirno_visible(true)
+        
         for child in $"thj8 char/Armature/Skeleton".get_children():
             child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
         $CamRelative/WeaponHolder/CSGPolygon.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
         weapon_offset.x = 0.3
         weapon_offset.y = 0.1
         
-        alice_visible(false)
-        cirno_visible(true)
         camera.current = false
         camera.input_enabled = false
     $"thj8 char".rotation.y = $CameraHolder.rotation.y + PI - offset_angle
@@ -85,13 +90,17 @@ func update_from_camera_smoothing():
     $CamRelative.global_translation.y += amount
 
 func alice_visible(whether : bool):
+    $"thj8 char/Armature/Skeleton/eyes".visible = true
+    $"thj8 char/Armature/Skeleton/dead eyes".visible = false
+    $"thj8 char/Armature/Skeleton/crossed eyes".visible = false
+    
+    $"thj8 char/Armature/Skeleton/ribbon".visible = whether
     $"thj8 char/Armature/Skeleton/ribbon alice".visible = whether
     $"thj8 char/Armature/Skeleton/dress alice".visible = whether
-    $"thj8 char/Armature/Skeleton/bow alice".visible = whether
-    $"thj8 char/Armature/Skeleton/ribbon alice".visible = whether
+    $"thj8 char/Armature/Skeleton/bow alice".visible = false
     $"thj8 char/Armature/Skeleton/hair alice".visible = whether
 func cirno_visible(whether : bool):
-    $"thj8 char/Armature/Skeleton/ribbon".visible = whether
+    $"thj8 char/Armature/Skeleton/bowtie".visible = whether
     $"thj8 char/Armature/Skeleton/dress".visible = whether
     $"thj8 char/Armature/Skeleton/bowtie".visible = whether
     $"thj8 char/Armature/Skeleton/ribbon".visible = whether
@@ -172,17 +181,16 @@ func do_evil_anim_things(delta):
     
     skele.clear_bones_global_pose_override()
     
-    var offset_amount = -0.05
-    var xform2 = Transform.IDENTITY
-    var xform3 = Transform.IDENTITY.rotated(Vector3.UP, offset_angle/2.0)
-    var xform4 = Transform.IDENTITY.rotated(Vector3.UP, -offset_angle/2.0).rotated(Vector3.RIGHT, -$CameraHolder.rotation.x/8.0).rotated(Vector3.UP, offset_angle/2.0)
+    #var offset_amount = -0.05
+    var xform3 = Transform.IDENTITY.rotated(Vector3.UP, offset_angle/6.0)
+    var xform4 = Transform.IDENTITY.rotated(Vector3.UP, -offset_angle/2.0).rotated(Vector3.RIGHT, -$CameraHolder.rotation.x/8.0).rotated(Vector3.UP, offset_angle/1.666)
     
-    for target in [lower_chest, upper_chest, neck, root, leg_L, leg_R]:
+    for target in [root, leg_L, leg_R, lower_chest, upper_chest, neck]:
         var xform : Transform = skele.get_bone_global_pose(target)
         if target == lower_chest:
-            xform = xform2 * xform3 * xform * xform3 * xform2.inverse()
+            xform = xform3 * xform * xform3
         elif target == upper_chest:
-            xform = xform2 * xform4 * xform * xform4 * xform2.inverse()
+            xform = xform4 * xform * xform4
         elif target == leg_L or target == leg_R:
             xform = xform3.inverse() * xform
         elif target == root:
@@ -294,35 +302,110 @@ class Inputs extends Reference:
     var m2 : bool
     var m2_pressed : bool
     var m2_released : bool
+    func clear():
+        jump = false
+        jump_pressed = false
+        jump_released = false
+        
+        m1 = false
+        m1_pressed = false
+        m1_released = false
+        
+        m2 = false
+        m2_pressed = false
+        m2_released = false
 
 var wishdir = Vector3()
 var inputs : Inputs = Inputs.new()
 
 func update_inputs():
+    if !is_player:
+        return
+    inputs.jump = Input.is_action_pressed("jump")
+    inputs.jump_pressed = Input.is_action_just_pressed("jump")
+    inputs.jump_released = Input.is_action_just_released("jump")
+    
+    inputs.m1 = Input.is_action_pressed("m1")
+    inputs.m1_pressed = Input.is_action_just_pressed("m1")
+    inputs.m1_released = Input.is_action_just_released("m1")
+    
+    inputs.m2 = false
+    inputs.m2_pressed = false
+    inputs.m2_released = false
+    
+    wishdir = Vector3()
+    if Input.is_action_pressed("ui_up"):
+        wishdir += Vector3.FORWARD
+    if Input.is_action_pressed("ui_down"):
+        wishdir += Vector3.BACK
+    if Input.is_action_pressed("ui_right"):
+        wishdir += Vector3.RIGHT
+    if Input.is_action_pressed("ui_left"):
+        wishdir += Vector3.LEFT
+    if wishdir.length_squared() > 1.0:
+        wishdir = wishdir.normalized()
+
+func do_ai(delta):
+    $CSGBox.visible = false
     if is_player:
-        inputs.jump = Input.is_action_pressed("jump")
-        inputs.jump_pressed = Input.is_action_just_pressed("jump")
-        inputs.jump_released = Input.is_action_just_released("jump")
-        
-        inputs.m1 = Input.is_action_pressed("m1")
-        inputs.m1_pressed = Input.is_action_just_pressed("m1")
-        inputs.m1_released = Input.is_action_just_released("m1")
-        
-        inputs.m2 = false
-        inputs.m2_pressed = false
-        inputs.m2_released = false
-        
-        wishdir = Vector3()
-        if Input.is_action_pressed("ui_up"):
-            wishdir += Vector3.FORWARD
-        if Input.is_action_pressed("ui_down"):
-            wishdir += Vector3.BACK
-        if Input.is_action_pressed("ui_right"):
-            wishdir += Vector3.RIGHT
-        if Input.is_action_pressed("ui_left"):
-            wishdir += Vector3.LEFT
-        if wishdir.length_squared() > 0:
-            wishdir = wishdir.normalized()
+        return
+    inputs.clear()
+    
+    wishdir = Vector3()
+    
+    var player = null
+    for other in get_tree().get_nodes_in_group("Player"):
+        if other.is_player:
+            player = other
+            break
+    if !player:
+        return
+    #if !is_on_floor():
+    #    return
+    
+    #print($Navigation/Agent.get_navigation_map().get_id())
+    #$Navigation/Agent.
+    #$Navigation/Agent.set_navigation_map()
+    if navigable_floor_is_up_to_date:
+        $Navigation.global_translation = navigable_floor
+    else:
+        $Navigation.global_translation = global_translation
+    $Navigation/Agent.set_target_location(player.navigable_floor)
+    var next_pos = $Navigation/Agent.get_next_location()
+    var target_pos = $Navigation/Agent.get_target_location()
+    if !$Navigation/Agent.is_target_reachable():
+        print("not reachable")
+        return
+    $CSGBox.global_translation = next_pos
+    #$CSGBox.visible = true
+    var target_diff = player.global_translation - global_translation
+    var diff = next_pos - global_translation
+    var horiz_diff = Vector3(target_diff.x, 0, target_diff.z)
+    var new_angle = Vector2().angle_to_point(Vector2(diff.z, diff.x))
+    $CameraHolder.rotation.y = lerp_angle($CameraHolder.rotation.y, new_angle, 1.0 - pow(0.001, delta))
+    $CameraHolder.rotation.y = fposmod($CameraHolder.rotation.y, PI*2.0)
+    #print(horiz_diff.length())
+    if horiz_diff.length() > 0.1:
+        if target_diff.length() > 6.0:
+            #wishdir = horiz_diff.normalized()
+            var angle_diff = new_angle - $CameraHolder.rotation.y
+            while angle_diff < -PI:
+                angle_diff += PI*2.0
+            while angle_diff > PI:
+                angle_diff -= PI*2.0
+            angle_diff = rad2deg(angle_diff)
+            if abs(angle_diff) < 22.5:
+                wishdir = Vector3.FORWARD
+            elif angle_diff > 0.0 and angle_diff < 90.0:
+                wishdir = Vector3.FORWARD + Vector3.LEFT
+            elif angle_diff < 0.0 and angle_diff > -90.0:
+                wishdir = Vector3.FORWARD + Vector3.RIGHT
+        else:
+            $CameraHolder.rotation.y = new_angle
+            var strafe_time = 0.8
+            wishdir = Vector3.RIGHT * (fmod(time_alive, strafe_time) - strafe_time/2.0)
+            
+        wishdir = wishdir.normalized()
 
 var previous_on_floor = false
 var previous_velocity = velocity
@@ -342,6 +425,7 @@ func _process(delta):
     
     check_first_person_visibility()
     update_inputs()
+    do_ai(delta)
     
     # FIXME move to hud
     if Input.is_action_just_pressed("ui_page_up"):
@@ -396,7 +480,12 @@ func _process(delta):
         
         if previous_velocity.y < -7.5:
             time_of_landing = time_alive
-            EmitterFactory.emit("HybridFoley4").volume_db = -9
+            if is_player:
+                EmitterFactory.emit("HybridFoley4").volume_db = -9.0
+            else:
+                var effect : AudioStreamPlayer3D = EmitterFactory.emit("HybridFoley4", self)
+                effect.max_db = -9.0
+                effect.unit_db = 40
             sway_timer = fmod(sway_timer, PI*2.0)
             if sway_timer >= PI*1.0:
                 force_sway_to = 0.0
@@ -410,6 +499,7 @@ func _process(delta):
         time_of_shot = time_alive
         reload += 0.8
         var rocket : Spatial = load("res://Rocket.tscn").instance()
+        rocket.origin_player = self
         get_parent().add_child(rocket)
         $CamRelative/RayCast.force_raycast_update()
         if !$CamRelative/RayCast.is_colliding():
@@ -423,7 +513,10 @@ func _process(delta):
             rocket.global_transform = $CamRelative/RayCast.global_transform
         
         rocket.add_exception(self)
-        EmitterFactory.emit("rocketshot")
+        if is_player:
+            EmitterFactory.emit("rocketshot").volume_db = -9.0
+        else:
+            (EmitterFactory.emit("rocketshot", self) as AudioStreamPlayer3D).unit_db -= 9.0
         rocket.advance(0.65)
         rocket.force_update_transform()
         (rocket.get_node("RocketParticles") as CPUParticles).emitting = true
@@ -673,28 +766,29 @@ func _process(delta):
     
     # FIXME move to HUD
     
-    HUD.get_node("Peak").text = "%s\n%s\n%s\n%s\n%s\n%s\n%s" % \
-        [(peak*unit_scale),
-        (velocity * Vector3(1,0,1)).length()*unit_scale,
-        velocity.length()*unit_scale,
-        is_on_floor(),
-        global_translation*unit_scale,
-        velocity.y*unit_scale,
-        Engine.get_frames_per_second()]
-    
-    HUD.get_node("ArrowUp").visible = wishdir.z < 0
-    HUD.get_node("ArrowDown").visible = wishdir.z > 0
-    HUD.get_node("ArrowLeft").visible = wishdir.x < 0
-    HUD.get_node("ArrowRight").visible = wishdir.x > 0
-    HUD.get_node("ArrowJump").visible = inputs.jump
-    if can_doublejump and jump_state_timer > 0:
-        HUD.get_node("ArrowJump").modulate = Color.turquoise
-    else:
-        HUD.get_node("ArrowJump").modulate = Color.white
-    if !want_to_jump and !pogostick_jumping:
-        HUD.get_node("ArrowJump").modulate.a = 0.5
-    else:
-        HUD.get_node("ArrowJump").modulate.a = 1.0
+    if is_player:
+        HUD.get_node("Peak").text = "%s\n%s\n%s\n%s\n%s\n%s\n%s" % \
+            [(peak*unit_scale),
+            (velocity * Vector3(1,0,1)).length()*unit_scale,
+            velocity.length()*unit_scale,
+            is_on_floor(),
+            global_translation*unit_scale,
+            velocity.y*unit_scale,
+            Engine.get_frames_per_second()]
+        
+        HUD.get_node("ArrowUp").visible = wishdir.z < 0
+        HUD.get_node("ArrowDown").visible = wishdir.z > 0
+        HUD.get_node("ArrowLeft").visible = wishdir.x < 0
+        HUD.get_node("ArrowRight").visible = wishdir.x > 0
+        HUD.get_node("ArrowJump").visible = inputs.jump
+        if can_doublejump and jump_state_timer > 0:
+            HUD.get_node("ArrowJump").modulate = Color.turquoise
+        else:
+            HUD.get_node("ArrowJump").modulate = Color.white
+        if !want_to_jump and !pogostick_jumping:
+            HUD.get_node("ArrowJump").modulate.a = 0.5
+        else:
+            HUD.get_node("ArrowJump").modulate.a = 1.0
     
     var new_velocity = custom_move_and_slide(delta, velocity)
     velocity.y = new_velocity.y
@@ -758,3 +852,16 @@ func _process(delta):
     
     velocity += vel_delta/2
     
+    find_navigable_floor()
+
+var navigable_floor = null
+var navigable_floor_is_up_to_date = false
+func find_navigable_floor():
+    navigable_floor_is_up_to_date = false
+    collision_mask ^= 2
+    var collision = find_real_collision(Vector3.DOWN*64.0)
+    if collision and collision_is_floor({normal=collision.collision_normal}):
+        navigable_floor = global_translation + collision.motion
+        navigable_floor_is_up_to_date = true
+    collision_mask ^= 2
+

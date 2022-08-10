@@ -13,6 +13,7 @@ const unit_scale = 32.0
 var speed = 1000.0/unit_scale
 
 func _process(delta):
+    delta = 0.008
     $CSGPolygon.rotation_degrees.x += delta*1000.0
     if abs(life-max_life) > 0.04:
         $RocketParticles2.emitting = true
@@ -27,13 +28,20 @@ func _process(delta):
 func add_exception(other):
     $RayCast.add_exception(other)
 
+var origin_player = null
+
 func die():
     EmitterFactory.emit("rocketexplosion2", self)
     var particles : CPUParticles = load("res://RocketParticles.tscn").instance()
     particles.emitting = true
     get_parent().add_child(particles)
     particles.global_transform.origin = global_transform.origin
-    particles.global_transform.origin -= global_transform.basis.xform($RayCast.cast_to).normalized()*0.5
+    print("-0-0---")
+    var asdf = global_transform.basis.xform(destination.normalized())*0.5
+    print(destination)
+    print(global_transform.basis)
+    print(asdf)
+    particles.global_transform.origin -= asdf
     particles.global_transform.origin += $RayCast.get_collision_normal()*0.25
     
     var particles2 = $RocketParticles2
@@ -68,18 +76,40 @@ func die():
         print(knockback_falloff)
         print(knockback_dir)
         print(knockback_strength)
+        #knockback_strength *= 0.0
         player.velocity += knockback_dir * knockback_strength * f / mass
         player.floor_collision = null
 
 var bounces = 0
 
+func check_distance():
+    for player in get_tree().get_nodes_in_group("Player"):
+        if player == origin_player:
+            continue
+        var dist = global_translation - player.global_translation
+        dist = player.subtract_hull_size_from_distance(dist)
+        if dist == Vector3():
+            life = 0.0
+        break
+
+var destination = Vector3()
 func advance(distance):
+    check_distance()
     if life <= 0.0:
         return
-    $RayCast.cast_to = Vector3.FORWARD * distance
+    
+    destination = Vector3.FORWARD * distance
+    $RayCast.cast_to = Vector3.FORWARD * (distance + 0.05) # collision margin equivalent for raycasts
     $RayCast.force_raycast_update()
     if $RayCast.is_colliding():
-        speed = -speed
+        if $RayCast.get_collider().is_in_group("Player"):
+            bounces = 0
+        if bounces > 0:
+            var front = global_transform.basis.xform(Vector3.FORWARD)
+            var normal = $RayCast.get_collision_normal()
+            var amount = -2*front.project(normal)
+            front += amount
+            global_transform = global_transform.looking_at(global_translation+front, Vector3.UP)
         bounces -= 1
         if bounces < 0:
             life = 0.0
@@ -87,6 +117,7 @@ func advance(distance):
         #else:
         #    global_transform.basis = global_transform.basis.inverse()
     else:
-        global_transform.origin += global_transform.basis.xform($RayCast.cast_to)
+        global_transform.origin += global_transform.basis.xform(destination)
+    check_distance()
 
     
