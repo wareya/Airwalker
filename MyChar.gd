@@ -28,7 +28,7 @@ func reset_stair_camera_offset():
     camera.reset_stair_offset()
     pass
 
-onready var base_model_offset = $"thj8 char".translation
+onready var base_model_offset = $Model.translation
 func _ready():
     #NavigationServer.region_bake_navmesh()
     $CameraHolder.rotation.y = rotation.y
@@ -49,16 +49,20 @@ func check_first_person_visibility():
         cirno_visible(false)
         
         if third_person:
-            for child in $"thj8 char/Armature/Skeleton".get_children():
-                child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
+            #for child in $"thj8 char/Armature/Skeleton".get_children():
+            #    child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
+            $Model.visible = true
+            $Model.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
             $"CamRelative/WeaponHolder/CSGPolygon".cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
             weapon_offset.x = 0.3
             weapon_offset.y = 0.1
             $CameraHolder/CamBasePos.translation = Vector3(0, 0.5 * cos($CameraHolder.rotation.x), 2)
         else:
-            for child in $"thj8 char/Armature/Skeleton".get_children():
-                child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
-                child.visible = false
+            #for child in $"thj8 char/Armature/Skeleton".get_children():
+            #    child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
+            #    child.visible = false
+            $Model.visible = false
+            $Model.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
             $"CamRelative/WeaponHolder/CSGPolygon".cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
             weapon_offset.x = 0
             weapon_offset.y = 0
@@ -70,26 +74,30 @@ func check_first_person_visibility():
         alice_visible(false)
         cirno_visible(true)
         
-        for child in $"thj8 char/Armature/Skeleton".get_children():
-            child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
+        #for child in $"thj8 char/Armature/Skeleton".get_children():
+        #    child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
+        $Model.visible = true
+        $Model.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
         $CamRelative/WeaponHolder/CSGPolygon.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
         weapon_offset.x = 0.3
         weapon_offset.y = 0.1
         
         camera.current = false
         camera.input_enabled = false
-    $"thj8 char".rotation.y = $CameraHolder.rotation.y + PI - offset_angle
+    #$"thj8 char".rotation.y = $CameraHolder.rotation.y + PI - offset_angle
+    $Model.rotation.y = $CameraHolder.rotation.y + PI - offset_angle
     
 func update_from_camera_smoothing():
     var amount = camera.smoothing_amount
     if amount > 0.0001:
         print(amount)
-    $"thj8 char".translation.y = base_model_offset.y + amount
+    $Model.translation.y = base_model_offset.y + amount
     $CamRelative.visible = true
     $CamRelative.global_transform = $CameraHolder.global_transform
     $CamRelative.global_translation.y += amount
 
 func alice_visible(whether : bool):
+    return
     $"thj8 char/Armature/Skeleton/eyes".visible = true
     $"thj8 char/Armature/Skeleton/dead eyes".visible = false
     $"thj8 char/Armature/Skeleton/crossed eyes".visible = false
@@ -100,6 +108,7 @@ func alice_visible(whether : bool):
     $"thj8 char/Armature/Skeleton/bow alice".visible = false
     $"thj8 char/Armature/Skeleton/hair alice".visible = whether
 func cirno_visible(whether : bool):
+    return
     $"thj8 char/Armature/Skeleton/bowtie".visible = whether
     $"thj8 char/Armature/Skeleton/dress".visible = whether
     $"thj8 char/Armature/Skeleton/bowtie".visible = whether
@@ -109,6 +118,7 @@ func cirno_visible(whether : bool):
 
 var anim_lock_time = 0.0
 func play_no_self_override(anim, speed, blendmult) -> bool:
+    return true
     for anim_name in $"thj8 char/AnimationPlayer".get_animation_list():
         var _anim : Animation = $"thj8 char/AnimationPlayer".get_animation(anim_name)
         for t in _anim.get_track_count():
@@ -159,6 +169,7 @@ var last_offset_angle = 0.0
 var offset_angle = 0.0
 var anim_walk_backwards = false
 func do_evil_anim_things(delta):
+    return
     anim_walk_backwards = false
     offset_angle = 0.0
     if wishdir.length_squared() > 0.0:
@@ -858,7 +869,7 @@ func _process(delta):
             play_animation("idle", 1.0)
     elif did_jump:
         play_animation("jump", 1.0)
-    elif !$"thj8 char/AnimationPlayer".current_animation == "Jump":
+    elif true:#!$"thj8 char/AnimationPlayer".current_animation == "Jump":
         if abs(velocity.y*unit_scale) > 320.0:
             play_animation("float", 1.0)
         else:

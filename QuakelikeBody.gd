@@ -252,6 +252,7 @@ func attempt_stair_step(motion, raw_velocity, is_wall, fallback = false):
     elif motion.length_squared() < stair_query_fallback_distance*stair_query_fallback_distance:
         return attempt_stair_step(original_motion, raw_velocity, is_wall, true)
 
+# FIXME: prevent inertia inheritance from other players
 func custom_move_and_slide(delta, velocity):
     # before doing anything else: see if we're stick inside the world, and if so, try to get outside of it
     for dir in [Vector3.UP, Vector3.DOWN, Vector3.LEFT, Vector3.RIGHT, Vector3.FORWARD, Vector3.BACK]:
@@ -259,6 +260,7 @@ func custom_move_and_slide(delta, velocity):
         var result = find_real_collision(dir*dist, true)
         if result and result.motion.length() > 0.001 and result.motion.dot(dir) < 0.0:
             global_translation += result.motion
+            
             var test_velocity = velocity
             var collider_velocity = result.collider_velocity
             if result.collider.has_method("get_real_velocity"):
