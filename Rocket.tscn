@@ -109,8 +109,7 @@ material = SubResource( 7 )
 
 [node name="CSGCylinder" type="CSGCylinder" parent="CSGPolygon/CSGSphere"]
 transform = Transform( 4.03328, 0, 0, 0, 4.03328, -3.41061e-13, 0, 3.41061e-13, 4.03328, 0, 1.36668, -3.85581e-07 )
-visible = false
-radius = 0.180458
+radius = 0.147
 height = 0.673098
 material = SubResource( 6 )
 

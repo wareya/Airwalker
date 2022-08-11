@@ -17,6 +17,8 @@ export var moving_platform_jump_ignore_vertical : bool = false
 export var pogostick_jumping : bool = true
 export var is_player : bool = false
 
+var player_id = -1
+
 func set_rotation(y):
     $CameraHolder.rotation.y = y
     $CameraHolder.rotation.x = 0
@@ -30,7 +32,7 @@ func reset_stair_camera_offset():
 
 onready var base_model_offset = $Model.translation
 func _ready():
-    #NavigationServer.region_bake_navmesh()
+    physics_interpolation_mode = PHYSICS_INTERPOLATION_MODE_OFF
     $CameraHolder.rotation.y = rotation.y
     rotation.y = 0
     check_first_person_visibility()
@@ -338,22 +340,21 @@ func angle_move_toward(a : float, b : float, amount : float) -> float:
     var motion = clamp(delta, -amount, amount)
     return fposmod(a+motion, PI*2.0)
 
-var ai_angle_inertia = 0.0
-var ai_angle_accel = PI*16.0
+var ai_angle_inertia : Vector3 = Vector3()
+var ai_angle_accel = PI*12.0
 var ai_turn_rate_limit = PI*2.0
-func ai_apply_turn_logic(target_angle, delta):
-    ai_angle_accel = PI*12.0
-    var old_angle = $CameraHolder.rotation.y
+func ai_apply_turn_logic(delta, target_angle, axis):
+    var old_angle = $CameraHolder.rotation[axis]
     var new_angle = angle_move_toward(old_angle, target_angle, ai_turn_rate_limit*delta)
     var target_angle_velocity = -angle_get_delta(new_angle, old_angle)/delta
     
     var to_target = angle_get_delta(old_angle, target_angle)
-    var stopping_distance = ai_angle_inertia*ai_angle_inertia / (2.0*ai_angle_accel)
+    var stopping_distance = ai_angle_inertia[axis]*ai_angle_inertia[axis] / (2.0*ai_angle_accel)
     if abs(to_target) < abs(stopping_distance):
         target_angle_velocity = 0.0
     
-    ai_angle_inertia = move_toward(ai_angle_inertia, target_angle_velocity, ai_angle_accel*delta)
-    $CameraHolder.rotation.y = old_angle + ai_angle_inertia*delta
+    ai_angle_inertia[axis] = move_toward(ai_angle_inertia[axis], target_angle_velocity, ai_angle_accel*delta)
+    $CameraHolder.rotation[axis] = old_angle + ai_angle_inertia[axis]*delta
 
 var last_used_nav_pos = Vector3()
 func do_ai(delta):
@@ -376,10 +377,9 @@ func do_ai(delta):
     if navigable_floor_is_up_to_date:
         $CSGBox.global_translation = navigable_floor
         $Navigation.global_translation = navigable_floor
-        
+    
     $Navigation/Agent.set_target_location(player.navigable_floor)
     var next_pos = $Navigation/Agent.get_next_location()
-    var target_pos = $Navigation/Agent.get_target_location()
     
     if !$Navigation/Agent.is_target_reachable():
         if (last_used_nav_pos - navigable_floor).length() > 0.1:
@@ -389,7 +389,6 @@ func do_ai(delta):
         $Navigation.global_translation = last_used_nav_pos
         $Navigation/Agent.set_target_location(player.navigable_floor)
         next_pos = $Navigation/Agent.get_next_location()
-        target_pos = $Navigation/Agent.get_target_location()
     
     if !$Navigation/Agent.is_target_reachable():
         #print("not reachable")
@@ -411,6 +410,43 @@ func do_ai(delta):
         $CSGBox.visible = true
         $CSGBox.global_translation = new_next_pos
     
+    var target_diff_for_aiming = target_diff
+    # FIXME: calculate in player, using physics traces
+    if found_player and player.previous_positions.size() > 2:
+        var first = player.previous_positions[0]
+        var subdelta = player.total_prev_position_time - first.delta
+        var second = player.previous_positions[1]
+        var third = player.previous_positions[2]
+        var _penult = player.previous_positions[player.previous_positions.size()-2]
+        var last = player.previous_positions[player.previous_positions.size()-1]
+        
+        var first_vel  = (second.pos - first.pos)/second.delta
+        var second_vel = (third.pos - second.pos)/third.delta
+        var accel = (second_vel - first_vel)/(second.delta + third.delta)*2.0
+        var _truaccel = (second.vel - first.vel)/second.delta
+        #if Engine.get_frames_drawn()%10 == 0:
+        #    print(accel, truaccel, " ", second.vel, " ", (third.pos-second.pos)/second.delta)
+        #var current_accel = (last.vel - penult.vel)/last.delta
+        #var full_accel = (last.vel - first.vel)/subdelta
+        
+        var _actual_motion = (last.pos - first.pos)
+        #var retro_motion = current_accel * subdelta
+        
+        # acceleration on the horizontal axis will probably be too large and short-lived to be useful
+        var used_accel = accel
+        if player.is_on_floor():
+            used_accel.x = 0.0
+            used_accel.z = 0.0
+        
+        var predicted_motion = (first_vel + used_accel * 0.5 * subdelta) * subdelta
+        
+        #if player.is_on_floor():
+        #    predicted_motion.y = max(predicted_motion.y, predicted_motion.y*0.5)
+        
+        target_diff_for_aiming = first.pos + predicted_motion - global_translation
+        $CSGBox.visible = true
+        $CSGBox.global_translation = global_translation + target_diff_for_aiming
+    
     # follow player off ledges
     if found_player and ((target_diff.length() < 20.0 and target_diff.y < 1.0) or (target_diff.length() < 50.0 and target_diff.y < -1.0)):
         next_pos = player.global_translation
@@ -421,21 +457,36 @@ func do_ai(delta):
     #if abs(ai_angle_inertia) > PI and Engine.time_scale > 0.5:
     #    print(ai_angle_inertia)
     if horiz_diff.length() > 0.1:
-        if target_diff.length() > 6.0 or !found_player:
+        if target_diff.length() > 40.0 or !found_player:
             if is_on_wall():
                 if (velocity * Vector3(1, 0, 1)).normalized().dot(horiz_diff) > 0.5:
                     inputs.jump_pressed = true
                     inputs.jump = true
             
-            var target_angle = Vector2().angle_to_point(Vector2(diff.z, diff.x))
-            ai_apply_turn_logic(target_angle, delta)
+            var target_yaw
+            # TODO: look at player while moving if we want to attack
+            if found_player and target_diff.length() < 40.0:
+                target_yaw = Vector2().angle_to_point(Vector2(target_diff_for_aiming.z, target_diff_for_aiming.x))
+                ai_apply_turn_logic(delta, target_yaw, 1)
+                
+                var target_pitch = acos(clamp(-(target_diff_for_aiming-Vector3(0,0.5,0)).normalized().y, -1, 1))-PI/2.0
+                ai_apply_turn_logic(delta, target_pitch, 0)
+            else:
+                target_yaw = Vector2().angle_to_point(Vector2(diff.z, diff.x))
+                ai_apply_turn_logic(delta, target_yaw, 1)
+                
+                var diff2 = diff
+                diff2.y = max(abs(diff2.y)-0.5, 0.0) * sign(diff2.y);
+                var target_pitch = acos(clamp(min(0, -diff2.normalized().y), -1, 1))-PI/2.0
+                ai_apply_turn_logic(delta, target_pitch, 0)
             
-            var angle_diff = target_angle - $CameraHolder.rotation.y
+            var angle_diff = target_yaw - $CameraHolder.rotation.y
             while angle_diff < -PI:
                 angle_diff += PI*2.0
             while angle_diff > PI:
                 angle_diff -= PI*2.0
             angle_diff = rad2deg(angle_diff)
+            # TODO support all angles
             if abs(angle_diff) < 22.5 or !is_on_floor():
                 wishdir = Vector3.FORWARD
             elif angle_diff > 0.0 and angle_diff < 90.0:
@@ -443,8 +494,10 @@ func do_ai(delta):
             elif angle_diff < 0.0 and angle_diff > -90.0:
                 wishdir = Vector3.FORWARD + Vector3.RIGHT
         else:
-            var target_angle = Vector2().angle_to_point(Vector2(target_diff.z, target_diff.x))
-            ai_apply_turn_logic(target_angle, delta)
+            var target_yaw = Vector2().angle_to_point(Vector2(target_diff_for_aiming.z, target_diff_for_aiming.x))
+            ai_apply_turn_logic(delta, target_yaw, 1)
+            var target_pitch = acos(clamp(-(target_diff_for_aiming-Vector3(0,0.5,0)).normalized().y, -1, 1))-PI/2.0
+            ai_apply_turn_logic(delta, target_pitch, 0)
             
             var strafe_time = 2.0
             var strafe_timer = fmod(time_alive, strafe_time*3.0)/strafe_time*2.0
@@ -457,8 +510,24 @@ func do_ai(delta):
                 strafe_dir = sin(strafe_timer*PI*2.0)
                 
             wishdir = Vector3.RIGHT * strafe_dir
-            
+            wishdir = Vector3()
+        
+        # TODO: make it so keys have to be pressed/depressed for a certain amount of time (0.1s?) before their opposite can be pressed
         wishdir = wishdir.normalized()
+
+
+var total_prev_position_time = 0.0
+# note that delta is the time since the previous entry, not the time to the next entry
+var previous_positions = []
+func cycle_prev_positions(delta):
+    previous_positions.push_back({delta=delta, pos=global_translation, vel=velocity})
+    total_prev_position_time = 0.0
+    for prev in previous_positions:
+        total_prev_position_time += prev.delta
+    while total_prev_position_time > 0.20:
+        var front = previous_positions[0]
+        previous_positions.pop_front()
+        total_prev_position_time -= front.delta
 
 var previous_on_floor = false
 var previous_velocity = velocity
@@ -631,6 +700,8 @@ func _process(delta):
         else:
             jump_state_timer = jump_state_timer_max
         can_doublejump = false
+        
+        #my_jumpstr *= 2.0
         
         if velocity.y > 0 and velocity.length() < 200:
             velocity.y += my_jumpstr*Vector3.UP.y
@@ -824,33 +895,10 @@ func _process(delta):
     previous_velocity = velocity
     previous_on_floor = floor_collision != null
     
-    force_update_transform()
-    
     # FIXME move to HUD
     
     if is_perspective:
-        HUD.get_node("Peak").text = "%s\n%s\n%s\n%s\n%s\n%s\n%s" % \
-            [(peak*unit_scale),
-            (velocity * Vector3(1,0,1)).length()*unit_scale,
-            velocity.length()*unit_scale,
-            is_on_floor(),
-            global_translation*unit_scale,
-            velocity.y*unit_scale,
-            Engine.get_frames_per_second()]
-        
-        HUD.get_node("ArrowUp").visible = wishdir.z < 0
-        HUD.get_node("ArrowDown").visible = wishdir.z > 0
-        HUD.get_node("ArrowLeft").visible = wishdir.x < 0
-        HUD.get_node("ArrowRight").visible = wishdir.x > 0
-        HUD.get_node("ArrowJump").visible = inputs.jump
-        if can_doublejump and jump_state_timer > 0:
-            HUD.get_node("ArrowJump").modulate = Color.turquoise
-        else:
-            HUD.get_node("ArrowJump").modulate = Color.white
-        if !want_to_jump and !pogostick_jumping:
-            HUD.get_node("ArrowJump").modulate.a = 0.5
-        else:
-            HUD.get_node("ArrowJump").modulate.a = 1.0
+        HUD.update(self)
     
     var new_velocity = custom_move_and_slide(delta, velocity)
     velocity.y = new_velocity.y
@@ -882,7 +930,7 @@ func _process(delta):
     
     if did_stairs:
         stair_cooldown = camera.correction_window
-        print("stepped")
+        #print("stepped")
     
     if !is_on_floor() or stair_cooldown == 0.0:
         reset_stair_camera_offset()
@@ -915,13 +963,33 @@ func _process(delta):
             play_animation("float", 1.0)
         else:
             play_animation("air", 1.0)
-    do_evil_anim_things(delta)
     
     velocity += vel_delta/2
     
+    force_update_transform()
+    do_evil_anim_things(delta)
+    cycle_prev_positions(delta)
     find_navigable_floor()
 
-var navigable_floor = null
+var health = 100
+var armor  = 100
+
+var armor_ratio = 2.0/3.0
+
+func take_damage(amount, from, type):
+    if from == self:
+        amount *= 0.5
+    amount = ceil(amount)
+    var to_armor = ceil(min(armor, armor_ratio*amount))
+    armor -= to_armor
+    
+    print(to_armor)
+    print(amount - to_armor)
+    health -= amount - to_armor
+    if health <= 0:
+        Gamemode.kill_player(player_id, type)
+
+onready var navigable_floor = global_translation
 var navigable_floor_is_up_to_date = false
 func find_navigable_floor():
     navigable_floor_is_up_to_date = false

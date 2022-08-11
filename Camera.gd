@@ -1,16 +1,5 @@
 extends Camera
 
-
-# Declare member variables here. Examples:
-# var a = 2
-# var b = "text"
-
-
-# Called when the node enters the scene tree for the first time.
-func _ready():
-    
-    pass # Replace with function body.
-
 var mouselook_speed = -0.022*3.0
 var mouse_motion = Vector2()
 
@@ -75,8 +64,8 @@ func _process(delta):
     if delta > 0.0 and prev_global_position:
         var ydelta = (basic_position.y - prev_global_position.y)
         if abs(ydelta) > 0.01:
-            print("bouncing")
-            print(ydelta)
+            #print("bouncing")
+            #print(ydelta)
             smoothing_amount -= ydelta
             correction_speed = abs(ydelta)/correction_window
     prev_global_position = basic_position

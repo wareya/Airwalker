@@ -1,7 +1,12 @@
 extends KinematicBody
 
+
+
 var previous_global_transform = null
 var previous_delta = 0.0
+
+func _ready():
+    physics_interpolation_mode = PHYSICS_INTERPOLATION_MODE_OFF
 
 func get_real_velocity(foot_location : Vector3) -> Vector3:
     if previous_global_transform:

@@ -1,19 +1,20 @@
 extends Node
 
-var sounds = ResourcePreloader.new()
-func _ready():
-    print("loading")
-    var dir = Directory.new()
-    dir.change_dir("res://sfx/")
-    dir.list_dir_begin(true)
-    var file_name = dir.get_next()
-    while file_name != "":
-        if !dir.current_is_dir() and file_name.ends_with(".wav"):
-            sounds.add_resource(file_name.replace(".wav", ""), load(dir.get_current_dir() + "/" + file_name))
-        file_name = dir.get_next()
-
-
-#var loud_mode = false
+var sounds = {
+    "HybridFoley2" : preload("res://sfx/HybridFoley2.wav"),
+    "HybridFoley3" : preload("res://sfx/HybridFoley3.wav"),
+    "HybridFoley4" : preload("res://sfx/HybridFoley4.wav"),
+    "HybridFoley" : preload("res://sfx/HybridFoley.wav"),
+    "rocketexplosion2" : preload("res://sfx/rocketexplosion2.wav"),
+    "rocketexplosion" : preload("res://sfx/rocketexplosion.wav"),
+    "rocketloop" : preload("res://sfx/rocketloop.wav"),
+    "rocketshot" : preload("res://sfx/rocketshot.wav"),
+    "teleporter fx" : preload("res://sfx/teleporter fx.wav"),
+    "TubeSound3" : preload("res://sfx/TubeSound3.wav"),
+    "GibFrag" : preload("res://sfx/cc0/impactsplat01.wav"),
+    "GibBounce1" : preload("res://sfx/cc0/random2.wav"),
+    "GibBounce2" : preload("res://sfx/cc0/random3.wav"),
+}
 
 class Emitter3D extends AudioStreamPlayer3D:
     var ready = false
@@ -80,11 +81,13 @@ class Emitter extends AudioStreamPlayer:
 
 func emit(sound, parent = null, arg_position = Vector3(), channel = "SFX"):
     var stream = null
-    if sound is String and sounds.has_resource(sound):
-        stream = sounds.get_resource (sound)
+    if sound is String and sound in sounds:
+        stream = sounds[sound]
     elif sound is AudioStream:
         stream = sound
-    if parent:
+    if parent or arg_position != Vector3():
+        if !parent:
+            parent = get_tree().current_scene
         return Emitter3D.new().emit(parent, stream, arg_position, channel)
     else:
         return Emitter.new().emit(self, stream, channel)

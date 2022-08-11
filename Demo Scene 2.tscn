@@ -1,7 +1,6 @@
 [gd_scene load_steps=29 format=2]
 
 [ext_resource path="res://art/texture/blockmesh texture blue.png" type="Texture" id=1]
-[ext_resource path="res://MyChar.tscn" type="PackedScene" id=2]
 [ext_resource path="res://art/texture/blockmesh texture black.png" type="Texture" id=3]
 [ext_resource path="res://art/texture/blockmesh texture green.png" type="Texture" id=4]
 [ext_resource path="res://art/texture/blockmesh texture.png" type="Texture" id=5]
@@ -14,6 +13,7 @@
 [ext_resource path="res://KinematicBody.gd" type="Script" id=12]
 [ext_resource path="res://KinematicBody2.gd" type="Script" id=13]
 [ext_resource path="res://KinematicBody3.gd" type="Script" id=14]
+[ext_resource path="res://Spawner.tscn" type="PackedScene" id=15]
 
 [sub_resource type="ProceduralSky" id=45]
 radiance_size = 0
@@ -150,15 +150,6 @@ directional_shadow_max_distance = 200.0
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="Stuff"]
 environment = SubResource( 46 )
-
-[node name="MyChar" parent="Stuff" instance=ExtResource( 2 )]
-process_priority = 1
-transform = Transform( -0.573575, 0, -0.819153, 0, 1, 0, 0.819153, 0, -0.573575, 50.033, 0.934016, 2.07474 )
-is_player = true
-
-[node name="MyChar2" parent="Stuff" instance=ExtResource( 2 )]
-process_priority = 1
-transform = Transform( 0.691514, 0, -0.722363, 0, 1, 0, 0.722363, 0, 0.691514, 50.033, 0.934016, 7.69974 )
 
 [node name="CSGStuff" type="Spatial" parent="Stuff"]
 
@@ -989,7 +980,7 @@ polygon = PoolVector2Array( -0.25, 0, -0.25, 1.25, 0.5, 2, 0.5, 0 )
 depth = 2.75
 material = SubResource( 49 )
 
-[node name="NavigationMeshInstance" type="NavigationMeshInstance" parent="Stuff"]
+[node name="NavigationMeshInstance" type="NavigationMeshInstance" parent="Stuff" groups=["NavWorld"]]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 51, 0, 4 )
 navmesh = SubResource( 65 )
 
@@ -2719,7 +2710,29 @@ width = 41.75
 depth = 32.5
 material = SubResource( 48 )
 
-[node name="Spatial" type="Spatial" parent="."]
+[node name="Spawner" parent="Stuff/NavigationMeshInstance" instance=ExtResource( 15 )]
+transform = Transform( -1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 11.375, 3, -3.25 )
+
+[node name="Spawner5" parent="Stuff/NavigationMeshInstance" instance=ExtResource( 15 )]
+transform = Transform( -0.866025, 0, 0.5, 0, 1, 0, -0.5, 0, -0.866025, 17.875, 5, -15.25 )
+
+[node name="Spawner3" parent="Stuff/NavigationMeshInstance" instance=ExtResource( 15 )]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -1, 1.19209e-07, 1.125 )
+
+[node name="Spawner2" parent="Stuff/NavigationMeshInstance" instance=ExtResource( 15 )]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -7.25, 7, -15 )
+
+[node name="Spawner6" parent="Stuff/NavigationMeshInstance" instance=ExtResource( 15 )]
+transform = Transform( -0.5, 0, -0.866025, 0, 1, 0, 0.866025, 0, -0.5, -27.875, 7, -2.5 )
+
+[node name="Spawner7" parent="Stuff/NavigationMeshInstance" instance=ExtResource( 15 )]
+transform = Transform( 1, 0, -5.96046e-08, 0, 1, 0, 5.96046e-08, 0, 1, 3, 5, 24 )
+
+[node name="Spawner8" parent="Stuff/NavigationMeshInstance" instance=ExtResource( 15 )]
+transform = Transform( 0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 13.5, 3, 20.5 )
+
+[node name="Spawner4" parent="Stuff/NavigationMeshInstance" instance=ExtResource( 15 )]
+transform = Transform( -0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, -0.707107, -5.5, 2, -24.75 )
 
 [editable path="Stuff/NavigationMeshInstance/Teleporter"]
 [editable path="Stuff/NavigationMeshInstance/Teleporter2"]

@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=2]
+[gd_scene load_steps=12 format=2]
 
 [ext_resource path="res://MyChar.gd" type="Script" id=1]
 [ext_resource path="res://Camera.gd" type="Script" id=2]
@@ -6,9 +6,6 @@
 [ext_resource path="res://sfx/HybridFoley.wav" type="AudioStream" id=4]
 [ext_resource path="res://3d/char/fps char.glb" type="PackedScene" id=5]
 [ext_resource path="res://art/texture/blockmesh texture white.png" type="Texture" id=6]
-
-[sub_resource type="SpatialMaterial" id=6]
-albedo_color = Color( 0.47451, 1, 0.435294, 1 )
 
 [sub_resource type="SpatialMaterial" id=2]
 albedo_color = Color( 0.823529, 0.643137, 0.533333, 1 )
@@ -36,7 +33,9 @@ height = 1.75
 radius = 0.468
 
 [sub_resource type="SpatialMaterial" id=5]
-params_blend_mode = 3
+flags_transparent = true
+flags_unshaded = true
+albedo_color = Color( 0.670588, 0.211765, 0.211765, 0.780392 )
 
 [node name="MyChar" type="KinematicBody" groups=["Player"]]
 collision_layer = 2
@@ -44,22 +43,7 @@ collision_mask = 3
 script = ExtResource( 1 )
 
 [node name="Model" parent="." instance=ExtResource( 5 )]
-transform = Transform( 0.666, 0, 0, 0, 0.666, 0, 0, 0, 0.666, 0, -0.875, 0 )
-
-[node name="_Model" type="CSGBox" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0 )
-visible = false
-width = 0.938
-height = 1.25
-depth = 0.938
-material = SubResource( 6 )
-
-[node name="Model2" type="CSGBox" parent="_Model"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.875, 0 )
-width = 0.5
-height = 0.5
-depth = 0.5
-material = SubResource( 6 )
+transform = Transform( -0.666, 0, -5.82236e-08, 0, 0.666, 0, 5.82236e-08, 0, -0.666, 0, -0.875, 0 )
 
 [node name="JumpSound" type="AudioStreamPlayer3D" parent="."]
 stream = ExtResource( 4 )
