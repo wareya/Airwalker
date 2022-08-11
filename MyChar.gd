@@ -347,18 +347,12 @@ func ai_apply_turn_logic(target_angle, delta):
     var new_angle = angle_move_toward(old_angle, target_angle, ai_turn_rate_limit*delta)
     var target_angle_velocity = -angle_get_delta(new_angle, old_angle)/delta
     
-    var actual_accel = ai_angle_accel
-    
     var to_target = angle_get_delta(old_angle, target_angle)
-    
-    var stopping_distance = ai_angle_inertia*ai_angle_inertia / (2.0*actual_accel)
-    
-    #if Engine.get_frames_drawn() % 10 == 0:
-    #    print([round(rad2deg(to_target)), round(rad2deg(stopping_distance))])
+    var stopping_distance = ai_angle_inertia*ai_angle_inertia / (2.0*ai_angle_accel)
     if abs(to_target) < abs(stopping_distance):
         target_angle_velocity = 0.0
     
-    ai_angle_inertia = move_toward(ai_angle_inertia, target_angle_velocity, actual_accel*delta)
+    ai_angle_inertia = move_toward(ai_angle_inertia, target_angle_velocity, ai_angle_accel*delta)
     $CameraHolder.rotation.y = old_angle + ai_angle_inertia*delta
 
 var last_used_nav_pos = Vector3()
@@ -412,12 +406,13 @@ func do_ai(delta):
     
     # try to avoid getting stuck when the navigation system deletes essential points
     if is_on_wall():
-        var new_next_pos = next_pos# + $Model.global_transform.basis.xform(Vector3(2.0 * sign(sin(time_alive*4.0)), 0.0, 1.0 * sign(sin(time_alive*7.1))))
+        var new_next_pos = next_pos + $Model.global_transform.basis.xform(Vector3(2.0 * sign(sin(time_alive*4.0)), 0.0, 1.0 * sign(sin(time_alive*7.1))))
         next_pos = new_next_pos
         $CSGBox.visible = true
         $CSGBox.global_translation = new_next_pos
     
-    if found_player and target_diff.length() < 50.0 and target_diff.y < 2.0:
+    # follow player off ledges
+    if found_player and ((target_diff.length() < 20.0 and target_diff.y < 1.0) or (target_diff.length() < 50.0 and target_diff.y < -1.0)):
         next_pos = player.global_translation
     
     var diff = next_pos - global_translation
