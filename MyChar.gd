@@ -456,28 +456,31 @@ func do_ai(delta):
     
     #if abs(ai_angle_inertia) > PI and Engine.time_scale > 0.5:
     #    print(ai_angle_inertia)
+    var target_yaw
+    var target_pitch
+    var want_to_attack = false
     if horiz_diff.length() > 0.1:
-        if target_diff.length() > 40.0 or !found_player:
+        if target_diff.length() > 6.0 or !found_player:
             if is_on_wall():
                 if (velocity * Vector3(1, 0, 1)).normalized().dot(horiz_diff) > 0.5:
                     inputs.jump_pressed = true
                     inputs.jump = true
             
-            var target_yaw
             # TODO: look at player while moving if we want to attack
-            if found_player and target_diff.length() < 40.0:
+            if found_player and target_diff.length() < 10.0:
                 target_yaw = Vector2().angle_to_point(Vector2(target_diff_for_aiming.z, target_diff_for_aiming.x))
                 ai_apply_turn_logic(delta, target_yaw, 1)
                 
-                var target_pitch = acos(clamp(-(target_diff_for_aiming-Vector3(0,0.5,0)).normalized().y, -1, 1))-PI/2.0
+                target_pitch = acos(clamp(-(target_diff_for_aiming-Vector3(0,0.5,0)).normalized().y, -1, 1))-PI/2.0
                 ai_apply_turn_logic(delta, target_pitch, 0)
+                want_to_attack = true
             else:
                 target_yaw = Vector2().angle_to_point(Vector2(diff.z, diff.x))
                 ai_apply_turn_logic(delta, target_yaw, 1)
                 
                 var diff2 = diff
                 diff2.y = max(abs(diff2.y)-0.5, 0.0) * sign(diff2.y);
-                var target_pitch = acos(clamp(min(0, -diff2.normalized().y), -1, 1))-PI/2.0
+                target_pitch = acos(clamp(min(0, -diff2.normalized().y), -1, 1))-PI/2.0
                 ai_apply_turn_logic(delta, target_pitch, 0)
             
             var angle_diff = target_yaw - $CameraHolder.rotation.y
@@ -494,9 +497,10 @@ func do_ai(delta):
             elif angle_diff < 0.0 and angle_diff > -90.0:
                 wishdir = Vector3.FORWARD + Vector3.RIGHT
         else:
-            var target_yaw = Vector2().angle_to_point(Vector2(target_diff_for_aiming.z, target_diff_for_aiming.x))
+            want_to_attack = true
+            target_yaw = Vector2().angle_to_point(Vector2(target_diff_for_aiming.z, target_diff_for_aiming.x))
             ai_apply_turn_logic(delta, target_yaw, 1)
-            var target_pitch = acos(clamp(-(target_diff_for_aiming-Vector3(0,0.5,0)).normalized().y, -1, 1))-PI/2.0
+            target_pitch = acos(clamp(-(target_diff_for_aiming-Vector3(0,0.5,0)).normalized().y, -1, 1))-PI/2.0
             ai_apply_turn_logic(delta, target_pitch, 0)
             
             var strafe_time = 2.0
@@ -514,6 +518,13 @@ func do_ai(delta):
         
         # TODO: make it so keys have to be pressed/depressed for a certain amount of time (0.1s?) before their opposite can be pressed
         wishdir = wishdir.normalized()
+    
+    if want_to_attack:
+        var angle = Vector2($CameraHolder.rotation.x, $CameraHolder.rotation.y)
+        var target_angle = Vector2(target_pitch, target_yaw)
+        # FIXME wrong but whatever
+        if angle_diff(0, (angle-target_angle).length()) < deg2rad(5):
+            inputs.m1 = true
 
 
 var total_prev_position_time = 0.0

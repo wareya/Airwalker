@@ -10,15 +10,7 @@ var input_enabled = false
 func _input(event):
     if !input_enabled:
         return
-    if event is InputEventMouseButton:
-        if event.pressed and event.button_index == 2:
-            if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
-                Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-                #holder.get_parent().enable_autocam()
-            else:
-                Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-                #holder.get_parent().disable_autocam()
-    elif event is InputEventMouseMotion:
+    if event is InputEventMouseMotion:
         var ratio : Vector2
         # FIXME: in godot 3.5 (and older, and probably newer), mouse relatie motion is tied to window size
         # ...in 2d scaling mode only

@@ -3,6 +3,14 @@ extends CanvasLayer
 func _ready():
     pass
 
+func _input(event):
+    if event is InputEventMouseButton:
+        if event.pressed and event.button_index == 2:
+            if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
+                Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+            else:
+                Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+
 func _process(_delta):
     $Crosshair.visible = false
     $ArrowUp.visible = false
