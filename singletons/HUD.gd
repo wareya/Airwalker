@@ -20,6 +20,21 @@ func _process(_delta):
     $ArrowJump.visible = false
     $HealthLabel.visible = false
     $ArmorLabel.visible = false
+    
+    if Input.is_action_just_pressed("ui_page_down"):
+        if Engine.target_fps != 125:
+            Engine.target_fps = 125
+        else:
+            Engine.target_fps = 5
+        #Engine.time_scale = 1.0
+    
+    # FIXME move to hud
+    if Input.is_action_just_pressed("ui_page_up"):
+        if get_viewport().debug_draw:
+            get_viewport().debug_draw = 0
+        else:
+            get_viewport().debug_draw = Viewport.DEBUG_DRAW_OVERDRAW
+        pass
 
 func update(player):
     $Peak.text = "%s\n%s\n%s\n%s\n%s\n%s\n%s" % \

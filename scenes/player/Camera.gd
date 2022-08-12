@@ -37,8 +37,7 @@ var correction_speed = 5
 var correction_window = 0.05
 var smoothing_amount = 0.0
 
-func _process(delta):
-    var correction_range_clamp = 16.0/32.0
+func update_input(_delta):
     correction_window = 0.05
     
     var y = holder.rotation_degrees.y
@@ -51,6 +50,9 @@ func _process(delta):
     
     holder.rotation_degrees.y = y
     holder.rotation_degrees.x = x
+
+func update_smoothing(delta):
+    var correction_range_clamp = 16.0/32.0
     
     var basic_position = holder.global_translation
     if delta > 0.0 and prev_global_position:
@@ -69,5 +71,6 @@ func _process(delta):
     global_translation.y += smoothing_amount
     
     holder.get_parent().update_from_camera_smoothing()
+    force_update_transform()
     
     

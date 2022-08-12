@@ -54,6 +54,10 @@ bus = "SFX"
 attenuation_filter_cutoff_hz = 20500.0
 attenuation_filter_db = -0.1
 
+[node name="JumpSound0D" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 1 )
+bus = "SFX"
+
 [node name="CameraHolder" type="Spatial" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, 0 )
 

@@ -10,7 +10,3 @@ script = ExtResource( 1 )
 
 [node name="CollisionShape" type="CollisionShape" parent="."]
 shape = SubResource( 1 )
-
-[node name="Camera" type="Camera" parent="."]
-current = true
-fov = 90.0

@@ -13,15 +13,17 @@ const unit_scale = 32.0
 #var speed = 1150.0/unit_scale
 var speed = 1000.0/unit_scale
 
+func check_death():
+    if life <= 0.0:
+        die()
+        queue_free()
+
 func _process(delta):
     $CSGPolygon.rotation_degrees.x += delta*1000.0
     if abs(life-max_life) > 0.04:
         $RocketParticles2.emitting = true
     life -= delta
-    if life <= 0.0:
-        #print("rocket killed")
-        die()
-        queue_free()
+    check_death()
         
     advance(speed*delta)
 
@@ -51,16 +53,16 @@ func die():
     #particles2.emitting = false
     var _unused = get_tree().create_timer(particles2.lifetime, false).connect("timeout", particles2, "queue_free")
     
-    for _player in get_tree().get_nodes_in_group("Player"):
-        var player : Spatial = _player
-        var pos_diff_raw = player.global_transform.origin - global_transform.origin
-        var pos_diff = player.subtract_hull_size_from_distance(pos_diff_raw)
+    for _object in get_tree().get_nodes_in_group("Player") + get_tree().get_nodes_in_group("ForceReceiver"):
+        var object : Spatial = _object
+        var pos_diff_raw = object.global_transform.origin - global_transform.origin
+        var pos_diff = pos_diff_raw
+        if object.has_method("subtract_hull_size_from_distance"):
+            pos_diff = object.subtract_hull_size_from_distance(pos_diff_raw)
         # force direct hits to always be direct hits
-        if $RayCast.is_colliding() and $RayCast.get_collider() == player:
-            #print("is collider")
+        if $RayCast.is_colliding() and $RayCast.get_collider() == object:
             pos_diff *= 0.0
-        if force_collider == player:
-            #print("is inside")
+        if force_collider == object:
             pos_diff *= 0.0
         
         #var knockback_range = 125.0/unit_scale
@@ -68,32 +70,28 @@ func die():
         var knockback_strength_min = 35.0/unit_scale
         var knockback_strength_max = 100.0/unit_scale
         
-        var f = 1000.0
-        var mass = 200.0
-        
         if pos_diff.length() > knockback_range:
             continue
         
         # FIXME: self only?
         var knockback_dir = (pos_diff_raw + Vector3(0, 1.25/2.0, 0)).normalized()
-        #var knockback_dir = pos_diff.normalized()
-        #var knockback_falloff = 1.0/(pos_diff.length()*pos_diff.length())
-        #var knockback_falloff = 1.0/pos_diff.length()
         var falloff = 1.0 - pos_diff.length()/knockback_range
-        #print(falloff)
         var knockback_strength = lerp(knockback_strength_min, knockback_strength_max, falloff)
         var damage = lerp(0, 100, falloff)
-        #print(pos_diff.length())
-        #print(falloff)
-        #print(knockback_dir)
-        #print(knockback_strength)
-        #knockback_strength *= 0.0
         
         # FIXME use a knockback function
-        player.velocity += knockback_dir * knockback_strength * f / mass
-        player.floor_collision = null
-        
-        player.take_damage(damage, origin_player_id, "rocket")
+        if object.is_in_group("Player"):
+            var f = 1000.0
+            var mass = 200.0
+            object.velocity += knockback_dir * knockback_strength * f / mass
+            object.floor_collision = null
+            object.take_damage(damage, origin_player_id, "rocket")
+        else:
+            var force = knockback_dir * knockback_strength * 4.0
+            if "linear_velocity" in object:
+                object.linear_velocity += force
+            elif "velocity" in object:
+                object.velocity += force
         
 
 var bounces = 0
@@ -142,5 +140,6 @@ func advance(distance):
     else:
         global_transform.origin += global_transform.basis.xform(destination)
     check_distance()
+    check_death()
 
     

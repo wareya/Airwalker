@@ -88,6 +88,7 @@ max_value = 2.0
 _data = [ Vector2( 0.0112994, 0.485227 ), 0.0, -0.448965, 0, 0, Vector2( 1, 2 ), 1.67614, 0.0, 0, 0 ]
 
 [node name="Rocket" type="Spatial"]
+process_priority = 1
 script = ExtResource( 2 )
 
 [node name="CSGPolygon" type="CSGPolygon" parent="."]

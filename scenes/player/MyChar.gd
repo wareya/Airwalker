@@ -22,6 +22,11 @@ var player_id = -1
 func force_take_camera():
     $CameraHolder/Camera.make_current()
 
+func remove_camera():
+    var ret = $CameraHolder/Camera
+    $CameraHolder.remove_child($CameraHolder/Camera)
+    return ret
+
 func get_camera_transform():
     return $CameraHolder.global_transform
 
@@ -444,6 +449,53 @@ func update_inputs():
     if wishdir.length_squared() > 1.0:
         wishdir = wishdir.normalized()
 
+
+func process_inputs():
+    if inputs.jump_pressed:
+        want_to_jump = true
+        can_doublejump = true
+    if inputs.jump_released:
+        can_doublejump = false
+        want_to_jump = false
+    
+    if pogostick_jumping:
+        want_to_jump = inputs.jump
+
+func weapon_think(delta):
+    reload = reload-delta
+    if inputs.m1 and reload <= 0.0:
+        if is_player:
+            print("firing!!!")
+        time_of_shot = time_alive
+        reload += 0.8
+        var rocket : Spatial = load("res://scenes/dynamic/Rocket.tscn").instance()
+        rocket.origin_player = self
+        rocket.origin_player_id = player_id
+        get_parent().add_child(rocket)
+        $CamRelative/RayCast.force_raycast_update()
+        if !$CamRelative/RayCast.is_colliding():
+            rocket.global_transform = $CamRelative/RocketOrigin.global_transform
+        elif $CamRelative/RayCast.get_collision_point().distance_to(
+                $CamRelative/RayCast.global_transform.origin
+            ) > 10.0:
+            rocket.global_transform = $CamRelative/RocketOrigin.global_transform
+            rocket.global_transform = rocket.global_transform.looking_at($CamRelative/RayCast.get_collision_point(), Vector3.UP)
+        else:
+            rocket.global_transform = $CamRelative/RayCast.global_transform
+        
+        rocket.add_exception(self)
+        if is_perspective:
+            EmitterFactory.emit("rocketshot").volume_db = -4.5
+        else:
+            var fx : AudioStreamPlayer3D = EmitterFactory.emit("rocketshot", self)
+            fx.unit_db -= 4.5
+            fx.max_db = -4.5
+        rocket.advance(0.65)
+        rocket.force_update_transform()
+        rocket.advance(rocket.speed*delta)
+        (rocket.get_node("RocketParticles") as CPUParticles).emitting = true
+    reload = max(reload, 0.0)
+
 func angle_get_delta(a : float, b : float) -> float:
     a = fposmod(a, PI*2.0)
     b = fposmod(b, PI*2.0)
@@ -717,213 +769,63 @@ func cycle_prev_positions(delta):
         previous_positions.pop_front()
         total_prev_position_time -= front.delta
 
-var floor_velocity = Vector3()
-
-var previous_on_floor = false
-var previous_velocity = velocity
-var want_to_jump = false
-var reload = 0.0
-var sway_memory = 0.0
-var cam_angle_memory = Vector2()
-var cam_sway_memory = Vector2()
-var sway_strength = 0.5
-var force_sway_to = 0.0
-var force_sway_amount = 0.0
-var prev_floor_transform = null
-var prev_floor_collision = null
-func _process(delta):
-    moving_platform_mode = MOVING_PLATFORM_FULL_INHERIT
+func handle_jump(_delta):
+    if !is_on_floor() or !want_to_jump:
+        return false
+    sway_rate_multiplier = 1.0
     
-    time_alive += delta
-    anim_lock_time -= delta
+    var effect : Node
+    # streamplayer3ds have a one-frame delay on replaying
+    if is_perspective:
+        effect = $JumpSound0D
+    else:
+        effect = $JumpSound
     
-    check_first_person_visibility()
-    update_inputs()
-    do_ai(delta)
-    
-    if is_player:
-        if Input.is_action_just_pressed("ui_page_down"):
-            if Engine.target_fps != 125:
-                Engine.target_fps = 125
-            else:
-                Engine.target_fps = 10
-            #Engine.time_scale = 1.0
-        
-        # FIXME move to hud
-        if Input.is_action_just_pressed("ui_page_up"):
-            if get_viewport().debug_draw:
-                get_viewport().debug_draw = 0
-            else:
-                get_viewport().debug_draw = Viewport.DEBUG_DRAW_OVERDRAW
-            pass
-    
-    if inputs.jump_pressed:
-        want_to_jump = true
-        can_doublejump = true
-    if inputs.jump_released:
-        can_doublejump = false
-        want_to_jump = false
-    
-    if pogostick_jumping:
-        want_to_jump = inputs.jump
-    
-    var prev_simtimer = simtimer
-    simtimer += delta
-    delta = (floor(simtimer*1000) - floor(prev_simtimer*1000))/1000
-    if delta < 0.001:
-        return
-    
-    
-    if global_transform.origin.y > peak:
-        peak = global_transform.origin.y
-        #print("new peak: %s" % (peak*unit_scale))
-        peak_time = simtimer
-    
-    if peak_time + 1 < simtimer:
-        peak = global_transform.origin.y
-    if jump_state_timer > 0:
-        jump_state_timer -= delta
-    
-    var closest_ground = null
-    closest_ground = my_move_and_collide(Vector3.DOWN*stair_height, true, true)
-    
-    if !previous_on_floor and floor_collision:
-        velocity = vector_reject(velocity, floor_collision.normal)
-        var floor_boost = Vector3()
-        if moving_platform_mode == 2:
-            floor_boost = floor_collision.collider_velocity
-        elif moving_platform_mode == 3:
-            floor_boost = vector_project(floor_collision.collider_velocity, floor_collision.normal)
-        if moving_platform_jump_ignore_vertical:
-            floor_boost.y = 0.0
-        #print(floor_boost)
-        velocity -= floor_boost
-        #print("subtracting... " + str(floor_boost))
-        
-        if previous_velocity.y < -7.5:
-            time_of_landing = time_alive
-            if is_perspective:
-                EmitterFactory.emit("HybridFoley4").volume_db = -9.0
-            else:
-                var effect : AudioStreamPlayer3D = EmitterFactory.emit("HybridFoley4", self)
-                effect.max_db = -9.0
-                effect.unit_db = 40
-            sway_timer = fmod(sway_timer, PI*2.0)
-            if sway_timer >= PI*1.0:
-                force_sway_to = 0.0
-            else:
-                force_sway_to = PI
-            force_sway_amount = 1.0
-            play_animation("land")
-    
-    reload = reload-delta
-    if inputs.m1 and reload <= 0.0:
-        if is_player:
-            print("firing!!!")
-        time_of_shot = time_alive
-        reload += 0.8
-        var rocket : Spatial = preload("res://scenes/dynamic/Rocket.tscn").instance()
-        rocket.origin_player = self
-        rocket.origin_player_id = player_id
-        get_parent().add_child(rocket)
-        $CamRelative/RayCast.force_raycast_update()
-        if !$CamRelative/RayCast.is_colliding():
-            rocket.global_transform = $CamRelative/RocketOrigin.global_transform
-        elif $CamRelative/RayCast.get_collision_point().distance_to(
-                $CamRelative/RayCast.global_transform.origin
-            ) > 10.0:
-            rocket.global_transform = $CamRelative/RocketOrigin.global_transform
-            rocket.global_transform = rocket.global_transform.looking_at($CamRelative/RayCast.get_collision_point(), Vector3.UP)
-        else:
-            rocket.global_transform = $CamRelative/RayCast.global_transform
-        
-        rocket.add_exception(self)
-        if is_perspective:
-            EmitterFactory.emit("rocketshot").volume_db = -4.5
-        else:
-            var fx : AudioStreamPlayer3D = EmitterFactory.emit("rocketshot", self)
-            fx.unit_db -= 4.5
-            fx.max_db = -4.5
-        rocket.advance(0.65)
-        rocket.force_update_transform()
-        (rocket.get_node("RocketParticles") as CPUParticles).emitting = true
-    reload = max(reload, 0.0)
-
-    floor_velocity = Vector3()
-    if (moving_platform_mode == 3 and is_on_floor() and delta > 0.0
-    and floor_collision and is_instance_valid(floor_collision.collider)
-    and prev_floor_collision and is_instance_valid(prev_floor_collision.collider)
-    and prev_floor_collision.collider == floor_collision.collider
-    and prev_floor_transform):
-        var floor_object : Spatial = floor_collision.collider
-        if floor_object.has_method("get_real_velocity"):
-            floor_velocity = floor_object.get_real_velocity(calculate_foot_position())
-        else:
-            var foot_location = calculate_foot_position()
-            var foreign_foot_location = floor_object.global_transform.affine_inverse().xform(foot_location)
-            var old_foot_location = prev_floor_transform.xform(foreign_foot_location)
-            floor_velocity = (foot_location - old_foot_location)/delta
-    
-    var floor_collision_before_jump = floor_collision
-    var did_jump = false
-    if is_on_floor() and want_to_jump:
-        did_jump = true
-        sway_rate_multiplier = 1.0
-        #EmitterFactory.emit("HybridFoley")
-        if !$JumpSound.playing or $JumpSound.get_playback_position() > 0.20 or can_doublejump:
-            #print($JumpSound.get_playback_position())
-            if jump_state_timer > 0 and can_doublejump:
-                $JumpSound.pitch_scale = 1.15
-            else:
-                $JumpSound.pitch_scale = 1.0
-            $JumpSound.play()
-        want_to_jump = false
-        #print("jumping....")
-        #print(velocity*unit_scale)
-        #print(floor_collision.normal)
-        velocity = vector_reject(velocity, floor_collision.normal)
-        #print("-----")
-        #print(floor_collision.collider_velocity)
-        #print(velocity*unit_scale)
-        
-        var my_jumpstr = jumpstr
-        
+    if !effect.playing or effect.get_playback_position() > 0.20 or can_doublejump:
         if jump_state_timer > 0 and can_doublejump:
-            print("doublejumped")
-            my_jumpstr *= 38.0/27.0
-            if jump_state_timer < 0.35:
-                jump_state_timer = 0
-            else:
-                jump_state_timer = jump_state_timer_max
+            effect.pitch_scale = 1.15
+        else:
+            effect.pitch_scale = 1.0
+        effect.play()
+    want_to_jump = false
+    #print("jumping....")
+    #print(velocity*unit_scale)
+    #print(floor_collision.normal)
+    velocity = vector_reject(velocity, floor_collision.normal)
+    #print("-----")
+    #print(floor_collision.collider_velocity)
+    #print(velocity*unit_scale)
+    
+    var my_jumpstr = jumpstr
+    
+    if jump_state_timer > 0 and can_doublejump:
+        print("doublejumped")
+        # FIXME: research objectively correct value for doublejump boost.
+        # why? because this seems arbitrary. (comes out suspiciously close to 140%)
+        my_jumpstr *= 38.0/27.0
+        if jump_state_timer < 0.35:
+            jump_state_timer = 0
         else:
             jump_state_timer = jump_state_timer_max
-        can_doublejump = false
-        
-        #my_jumpstr *= 2.0
-        
-        if velocity.y > 0 and velocity.length() < 200:
-            velocity.y += my_jumpstr*Vector3.UP.y
-        else: 
-            velocity.y = max(velocity.y, my_jumpstr*Vector3.UP.y)
-        #print(velocity*unit_scale)
-        
-        #print(my_jumpstr)
-        floor_collision = null
-        last_jump_coordinate = global_transform.origin
-        #print(velocity.y)
+    else:
+        jump_state_timer = jump_state_timer_max
+    can_doublejump = false
     
-    var forward = Vector3.FORWARD.rotated(Vector3.UP, $CameraHolder.rotation.y)
-    var right   = Vector3.RIGHT  .rotated(Vector3.UP, $CameraHolder.rotation.y)
-    if is_on_floor():
-        forward = vector_reject(forward, floor_collision.normal).normalized()
-        right   = vector_reject(right  , floor_collision.normal).normalized()
+    #my_jumpstr *= 2.0
     
-    global_wishdir = wishdir.x*right - wishdir.z*forward
+    if velocity.y > 0 and velocity.length() < 200:
+        velocity.y += my_jumpstr*Vector3.UP.y
+    else: 
+        velocity.y = max(velocity.y, my_jumpstr*Vector3.UP.y)
+    #print(velocity*unit_scale)
     
+    #print(my_jumpstr)
+    floor_collision = null
+    last_jump_coordinate = global_transform.origin
     #print(velocity.y)
-    
-    var oldvel = velocity
-    
+    return true
+
+func handle_gravity(delta):
     if is_on_floor():
         velocity += delta*Vector3.DOWN*gravity*0.0 # no gravity at all on ground
     elif jump_state_timer > 0:
@@ -931,10 +833,11 @@ func _process(delta):
     else:
         velocity += delta*Vector3.DOWN*gravity
     
+func handle_friction(delta):
     if is_on_floor():
-        velocity -= floor_velocity
         velocity = _friction(velocity, delta)
-    
+
+func handle_accel(delta):
     if wishdir != Vector3():
         var down = Vector3.DOWN
         if floor_collision:
@@ -974,9 +877,6 @@ func _process(delta):
                     flatdir = flatdir.normalized() * flatspeed
                     velocity.x = flatdir.x
                     velocity.z = flatdir.z
-                    
-                    #if accel_factor > 0.5:
-                    #    do something with funnyair_maxspeed
         
         
         if acceldirspeed < actual_maxspeed:
@@ -1006,34 +906,61 @@ func _process(delta):
             #print(vector_reject(velocity, Vector3.DOWN).length())
         #elif tempdot > 0.
     
-    if is_on_floor():
-        velocity += floor_velocity
-    
-    var newvel = velocity
-    velocity = oldvel
-    var vel_delta = newvel - oldvel
-    
-    velocity.x += vel_delta.x
-    vel_delta.x = 0
-    
-    velocity.z += vel_delta.z
-    vel_delta.z = 0
-    
-    velocity += vel_delta/2
-    
-    do_viewmodel_dynamics(delta)
-    
-    var actual_stair_height = stair_height
-    do_stairs = is_on_floor() or jump_state_timer > 0.0 or velocity.y <= 0
-    if !do_stairs and closest_ground:
-        do_stairs = true
-        stair_height = abs(closest_ground.remainder.y)
-    
+var floor_velocity = Vector3()
+
+func check_landing(_delta):
+    if !previous_on_floor and floor_collision:
+        velocity = vector_reject(velocity, floor_collision.normal)
+        var floor_boost = Vector3()
+        if moving_platform_mode == 2:
+            floor_boost = floor_collision.collider_velocity
+        elif moving_platform_mode == 3:
+            floor_boost = vector_project(floor_collision.collider_velocity, floor_collision.normal)
+        if moving_platform_jump_ignore_vertical:
+            floor_boost.y = 0.0
+        #print(floor_boost)
+        velocity -= floor_boost
+        #print("subtracting... " + str(floor_boost))
+        
+        if previous_velocity.y < -7.5:
+            time_of_landing = time_alive
+            if is_perspective:
+                EmitterFactory.emit("HybridFoley4").volume_db = -9.0
+            else:
+                var effect : AudioStreamPlayer3D = EmitterFactory.emit("HybridFoley4", self)
+                effect.max_db = -9.0
+                effect.unit_db = 40
+            sway_timer = fmod(sway_timer, PI*2.0)
+            if sway_timer >= PI*1.0:
+                force_sway_to = 0.0
+            else:
+                force_sway_to = PI
+            force_sway_amount = 1.0
+            play_animation("land")
+
+func check_floor_velocity(delta):
+    floor_velocity = Vector3()
+    if (moving_platform_mode == 3 and is_on_floor() and delta > 0.0
+    and floor_collision and is_instance_valid(floor_collision.collider)
+    and prev_floor_collision and is_instance_valid(prev_floor_collision.collider)
+    and prev_floor_collision.collider == floor_collision.collider
+    and prev_floor_transform):
+        var floor_object : Spatial = floor_collision.collider
+        if floor_object.has_method("get_real_velocity"):
+            floor_velocity = floor_object.get_real_velocity(calculate_foot_position())
+        else:
+            var foot_location = calculate_foot_position()
+            var foreign_foot_location = floor_object.global_transform.affine_inverse().xform(foot_location)
+            var old_foot_location = prev_floor_transform.xform(foreign_foot_location)
+            floor_velocity = (foot_location - old_foot_location)/delta
+
+func check_moving_platform_rotation():
     if moving_platform_mode > 1:
         if floor_collision and prev_floor_collision and floor_collision.collider == prev_floor_collision.collider:
             var rotation_diff = floor_collision.collider.global_rotation.y - prev_floor_transform.basis.get_euler().y
             add_rotation(rotation_diff)
-    
+
+func pre_move_and_slide_bookkeeping():
     if floor_collision and is_instance_valid(floor_collision.collider):
         prev_floor_transform = floor_collision.collider.global_transform
         prev_floor_collision = floor_collision
@@ -1043,15 +970,135 @@ func _process(delta):
     
     previous_velocity = velocity
     previous_on_floor = floor_collision != null
+
+func update_global_wishdir():
+    var forward = Vector3.FORWARD.rotated(Vector3.UP, $CameraHolder.rotation.y)
+    var right   = Vector3.RIGHT  .rotated(Vector3.UP, $CameraHolder.rotation.y)
+    if is_on_floor():
+        forward = vector_reject(forward, floor_collision.normal).normalized()
+        right   = vector_reject(right  , floor_collision.normal).normalized()
     
-    # FIXME move to HUD
+    global_wishdir = wishdir.x*right - wishdir.z*forward
+
+func cycle_debugging_info():
+    if global_transform.origin.y > peak:
+        peak = global_transform.origin.y
+        #print("new peak: %s" % (peak*unit_scale))
+        peak_time = simtimer
+    if peak_time + 1 < simtimer:
+        peak = global_transform.origin.y
+
+var previous_on_floor = false
+var previous_velocity = velocity
+var want_to_jump = false
+var reload = 0.0
+var sway_memory = 0.0
+var cam_angle_memory = Vector2()
+var cam_sway_memory = Vector2()
+var sway_strength = 0.5
+var force_sway_to = 0.0
+var force_sway_amount = 0.0
+var prev_floor_transform = null
+var prev_floor_collision = null
+func _process(delta):
+    moving_platform_mode = MOVING_PLATFORM_FULL_INHERIT
     
-    if is_perspective:
-        HUD.update(self)
+    check_first_person_visibility()
+    update_inputs()
+    do_ai(delta)
+    process_inputs()
+    
+    # round delta for this frame to per-millisecond granularity
+    simtimer += delta
+    delta = (floor(simtimer*1000) - floor((simtimer-delta)*1000))/1000
+    if delta < 0.001:
+        return
+    
+    time_alive += delta
+    anim_lock_time = max(0.0, anim_lock_time - delta)
+    jump_state_timer = max(0.0, jump_state_timer - delta)
+    
+    cycle_debugging_info()
+    
+    var closest_ground = null
+    closest_ground = my_move_and_collide(Vector3.DOWN*stair_height, true, true)
+    
+    check_landing(delta)
+    
+    check_floor_velocity(delta)
+    
+    var floor_collision_before_jump = floor_collision
+    var did_jump = handle_jump(delta)
+    
+    camera.update_input(delta)
+    
+    update_global_wishdir()
+    
+    var oldvel = velocity
+    
+    if is_on_floor():
+        velocity -= floor_velocity
+    
+    handle_gravity(delta)
+    handle_friction(delta)
+    handle_accel(delta)
+    
+    if is_on_floor():
+        velocity += floor_velocity
+    
+    var newvel = velocity
+    velocity = oldvel
+    var vel_delta = newvel - oldvel
+    
+    velocity += vel_delta * Vector3(1, 0, 1)
+    vel_delta *= Vector3(0, 1, 0)
+    
+    velocity += vel_delta/2
+    
+    do_viewmodel_dynamics(delta)
+    
+    var reset_stair_height = check_stair_height_override(closest_ground)
+    
+    check_moving_platform_rotation()
+    pre_move_and_slide_bookkeeping()
     
     var new_velocity = custom_move_and_slide(delta, velocity)
-    velocity.y = new_velocity.y
+    apply_new_velocity(new_velocity)
     
+    check_if_left_floor(floor_collision_before_jump)
+    
+    stair_height = reset_stair_height
+    
+    check_stair_smoothing_cooldown(delta)
+    check_anim_state(delta, did_jump)
+    
+    velocity += vel_delta/2
+    
+    camera.update_smoothing(delta)
+    weapon_think(delta)
+    force_update_transform()
+    do_evil_anim_things(delta)
+    cycle_prev_positions(delta)
+    find_navigable_floor()
+
+func check_stair_height_override(closest_ground):
+    var reset_stair_height = stair_height
+    do_stairs = is_on_floor() or jump_state_timer > 0.0 or velocity.y <= 0
+    if !do_stairs and closest_ground:
+        do_stairs = true
+        stair_height = abs(closest_ground.remainder.y)
+    return reset_stair_height
+        
+func check_stair_smoothing_cooldown(delta):
+    if did_stairs:
+        stair_cooldown = camera.correction_window
+    
+    if !is_on_floor() or stair_cooldown == 0.0:
+        reset_stair_camera_offset()
+    stair_cooldown = clamp(stair_cooldown-delta, 0.0, 1.0)
+    
+func apply_new_velocity(new_velocity):
+    velocity.y = new_velocity.y
     # hack to make badly placed jumppads work
     var minspeed = 0.1
     if !is_on_floor() and velocity.y > 0.0 and abs(new_velocity.x) < minspeed and abs(velocity.x) > minspeed:
@@ -1062,8 +1109,9 @@ func _process(delta):
         velocity.z = sign(velocity.z)*minspeed
     else:
         velocity.z = new_velocity.z
-    
-    # check for having left the floor (jump or otherwise)
+
+func check_if_left_floor(floor_collision_before_jump):
+    # check for having left the floor (jump or otherwise), do inertia inheritance if necessary
     if !floor_collision and floor_collision_before_jump:
         var floor_boost = Vector3()
         if moving_platform_mode == 2:
@@ -1072,26 +1120,10 @@ func _process(delta):
             floor_boost = vector_project(floor_collision_before_jump.collider_velocity, floor_collision_before_jump.normal)
         if moving_platform_jump_ignore_vertical:
             floor_boost.y = 0.0
-        #print(floor_boost)
         velocity += floor_boost
-    
-    stair_height = actual_stair_height
-    
-    if did_stairs:
-        stair_cooldown = camera.correction_window
-        #print("stepped")
-    
-    if !is_on_floor() or stair_cooldown == 0.0:
-        reset_stair_camera_offset()
-    stair_cooldown = clamp(stair_cooldown-delta, 0.0, 1.0)
-    
-    #    print("stairstepped")
-    #    print("before stairs: ", before_velocity*unit_scale)
-    #    print("after stairs : ", velocity*unit_scale)
-    #    print("would-be delta : ", vel_delta/2*unit_scale)
-    
+
+func check_anim_state(_delta, did_jump):
     var floorspeed = (velocity*Vector3(1, 0, 1)).length()
-    
     if is_on_floor():
         if floorspeed*unit_scale > 280:
             var walkspeed = clamp(floorspeed*unit_scale/320, 0.2, 1.0)
@@ -1113,12 +1145,6 @@ func _process(delta):
         else:
             play_animation("air", 1.0)
     
-    velocity += vel_delta/2
-    
-    force_update_transform()
-    do_evil_anim_things(delta)
-    cycle_prev_positions(delta)
-    find_navigable_floor()
 
 var health = 100
 var armor  = 100

@@ -44,17 +44,20 @@ func kill_player(which : int, killed_by : int, type : String):
     
     var camera_xform = player.entity.get_camera_transform()
     
-    var death_cam = preload("res://scenes/player/DeathCamera.tscn").instance()
-    world.add_child(death_cam)
-    death_cam.global_transform = camera_xform
-    death_cam.force_update_transform()
-    death_cam.make_current()
+    if player.is_player:
+        var death_cam = preload("res://scenes/player/DeathCamera.tscn").instance()
+        var camera : Camera = player.entity.remove_camera()
+        camera.set_script(null)
+        death_cam.add_child(camera)
+        world.add_child(death_cam)
+        death_cam.global_transform = camera_xform
     
     var location = player.entity.global_translation
     var velocity = player.entity.velocity
     
     if player.entity and is_instance_valid(player.entity):
         player.entity.queue_free()
+    
     player.respawn_time = 5.0
     if type == "rocket":
         randomize()
@@ -125,6 +128,8 @@ func playerside_processing():
     for i in players:
         var player = players[i]
         if player.is_player:
+            if is_instance_valid(player.entity):
+                HUD.update(player.entity)
             if player.respawn_time <= 0.0:
                 for cam in get_tree().get_nodes_in_group("DeathCam"):
                     cam.queue_free()
