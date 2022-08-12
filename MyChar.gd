@@ -22,9 +22,11 @@ var player_id = -1
 func set_rotation(y):
     $CameraHolder.rotation.y = y
     $CameraHolder.rotation.x = 0
+    update_from_camera_smoothing()
 
 func add_rotation(y):
     $CameraHolder.rotation.y += y
+    update_from_camera_smoothing()
 
 func reset_stair_camera_offset():
     camera.reset_stair_offset()
@@ -76,8 +78,8 @@ func check_first_person_visibility():
     
 func update_from_camera_smoothing():
     var amount = camera.smoothing_amount
-    if amount > 0.0001:
-        print(amount)
+    #if amount > 0.0001:
+    #    print(amount)
     $Model.translation.y = base_model_offset.y + amount
     $CamRelative.visible = true
     $CamRelative.global_transform = $CameraHolder.global_transform
@@ -382,8 +384,8 @@ func do_ai(delta):
     var next_pos = $Navigation/Agent.get_next_location()
     
     if !$Navigation/Agent.is_target_reachable():
-        if (last_used_nav_pos - navigable_floor).length() > 0.1:
-            print("resetting", last_used_nav_pos, navigable_floor)
+        #if (last_used_nav_pos - navigable_floor).length() > 0.1:
+        #    print("resetting", last_used_nav_pos, navigable_floor)
         navigable_floor = last_used_nav_pos
         $CSGBox.global_translation = last_used_nav_pos
         $Navigation.global_translation = last_used_nav_pos
@@ -459,15 +461,16 @@ func do_ai(delta):
     var target_yaw
     var target_pitch
     var want_to_attack = false
+    var engagement_range = 8.0
     if horiz_diff.length() > 0.1:
-        if target_diff.length() > 6.0 or !found_player:
+        if target_diff.length() > engagement_range or !found_player:
             if is_on_wall():
                 if (velocity * Vector3(1, 0, 1)).normalized().dot(horiz_diff) > 0.5:
                     inputs.jump_pressed = true
                     inputs.jump = true
             
-            # TODO: look at player while moving if we want to attack
-            if found_player and target_diff.length() < 10.0:
+            # TODO: look at player while moving if we want to attack. adjust wishdir accordingly
+            if found_player and target_diff.length() < engagement_range + 2.0:
                 target_yaw = Vector2().angle_to_point(Vector2(target_diff_for_aiming.z, target_diff_for_aiming.x))
                 ai_apply_turn_logic(delta, target_yaw, 1)
                 
@@ -514,7 +517,7 @@ func do_ai(delta):
                 strafe_dir = sin(strafe_timer*PI*2.0)
                 
             wishdir = Vector3.RIGHT * strafe_dir
-            wishdir = Vector3()
+            #wishdir = Vector3()
         
         # TODO: make it so keys have to be pressed/depressed for a certain amount of time (0.1s?) before their opposite can be pressed
         wishdir = wishdir.normalized()
@@ -523,7 +526,10 @@ func do_ai(delta):
         var angle = Vector2($CameraHolder.rotation.x, $CameraHolder.rotation.y)
         var target_angle = Vector2(target_pitch, target_yaw)
         # FIXME wrong but whatever
-        if angle_diff(0, (angle-target_angle).length()) < deg2rad(5):
+        var limit = deg2rad(5)
+        var diff_a = abs(angle_get_delta(angle.x, target_angle.x))
+        var diff_b = abs(angle_get_delta(angle.y, target_angle.y))
+        if diff_a < limit and diff_b < limit:
             inputs.m1 = true
 
 
@@ -636,10 +642,13 @@ func _process(delta):
     
     reload = reload-delta
     if inputs.m1 and reload <= 0.0:
+        if is_player:
+            print("firing!!!")
         time_of_shot = time_alive
         reload += 0.8
         var rocket : Spatial = load("res://Rocket.tscn").instance()
         rocket.origin_player = self
+        rocket.origin_player_id = player_id
         get_parent().add_child(rocket)
         $CamRelative/RayCast.force_raycast_update()
         if !$CamRelative/RayCast.is_colliding():
@@ -987,18 +996,18 @@ var armor  = 100
 
 var armor_ratio = 2.0/3.0
 
-func take_damage(amount, from, type):
-    if from == self:
+func take_damage(amount, other_player_id, type):
+    if player_id == other_player_id:
         amount *= 0.5
     amount = ceil(amount)
     var to_armor = ceil(min(armor, armor_ratio*amount))
     armor -= to_armor
     
-    print(to_armor)
-    print(amount - to_armor)
+    #print(to_armor)
+    #print(amount - to_armor)
     health -= amount - to_armor
     if health <= 0:
-        Gamemode.kill_player(player_id, type)
+        Gamemode.kill_player(player_id, other_player_id, type)
 
 onready var navigable_floor = global_translation
 var navigable_floor_is_up_to_date = false

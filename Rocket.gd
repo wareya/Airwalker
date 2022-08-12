@@ -30,6 +30,7 @@ func add_exception(other):
     $RayCast.add_exception(other)
 
 var origin_player = null
+var origin_player_id = null
 
 func die():
     EmitterFactory.emit("rocketexplosion2", self)
@@ -48,7 +49,8 @@ func die():
     var particles2 = $RocketParticles2
     remove_child(particles2)
     get_parent().add_child(particles2)
-    particles2.emitting = false
+    #particles2.emitting = false
+    get_tree().create_timer(particles2.lifetime, false).connect("timeout", particles2, "queue_free")
     
     for _player in get_tree().get_nodes_in_group("Player"):
         var player : Spatial = _player
@@ -56,10 +58,10 @@ func die():
         var pos_diff = player.subtract_hull_size_from_distance(pos_diff_raw)
         # force direct hits to always be direct hits
         if $RayCast.is_colliding() and $RayCast.get_collider() == player:
-            print("is collider")
+            #print("is collider")
             pos_diff *= 0.0
         if force_collider == player:
-            print("is inside")
+            #print("is inside")
             pos_diff *= 0.0
         
         #var knockback_range = 125.0/unit_scale
@@ -79,7 +81,7 @@ func die():
         #var knockback_falloff = 1.0/(pos_diff.length()*pos_diff.length())
         #var knockback_falloff = 1.0/pos_diff.length()
         var falloff = 1.0 - pos_diff.length()/knockback_range
-        print(falloff)
+        #print(falloff)
         var knockback_strength = lerp(knockback_strength_min, knockback_strength_max, falloff)
         var damage = lerp(0, 100, falloff)
         #print(pos_diff.length())
@@ -92,7 +94,7 @@ func die():
         player.velocity += knockback_dir * knockback_strength * f / mass
         player.floor_collision = null
         
-        player.take_damage(damage, origin_player, "rocket")
+        player.take_damage(damage, origin_player_id, "rocket")
         
 
 var bounces = 0
@@ -108,7 +110,7 @@ func check_distance():
         if dist == Vector3():
             life = 0.0
             force_collider = player
-            print("inside, dead rocket")
+            #print("inside, dead rocket")
         break
 
 var destination = Vector3()
@@ -131,7 +133,7 @@ func advance(distance):
             global_transform = global_transform.looking_at(global_translation+front, Vector3.UP)
         bounces -= 1
         if bounces < 0:
-            print("colliding, dead rocket")
+            #print("colliding, dead rocket")
             force_collider = $RayCast.get_collider()
             life = 0.0
             global_transform.origin = $RayCast.get_collision_point()

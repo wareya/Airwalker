@@ -4,8 +4,8 @@ func _ready():
     yield(get_tree(), "idle_frame")
     do_spawn()
 
-var player_deaths = 0
-var enemy_deaths = 0
+var player_kills = 0
+var enemy_kills  = 0
 
 func array_pick_random(array : Array, destructive = false):
     if array.size() == 0:
@@ -17,8 +17,8 @@ func array_pick_random(array : Array, destructive = false):
     return ele
 
 var players = {
-    0 : {name="Player", entity=null, is_player=true , is_bot=false, respawn_time=0.0},
-    1 : {name="Bot"   , entity=null, is_player=false, is_bot=true , respawn_time=0.0},
+    0 : {name="Player", score=0, entity=null, is_player=true , is_bot=false, respawn_time=0.0},
+    1 : {name="Bot"   , score=0, entity=null, is_player=false, is_bot=true , respawn_time=0.0},
 }
 
 func find_world():
@@ -33,8 +33,13 @@ onready var world = find_world()
 
 var char_scene = preload("res://MyChar.tscn")
 
-func kill_player(which : int, type : String):
+func kill_player(which : int, killed_by : int, type : String):
     var player = players[which]
+    var other  = players[killed_by]
+    if player != other:
+        other.score += 1
+    else:
+        other.score -= 1
     var location = player.entity.global_translation
     var velocity = player.entity.velocity
     if player.entity and is_instance_valid(player.entity):
@@ -97,7 +102,11 @@ func do_spawn():
 
 onready var spawners = get_tree().get_nodes_in_group("Spawner")
 func _process(delta : float):
-    $Label.text = "%s\n%s" % [player_deaths, enemy_deaths]
+    var text = ""
+    for i in players:
+        var player = players[i]
+        text += "%s: %s\n" % [player.name, player.score]
+    $Label.text = text
     
     for i in players:
         var player = players[i]
