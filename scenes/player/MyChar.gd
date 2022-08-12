@@ -19,18 +19,26 @@ export var is_player : bool = false
 
 var player_id = -1
 
-func set_rotation(y):
+func force_take_camera():
+    $CameraHolder/Camera.make_current()
+
+func get_camera_transform():
+    return $CameraHolder.global_transform
+
+func set_rotation(y, x = 0):
+    print("setting rotation")
     $CameraHolder.rotation.y = y
-    $CameraHolder.rotation.x = 0
+    $CameraHolder.rotation.x = x
+    cam_angle_memory = Vector2(rad2deg(x), rad2deg(y))
     update_from_camera_smoothing()
 
 func add_rotation(y):
     $CameraHolder.rotation.y += y
+    cam_angle_memory.y += y
     update_from_camera_smoothing()
 
 func reset_stair_camera_offset():
     camera.reset_stair_offset()
-    pass
 
 onready var base_model_offset = $Model.translation
 func _ready():
@@ -468,7 +476,7 @@ func ai_apply_turn_logic(delta, target_angle, axis):
     $CameraHolder.rotation[axis] = old_angle + ai_angle_inertia[axis]*delta
 
 
-var do_no_ai = false
+var do_no_ai = true
 var do_no_attack = false
 var last_used_nav_pos = Vector3()
 func do_ai(delta):
@@ -646,6 +654,55 @@ func do_ai(delta):
         if diff_a < limit and diff_b < limit:
             inputs.m1 = true
 
+func do_viewmodel_dynamics(delta):
+    $CamRelative/WeaponHolder.transform = Transform.IDENTITY
+    
+    var kickback_amount = clamp(time_of_shot + 0.5 - time_alive, 0.0, 1.0) / 0.5
+    $CamRelative/WeaponHolder.translation.z += lerp(0.0, 0.4, kickback_amount*kickback_amount)
+    $CamRelative/WeaponHolder.transform.basis = Basis.IDENTITY.rotated(Vector3.RIGHT, smoothstep(0.0, 1.0, kickback_amount)*0.1)
+    
+    var kickdown_amount = clamp(time_of_landing + 1.0 - time_alive, 0.0, 1.0) / 1.0
+    #var raw_kickdown_amount = kickdown_amount
+    kickdown_amount = kickdown_amount*kickdown_amount
+    kickdown_amount = kickdown_amount*kickdown_amount
+    kickdown_amount = kickdown_amount*kickdown_amount
+    kickdown_amount = kickdown_amount * (1.0-kickdown_amount) * 4.0
+    kickdown_amount = kickdown_amount*kickdown_amount
+    $CamRelative/WeaponHolder.translation.y -= lerp(0.0, 0.05, kickdown_amount)
+    $CamRelative/WeaponHolder.translation += weapon_offset
+    if third_person:
+        $CamRelative/WeaponHolder.global_translation += Transform.IDENTITY.rotated(Vector3.RIGHT, $CameraHolder.rotation.x+PI/2.0).rotated(Vector3.UP, $CameraHolder.rotation.y).xform(Vector3(0, 0, -0.5))*Vector3(1, 0, 1)
+    
+    if is_on_floor():
+        sway_rate_multiplier = 1.0
+    else:
+        sway_rate_multiplier = move_toward(sway_rate_multiplier, 0.25, delta*0.25)
+    if force_sway_amount > 0.0:
+        sway_timer = fmod(sway_timer, PI*2.0)
+        var target = fmod(force_sway_to, PI*2.0)
+        if target < sway_timer:
+            target += PI*2.0
+        sway_timer = lerp(sway_timer, target, clamp(delta*4.0/force_sway_amount, 0.0, 1.0))
+        force_sway_amount = clamp(force_sway_amount-delta*4.0, 0.0, 1.0)
+    else:
+        sway_timer += delta*PI*sway_rate_multiplier
+    var sway_amount = lerp(0.001, 0.05, clamp(((velocity - floor_velocity)*Vector3(1, 0, 1)).length()/32.0, 0.0, 1.0)*0.5)
+    sway_amount = lerp(sway_memory, sway_amount, 1.0 - pow(0.001, delta))
+    sway_memory = sway_amount
+    sway_amount *= sway_strength
+    
+    $CamRelative/WeaponHolder.transform.origin.y += sin(sway_timer*2.0)*sway_amount
+    $CamRelative/WeaponHolder.transform.origin.x += sin(sway_timer+1.5)*sway_amount*2.0*4.0
+    
+    var cam_sway_amount_y = 0.001*angle_diff($CamRelative.rotation_degrees.y, cam_angle_memory.y)/delta
+    var cam_sway_amount_x = 0.001*angle_diff($CamRelative.rotation_degrees.x, cam_angle_memory.x)/delta
+    var cam_sway_amount = Vector2(cam_sway_amount_x, cam_sway_amount_y)
+    cam_angle_memory = Vector2($CamRelative.rotation_degrees.x, $CamRelative.rotation_degrees.y)
+    cam_sway_amount = (cam_sway_amount as Vector2).limit_length(1.0)
+    cam_sway_amount = cam_sway_memory.linear_interpolate(cam_sway_amount, 1.0 - pow(0.001, delta))
+    cam_sway_memory = cam_sway_amount
+    $CamRelative/WeaponHolder.transform.origin.x += cam_sway_amount.y * 0.2
+    $CamRelative/WeaponHolder.transform.origin.y += cam_sway_amount.x * -0.2
 
 var total_prev_position_time = 0.0
 # note that delta is the time since the previous entry, not the time to the next entry
@@ -659,6 +716,8 @@ func cycle_prev_positions(delta):
         var front = previous_positions[0]
         previous_positions.pop_front()
         total_prev_position_time -= front.delta
+
+var floor_velocity = Vector3()
 
 var previous_on_floor = false
 var previous_velocity = velocity
@@ -684,10 +743,11 @@ func _process(delta):
     
     if is_player:
         if Input.is_action_just_pressed("ui_page_down"):
-            if Engine.time_scale > 0.5:
-                Engine.time_scale = 0.00001
+            if Engine.target_fps != 125:
+                Engine.target_fps = 125
             else:
-                Engine.time_scale = 1.0
+                Engine.target_fps = 10
+            #Engine.time_scale = 1.0
         
         # FIXME move to hud
         if Input.is_action_just_pressed("ui_page_up"):
@@ -762,7 +822,7 @@ func _process(delta):
             print("firing!!!")
         time_of_shot = time_alive
         reload += 0.8
-        var rocket : Spatial = load("res://Rocket.tscn").instance()
+        var rocket : Spatial = preload("res://scenes/dynamic/Rocket.tscn").instance()
         rocket.origin_player = self
         rocket.origin_player_id = player_id
         get_parent().add_child(rocket)
@@ -789,7 +849,7 @@ func _process(delta):
         (rocket.get_node("RocketParticles") as CPUParticles).emitting = true
     reload = max(reload, 0.0)
 
-    var floor_velocity = Vector3()
+    floor_velocity = Vector3()
     if (moving_platform_mode == 3 and is_on_floor() and delta > 0.0
     and floor_collision and is_instance_valid(floor_collision.collider)
     and prev_floor_collision and is_instance_valid(prev_floor_collision.collider)
@@ -961,56 +1021,7 @@ func _process(delta):
     
     velocity += vel_delta/2
     
-    
-    $CamRelative/WeaponHolder.transform = Transform.IDENTITY
-    
-    var kickback_amount = clamp(time_of_shot + 0.5 - time_alive, 0.0, 1.0) / 0.5
-    $CamRelative/WeaponHolder.translation.z += lerp(0.0, 0.4, kickback_amount*kickback_amount)
-    $CamRelative/WeaponHolder.transform.basis = Basis.IDENTITY.rotated(Vector3.RIGHT, smoothstep(0.0, 1.0, kickback_amount)*0.1)
-    
-    var kickdown_amount = clamp(time_of_landing + 1.0 - time_alive, 0.0, 1.0) / 1.0
-    #var raw_kickdown_amount = kickdown_amount
-    kickdown_amount = kickdown_amount*kickdown_amount
-    kickdown_amount = kickdown_amount*kickdown_amount
-    kickdown_amount = kickdown_amount*kickdown_amount
-    kickdown_amount = kickdown_amount * (1.0-kickdown_amount) * 4.0
-    kickdown_amount = kickdown_amount*kickdown_amount
-    $CamRelative/WeaponHolder.translation.y -= lerp(0.0, 0.05, kickdown_amount)
-    $CamRelative/WeaponHolder.translation += weapon_offset
-    if third_person:
-        $CamRelative/WeaponHolder.global_translation += Transform.IDENTITY.rotated(Vector3.RIGHT, $CameraHolder.rotation.x+PI/2.0).rotated(Vector3.UP, $CameraHolder.rotation.y).xform(Vector3(0, 0, -0.5))*Vector3(1, 0, 1)
-    
-    if is_on_floor():
-        sway_rate_multiplier = 1.0
-    else:
-        sway_rate_multiplier = move_toward(sway_rate_multiplier, 0.25, delta*0.25)
-    if force_sway_amount > 0.0:
-        sway_timer = fmod(sway_timer, PI*2.0)
-        var target = fmod(force_sway_to, PI*2.0)
-        if target < sway_timer:
-            target += PI*2.0
-        sway_timer = lerp(sway_timer, target, clamp(delta*4.0/force_sway_amount, 0.0, 1.0))
-        force_sway_amount = clamp(force_sway_amount-delta*4.0, 0.0, 1.0)
-    else:
-        sway_timer += delta*PI*sway_rate_multiplier
-    var sway_amount = lerp(0.001, 0.05, clamp(((velocity - floor_velocity)*Vector3(1, 0, 1)).length()/32.0, 0.0, 1.0)*0.5)
-    sway_amount = lerp(sway_memory, sway_amount, 1.0 - pow(0.001, delta))
-    sway_memory = sway_amount
-    sway_amount *= sway_strength
-    #sway_amount *= 1.0 - kickdown_amount
-    $CamRelative/WeaponHolder.transform.origin.y += sin(sway_timer*2.0)*sway_amount
-    $CamRelative/WeaponHolder.transform.origin.x += sin(sway_timer+1.5)*sway_amount*2.0*4.0
-    
-    var cam_sway_amount_y = 0.001*angle_diff($CamRelative.rotation_degrees.y, cam_angle_memory.y)/delta
-    var cam_sway_amount_x = 0.001*angle_diff($CamRelative.rotation_degrees.x, cam_angle_memory.x)/delta
-    var cam_sway_amount = Vector2(cam_sway_amount_x, cam_sway_amount_y)
-    cam_angle_memory = Vector2($CamRelative.rotation_degrees.x, $CamRelative.rotation_degrees.y)
-    cam_sway_amount = (cam_sway_amount as Vector2).limit_length(1.0)
-    cam_sway_amount = cam_sway_memory.linear_interpolate(cam_sway_amount, 1.0 - pow(0.001, delta))
-    cam_sway_memory = cam_sway_amount
-    $CamRelative/WeaponHolder.transform.origin.x += cam_sway_amount.y * 0.2
-    $CamRelative/WeaponHolder.transform.origin.y += cam_sway_amount.x * -0.2
-    
+    do_viewmodel_dynamics(delta)
     
     var actual_stair_height = stair_height
     do_stairs = is_on_floor() or jump_state_timer > 0.0 or velocity.y <= 0

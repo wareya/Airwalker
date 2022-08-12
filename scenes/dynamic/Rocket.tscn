@@ -1,7 +1,7 @@
 [gd_scene load_steps=16 format=2]
 
-[ext_resource path="res://Rocket.gd" type="Script" id=1]
-[ext_resource path="res://sfx/rocketloop.wav" type="AudioStream" id=2]
+[ext_resource path="res://sfx/rocketloop.wav" type="AudioStream" id=1]
+[ext_resource path="res://scenes/dynamic/Rocket.gd" type="Script" id=2]
 
 [sub_resource type="SpatialMaterial" id=6]
 albedo_color = Color( 1, 0.870588, 0.368627, 1 )
@@ -88,7 +88,7 @@ max_value = 2.0
 _data = [ Vector2( 0.0112994, 0.485227 ), 0.0, -0.448965, 0, 0, Vector2( 1, 2 ), 1.67614, 0.0, 0, 0 ]
 
 [node name="Rocket" type="Spatial"]
-script = ExtResource( 1 )
+script = ExtResource( 2 )
 
 [node name="CSGPolygon" type="CSGPolygon" parent="."]
 transform = Transform( -2.18021e-07, -1.95696e-08, -0.0693637, -0.0693637, 6.15101e-14, 2.18021e-07, 0, 0.0693637, -1.95696e-08, 0, -8.04603e-14, -0.149685 )
@@ -158,7 +158,7 @@ cast_to = Vector3( 0, 0, -1 )
 collision_mask = 3
 
 [node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="."]
-stream = ExtResource( 2 )
+stream = ExtResource( 1 )
 attenuation_model = 1
 unit_db = 55.0
 unit_size = 0.5

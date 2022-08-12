@@ -70,3 +70,4 @@ func _process(delta):
     
     holder.get_parent().update_from_camera_smoothing()
     
+    

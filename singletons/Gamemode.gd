@@ -31,33 +31,46 @@ func find_world():
 
 onready var world = find_world()
 
-var char_scene = preload("res://MyChar.tscn")
-
 func kill_player(which : int, killed_by : int, type : String):
     var player = players[which]
     var other  = players[killed_by]
-    if player != other:
+    if !player or !player.entity or !is_instance_valid(player.entity):
+        return
+    
+    if other and player != other:
         other.score += 1
-    else:
+    elif other:
         other.score -= 1
+    
+    var camera_xform = player.entity.get_camera_transform()
+    
+    var death_cam = preload("res://scenes/player/DeathCamera.tscn").instance()
+    world.add_child(death_cam)
+    death_cam.global_transform = camera_xform
+    death_cam.force_update_transform()
+    death_cam.make_current()
+    
     var location = player.entity.global_translation
     var velocity = player.entity.velocity
+    
     if player.entity and is_instance_valid(player.entity):
         player.entity.queue_free()
     player.respawn_time = 5.0
     if type == "rocket":
         randomize()
-        for _i in range(8):
-            var gibs = load("res://Giblet.tscn").instance()
+        for _i in range(16):
+            var gibs : Spatial = load("res://scenes/dynamic/Giblet.tscn").instance()
             world.add_child(gibs)
             var offset = Vector3(randf()*2.0-1.0, randf()*2.0-1.0, randf()*2.0-1.0).normalized()
+            gibs.scale *= randf()/2.0 + 0.5
             gibs.global_translation = location
-            gibs.linear_velocity = velocity + offset*8.0
-            #gibs.angular_velocity = Vector3(randf()*2.0-1.0, randf()*2.0-1.0, randf()*2.0-1.0)
+            gibs.linear_velocity = velocity*0.5 + offset*8.0
+            gibs.angular_velocity = Vector3(randf()*2.0-1.0, randf()*2.0-1.0, randf()*2.0-1.0)*0.25
         var fx : AudioStreamPlayer3D = EmitterFactory.emit("GibFrag", null, location)
         fx.unit_db -= 12
         fx.max_db = 0
 
+var char_scene = preload("res://scenes/player/MyChar.tscn")
 func spawn_player_at(which : int, spawner : Spatial):
     var player = players[which]
     
@@ -77,12 +90,14 @@ func spawn_player_at(which : int, spawner : Spatial):
     
     player.entity = mychar
     
-    mychar.set_rotation(spawner.rotation.y)
+    if spawner:
+        mychar.set_rotation(spawner.rotation.y)
+        mychar.global_translation = spawner.global_translation + Vector3(0, 0.5, 0)
     
-    mychar.global_translation = spawner.global_translation + Vector3(0, 0.5, 0)
     mychar.map_to_floor(null, 1.0)
     if player.is_player:
         mychar.is_player = true
+        mychar.force_take_camera()
     
     yield(get_tree(), "idle_frame")
     var fx : AudioStreamPlayer3D = EmitterFactory.emit("teleporter fx", mychar)
@@ -92,7 +107,6 @@ func spawn_player_at(which : int, spawner : Spatial):
 
 func do_spawn():
     randomize()
-    
     var mut_spawners = get_tree().get_nodes_in_group("Spawner")
     for i in players:
         var spawner = array_pick_random(mut_spawners, true)
@@ -100,14 +114,26 @@ func do_spawn():
             spawner = array_pick_random(spawners)
         spawn_player_at(i, spawner)
 
-onready var spawners = get_tree().get_nodes_in_group("Spawner")
-func _process(delta : float):
+func playerside_processing():
     var text = ""
     for i in players:
         var player = players[i]
         text += "%s: %s\n" % [player.name, player.score]
     $Label.text = text
     
+    $Label2.visible = false
+    for i in players:
+        var player = players[i]
+        if player.is_player:
+            if player.respawn_time <= 0.0:
+                for cam in get_tree().get_nodes_in_group("DeathCam"):
+                    cam.queue_free()
+            else:
+                $Label2.visible = true
+                $Label2.text = "Respawning in %s..." % [ceil(player.respawn_time)]
+
+onready var spawners = get_tree().get_nodes_in_group("Spawner")
+func _process(delta : float):
     for i in players:
         var player = players[i]
         if player.respawn_time > 0.0:
@@ -115,4 +141,6 @@ func _process(delta : float):
             if player.respawn_time <= 0.0:
                 var spawner = array_pick_random(spawners)
                 spawn_player_at(i, spawner)
+    
+    playerside_processing()
     

@@ -14,7 +14,6 @@ const unit_scale = 32.0
 var speed = 1000.0/unit_scale
 
 func _process(delta):
-    delta = 0.008
     $CSGPolygon.rotation_degrees.x += delta*1000.0
     if abs(life-max_life) > 0.04:
         $RocketParticles2.emitting = true
@@ -34,7 +33,7 @@ var origin_player_id = null
 
 func die():
     EmitterFactory.emit("rocketexplosion2", self)
-    var particles : CPUParticles = load("res://RocketParticles.tscn").instance()
+    var particles : CPUParticles = preload("res://scenes/dynamic/RocketParticles.tscn").instance()
     particles.emitting = true
     get_parent().add_child(particles)
     particles.global_transform.origin = global_transform.origin

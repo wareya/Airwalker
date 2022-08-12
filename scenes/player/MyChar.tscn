@@ -1,15 +1,15 @@
 [gd_scene load_steps=12 format=2]
 
-[ext_resource path="res://MyChar.gd" type="Script" id=1]
-[ext_resource path="res://Camera.gd" type="Script" id=2]
-[ext_resource path="res://art/texture/blockmesh texture red.png" type="Texture" id=3]
-[ext_resource path="res://sfx/HybridFoley.wav" type="AudioStream" id=4]
-[ext_resource path="res://3d/char/fps char.glb" type="PackedScene" id=5]
-[ext_resource path="res://art/texture/blockmesh texture white.png" type="Texture" id=6]
+[ext_resource path="res://sfx/HybridFoley.wav" type="AudioStream" id=1]
+[ext_resource path="res://scenes/player/MyChar.gd" type="Script" id=2]
+[ext_resource path="res://art/texture/blockmesh texture white.png" type="Texture" id=3]
+[ext_resource path="res://art/texture/blockmesh texture red.png" type="Texture" id=4]
+[ext_resource path="res://scenes/player/Camera.gd" type="Script" id=5]
+[ext_resource path="res://3d/char/fps char.glb" type="PackedScene" id=6]
 
 [sub_resource type="SpatialMaterial" id=2]
 albedo_color = Color( 0.823529, 0.643137, 0.533333, 1 )
-albedo_texture = ExtResource( 3 )
+albedo_texture = ExtResource( 4 )
 metallic = 0.23
 metallic_specular = 0.0
 roughness = 0.81
@@ -17,7 +17,7 @@ uv1_scale = Vector3( 16, 16, 16 )
 uv1_triplanar = true
 
 [sub_resource type="SpatialMaterial" id=3]
-albedo_texture = ExtResource( 6 )
+albedo_texture = ExtResource( 3 )
 metallic = 1.0
 roughness = 0.46
 uv1_scale = Vector3( 16, 16, 16 )
@@ -40,13 +40,13 @@ albedo_color = Color( 0.670588, 0.211765, 0.211765, 0.780392 )
 [node name="MyChar" type="KinematicBody" groups=["Player"]]
 collision_layer = 2
 collision_mask = 3
-script = ExtResource( 1 )
+script = ExtResource( 2 )
 
-[node name="Model" parent="." instance=ExtResource( 5 )]
+[node name="Model" parent="." instance=ExtResource( 6 )]
 transform = Transform( -0.666, 0, -1.00563e-07, 0, 0.666, 0, 1.00563e-07, 0, -0.666, 0, -0.875, 0 )
 
 [node name="JumpSound" type="AudioStreamPlayer3D" parent="."]
-stream = ExtResource( 4 )
+stream = ExtResource( 1 )
 unit_db = 30.0
 unit_size = 0.5
 max_db = 0.0
@@ -62,7 +62,7 @@ process_priority = 1
 doppler_tracking = 1
 fov = 90.0
 far = 1000.0
-script = ExtResource( 2 )
+script = ExtResource( 5 )
 
 [node name="CamBasePos" type="Spatial" parent="CameraHolder"]
 

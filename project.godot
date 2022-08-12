@@ -12,7 +12,7 @@ _global_script_classes=[ {
 "base": "KinematicBody",
 "class": "QuakelikeBody",
 "language": "GDScript",
-"path": "res://QuakelikeBody.gd"
+"path": "res://scenes/player/QuakelikeBody.gd"
 } ]
 _global_script_class_icons={
 "QuakelikeBody": ""
@@ -21,8 +21,12 @@ _global_script_class_icons={
 [application]
 
 config/name="Airwalker"
-run/main_scene="res://Demo Scene 2.tscn"
-config/icon="res://icon.png"
+run/main_scene="res://scenes/levels/Demo Scene 2.tscn"
+config/icon="res://res/icon.png"
+
+[audio]
+
+default_bus_layout="res://res/default_bus_layout.tres"
 
 [autoload]
 
@@ -1187,4 +1191,3 @@ quality/spatial_partitioning/render_tree_balance=0.19
 misc/occlusion_culling/max_active_polygons=32
 quality/reflections/atlas_subdiv=256
 quality/filters/msaa=2
-environment/default_environment="res://default_env.tres"
