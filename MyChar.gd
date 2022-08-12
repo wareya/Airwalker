@@ -469,10 +469,11 @@ func ai_apply_turn_logic(delta, target_angle, axis):
 
 
 var do_no_ai = false
+var do_no_attack = false
 var last_used_nav_pos = Vector3()
 func do_ai(delta):
     $CSGBox.visible = false
-    if is_player or true:
+    if is_player or do_no_ai:
         return
     inputs.clear()
     
@@ -633,7 +634,8 @@ func do_ai(delta):
         # TODO: make it so keys have to be pressed/depressed for a certain amount of time (0.1s?) before their opposite can be pressed
         wishdir = wishdir.normalized()
     
-    want_to_attack = false
+    if do_no_attack:
+        want_to_attack = false
     if want_to_attack:
         var angle = Vector2($CameraHolder.rotation.x, $CameraHolder.rotation.y)
         var target_angle = Vector2(target_pitch, target_yaw)
@@ -777,9 +779,11 @@ func _process(delta):
         
         rocket.add_exception(self)
         if is_perspective:
-            EmitterFactory.emit("rocketshot").volume_db = -9.0
+            EmitterFactory.emit("rocketshot").volume_db = -4.5
         else:
-            (EmitterFactory.emit("rocketshot", self) as AudioStreamPlayer3D).unit_db -= 9.0
+            var fx : AudioStreamPlayer3D = EmitterFactory.emit("rocketshot", self)
+            fx.unit_db -= 4.5
+            fx.max_db = -4.5
         rocket.advance(0.65)
         rocket.force_update_transform()
         (rocket.get_node("RocketParticles") as CPUParticles).emitting = true
