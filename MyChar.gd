@@ -33,18 +33,112 @@ func reset_stair_camera_offset():
     pass
 
 onready var base_model_offset = $Model.translation
+var foot_ik_l1 = null
+var foot_ik_l2 = null
+var foot_ik_r1 = null
+var foot_ik_r2 = null
 func _ready():
     physics_interpolation_mode = PHYSICS_INTERPOLATION_MODE_OFF
     $CameraHolder.rotation.y = rotation.y
     rotation.y = 0
     check_first_person_visibility()
     $Hull2.queue_free()
+    
+    $Model/Armature.translation.z = -0.08
+    
+    foot_ik_l1 = SkeletonIK.new()
+    foot_ik_l2 = SkeletonIK.new()
+    foot_ik_r1 = SkeletonIK.new()
+    foot_ik_r2 = SkeletonIK.new()
+    
+    $Model/Armature/Skeleton.add_child(foot_ik_l1)
+    $Model/Armature/Skeleton.add_child(foot_ik_l2)
+    $Model/Armature/Skeleton.add_child(foot_ik_r1)
+    $Model/Armature/Skeleton.add_child(foot_ik_r2)
+
+func do_ik_for_side(solver : SkeletonIK, root : String, tip : String, skip_if_above):
+    var index = $Model/Armature/Skeleton.find_bone(tip)
+    var xform = $Model/Armature/Skeleton.global_transform * $Model/Armature/Skeleton.get_bone_global_pose(index)
+    var origin = xform.origin
+    
+    $IKFinder.global_rotation = $Model.global_rotation
+    $IKFinder.global_translation = origin + Vector3(0, 1.0, 0)
+    $IKFinder.cast_to = Vector3(0, -2.0, 0)
+    $IKFinder.force_raycast_update()
+    var end_pos = $IKFinder.global_translation + $IKFinder.cast_to
+    if $IKFinder.is_colliding():
+        end_pos = $IKFinder.get_collision_point()
+        #print(end_pos)
+    end_pos.y = max($DummyIKThing.global_translation.y + $Model/Armature/Skeleton.translation.y, end_pos.y)
+    
+    if end_pos.y < origin.y and skip_if_above:
+        return
+    
+    if root.ends_with(".003"):
+        solver.use_magnet = false
+    else:
+        solver.magnet = Vector3.BACK*4.0
+        solver.use_magnet = true
+    solver.root_bone = root
+    solver.tip_bone  = tip
+    solver.max_iterations = 10
+    solver.min_distance = 0.01
+    solver.override_tip_basis = false
+    solver.target = $IKFinder.global_transform.translated(end_pos - $IKFinder.global_translation)
+    #solver.target = Transform.IDENTITY.translated(end_pos)
+    solver.start(true)
+
+var offset_memory = 0.0
+func do_anim_ik(delta):
+    #$Model.rotation.y += PI * Engine.get_frames_drawn()/360.0
+    
+    var offset_average = 0.0
+    if is_on_floor():
+        var normalize = 0.0
+        var _range = 1
+        $OffsetFinder.translation.y = 0.0
+        $OffsetFinder.cast_to.y = -stair_height + $DummyIKThing.translation.y
+        for x in range(-_range, _range+1):
+            for z in range(-_range, _range+1):
+                var _x = x/float(_range)*0.1
+                var _z = z/float(_range)*0.1
+                $OffsetFinder.translation.x = _x + _z/float(_range*2+1)
+                $OffsetFinder.translation.z = _z - _x/float(_range*2+1)
+                $OffsetFinder.force_raycast_update()
+                if $OffsetFinder.is_colliding() and $OffsetFinder.get_collision_normal().y > floor_normal_threshold:
+                    var end_pos = $OffsetFinder.get_collision_point().y
+                    end_pos -= $DummyIKThing.global_translation.y
+                    offset_average += end_pos
+                    normalize += 1.0
+        if normalize > 0.0:
+            offset_average /= normalize
+        #if is_player:
+        #    print(offset_average, " ", normalize)
+    
+    offset_memory = lerp(offset_memory, offset_average, 1.0 - pow(0.0001, delta))
+    $Model/Armature.translation.y = 1.24
+    $Model/Armature/Skeleton.translation.y = offset_memory
+    
+    if !is_on_floor():
+        return
+    
+    var current_anim = $Model/AnimationPlayer.current_animation
+    var force = current_anim == "Idle"
+    
+    if force or current_anim in ["Walk", "Run"]:
+        do_ik_for_side(foot_ik_r1, "Bone_R.001", "Bone_R.003", !force)
+        do_ik_for_side(foot_ik_r2, "Bone_R.003", "Bone_R.004", !force)
+    if force or current_anim in ["Walk", "Run"]:
+        do_ik_for_side(foot_ik_l1, "Bone_L.001", "Bone_L.003", !force)
+        do_ik_for_side(foot_ik_l2, "Bone_L.003", "Bone_L.004", !force)
 
 var third_person = false
 
 var weapon_offset = Vector3()
 
 onready var camera : Camera = $CameraHolder/Camera
+
+var first_person_see_body = false
 
 var is_perspective = false
 func check_first_person_visibility():
@@ -54,21 +148,29 @@ func check_first_person_visibility():
     is_perspective = is_player
     camera.current = is_perspective
     
-    if !is_perspective or third_person:
+    if !is_perspective or third_person or first_person_see_body:
         for child in $Model/Armature/Skeleton.get_children():
+            if not child is MeshInstance:
+                continue
             child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
             child.visible = true
+            ((child as MeshInstance).get_active_material(0) as SpatialMaterial).params_cull_mode = SpatialMaterial.CULL_BACK
         $Model.visible = true
+    else:
+        for _child in $Model/Armature/Skeleton.get_children():
+            if not _child is MeshInstance:
+                continue
+            var child : MeshInstance = _child
+            child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
+            child.visible = false
+        $Model.visible = false
+    
+    if !is_perspective or third_person:
         $"CamRelative/WeaponHolder/CSGPolygon".cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
         weapon_offset.x = 0.3
         weapon_offset.y = 0.1
         $CameraHolder/CamBasePos.translation = Vector3(0, 0.5 * cos($CameraHolder.rotation.x), 2)
     else:
-        for _child in $Model/Armature/Skeleton.get_children():
-            var child : MeshInstance = _child
-            child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
-            child.visible = false
-        $Model.visible = false
         $"CamRelative/WeaponHolder/CSGPolygon".cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
         weapon_offset.x = 0
         weapon_offset.y = 0
@@ -175,6 +277,8 @@ func do_evil_anim_things(delta):
         else:
             xform = xform3 * xform * xform3
         skele.set_bone_global_pose_override(target, xform, 1.0, true)
+    
+    do_anim_ik(delta)
     
 
 func angle_diff(a, b):
@@ -358,10 +462,12 @@ func ai_apply_turn_logic(delta, target_angle, axis):
     ai_angle_inertia[axis] = move_toward(ai_angle_inertia[axis], target_angle_velocity, ai_angle_accel*delta)
     $CameraHolder.rotation[axis] = old_angle + ai_angle_inertia[axis]*delta
 
+
+var do_no_ai = true
 var last_used_nav_pos = Vector3()
 func do_ai(delta):
     $CSGBox.visible = false
-    if is_player:
+    if is_player or true:
         return
     inputs.clear()
     
@@ -522,6 +628,7 @@ func do_ai(delta):
         # TODO: make it so keys have to be pressed/depressed for a certain amount of time (0.1s?) before their opposite can be pressed
         wishdir = wishdir.normalized()
     
+    want_to_attack = false
     if want_to_attack:
         var angle = Vector2($CameraHolder.rotation.x, $CameraHolder.rotation.y)
         var target_angle = Vector2(target_pitch, target_yaw)
@@ -559,6 +666,8 @@ var force_sway_amount = 0.0
 var prev_floor_transform = null
 var prev_floor_collision = null
 func _process(delta):
+    moving_platform_mode = MOVING_PLATFORM_FULL_INHERIT
+    
     time_alive += delta
     anim_lock_time -= delta
     
@@ -965,12 +1074,12 @@ func _process(delta):
     
     if is_on_floor():
         if floorspeed*unit_scale > 280:
-            var walkspeed = clamp(floorspeed*unit_scale/320, 0.0, 1.0)
+            var walkspeed = clamp(floorspeed*unit_scale/320, 0.2, 1.0)
             if anim_walk_backwards:
                 walkspeed *= -1.0
             play_animation("run", walkspeed)
-        elif floorspeed*unit_scale > 0.5:
-            var walkspeed = clamp(floorspeed*unit_scale/320, 0.0, 1.0)
+        elif floorspeed*unit_scale > 0.5 or wishdir != Vector3():
+            var walkspeed = max(floorspeed*unit_scale/320*1.5, 0.2)
             if anim_walk_backwards:
                 walkspeed *= -1.0
             play_animation("walk", walkspeed)

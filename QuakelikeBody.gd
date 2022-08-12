@@ -12,8 +12,6 @@ class_name QuakelikeBody
 func _ready():
     pass # Replace with function body.
 
-
-
 class CollisionData:
     var collider
     var collider_id

@@ -50,7 +50,7 @@ func die():
     remove_child(particles2)
     get_parent().add_child(particles2)
     #particles2.emitting = false
-    get_tree().create_timer(particles2.lifetime, false).connect("timeout", particles2, "queue_free")
+    var _unused = get_tree().create_timer(particles2.lifetime, false).connect("timeout", particles2, "queue_free")
     
     for _player in get_tree().get_nodes_in_group("Player"):
         var player : Spatial = _player
