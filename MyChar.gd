@@ -33,10 +33,6 @@ func reset_stair_camera_offset():
     pass
 
 onready var base_model_offset = $Model.translation
-var foot_ik_l1 = null
-var foot_ik_l2 = null
-var foot_ik_r1 = null
-var foot_ik_r2 = null
 func _ready():
     physics_interpolation_mode = PHYSICS_INTERPOLATION_MODE_OFF
     $CameraHolder.rotation.y = rotation.y
@@ -45,21 +41,20 @@ func _ready():
     $Hull2.queue_free()
     
     $Model/Armature.translation.z = -0.08
-    
-    foot_ik_l1 = SkeletonIK.new()
-    foot_ik_l2 = SkeletonIK.new()
-    foot_ik_r1 = SkeletonIK.new()
-    foot_ik_r2 = SkeletonIK.new()
-    
-    $Model/Armature/Skeleton.add_child(foot_ik_l1)
-    $Model/Armature/Skeleton.add_child(foot_ik_l2)
-    $Model/Armature/Skeleton.add_child(foot_ik_r1)
-    $Model/Armature/Skeleton.add_child(foot_ik_r2)
 
-func do_ik_for_side(solver : SkeletonIK, root : String, tip : String, skip_if_above):
+func do_ik_for_side(solver_name : String, root : String, tip : String, skip_if_above):
     var index = $Model/Armature/Skeleton.find_bone(tip)
     var xform = $Model/Armature/Skeleton.global_transform * $Model/Armature/Skeleton.get_bone_global_pose(index)
     var origin = xform.origin
+    
+    var add_to_skeleton = false
+    var solver
+    if get(solver_name) == null:
+        solver = SkeletonIK.new()
+        set(solver_name, solver)
+        add_to_skeleton = true
+    else:
+        solver = get(solver_name)
     
     $IKFinder.global_rotation = $Model.global_rotation
     $IKFinder.global_translation = origin + Vector3(0, 1.0, 0)
@@ -86,11 +81,21 @@ func do_ik_for_side(solver : SkeletonIK, root : String, tip : String, skip_if_ab
     solver.override_tip_basis = false
     solver.target = $IKFinder.global_transform.translated(end_pos - $IKFinder.global_translation)
     #solver.target = Transform.IDENTITY.translated(end_pos)
+    
+    if add_to_skeleton:
+        $Model/Armature/Skeleton.add_child(solver)
     solver.start(true)
 
+# offset into ground for slopes stairs etc so it doesn't look like you're floating
+# note: we don't want to use this for the camera; it's not what people are used to & affects aiming
 var offset_memory = 0.0
+
+var foot_ik_l1 = null
+var foot_ik_l2 = null
+var foot_ik_r1 = null
+var foot_ik_r2 = null
+
 func do_anim_ik(delta):
-    #$Model.rotation.y += PI * Engine.get_frames_drawn()/360.0
     
     var offset_average = 0.0
     if is_on_floor():
@@ -126,11 +131,11 @@ func do_anim_ik(delta):
     var force = current_anim == "Idle"
     
     if force or current_anim in ["Walk", "Run"]:
-        do_ik_for_side(foot_ik_r1, "Bone_R.001", "Bone_R.003", !force)
-        do_ik_for_side(foot_ik_r2, "Bone_R.003", "Bone_R.004", !force)
+        do_ik_for_side("foot_ik_r1", "Bone_R.001", "Bone_R.003", !force)
+        do_ik_for_side("foot_ik_r2", "Bone_R.003", "Bone_R.004", !force)
     if force or current_anim in ["Walk", "Run"]:
-        do_ik_for_side(foot_ik_l1, "Bone_L.001", "Bone_L.003", !force)
-        do_ik_for_side(foot_ik_l2, "Bone_L.003", "Bone_L.004", !force)
+        do_ik_for_side("foot_ik_l1", "Bone_L.001", "Bone_L.003", !force)
+        do_ik_for_side("foot_ik_l2", "Bone_L.003", "Bone_L.004", !force)
 
 var third_person = false
 
@@ -463,7 +468,7 @@ func ai_apply_turn_logic(delta, target_angle, axis):
     $CameraHolder.rotation[axis] = old_angle + ai_angle_inertia[axis]*delta
 
 
-var do_no_ai = true
+var do_no_ai = false
 var last_used_nav_pos = Vector3()
 func do_ai(delta):
     $CSGBox.visible = false
@@ -1112,8 +1117,6 @@ func take_damage(amount, other_player_id, type):
     var to_armor = ceil(min(armor, armor_ratio*amount))
     armor -= to_armor
     
-    #print(to_armor)
-    #print(amount - to_armor)
     health -= amount - to_armor
     if health <= 0:
         Gamemode.kill_player(player_id, other_player_id, type)
@@ -1122,10 +1125,10 @@ onready var navigable_floor = global_translation
 var navigable_floor_is_up_to_date = false
 func find_navigable_floor():
     navigable_floor_is_up_to_date = false
+    #FIXME don't use xor use and and or with bitwise not (or vice versa)
     collision_mask ^= 2
     var collision = find_real_collision(Vector3.DOWN*64.0)
     if collision and collision_is_floor({normal=collision.collision_normal}):
         navigable_floor = global_translation + collision.motion
         navigable_floor_is_up_to_date = true
     collision_mask ^= 2
-
