@@ -5,7 +5,7 @@ func _ready():
 
 func _input(event):
     if event is InputEventMouseButton:
-        if event.pressed and event.button_index == 2:
+        if event.pressed and event.button_index == 3:
             if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
                 Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
             else:

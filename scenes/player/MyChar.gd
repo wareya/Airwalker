@@ -484,7 +484,7 @@ func build_weapon_db():
         "rocket" : {
             model = ("res://scenes/player/RocketLauncherCSG.tscn"),
             #model_offset = Vector3(0.023, -0.375, -0.115),
-            model_offset = Vector3(0.1, -0.475, -0.215),
+            model_offset = Vector3(0.15, -0.475, -0.215),
             projectile = ("res://scenes/dynamic/Rocket.tscn"),
             projectile_origin = $CamRelative/RocketOrigin,
             projectile_count = 1,
@@ -499,7 +499,7 @@ func build_weapon_db():
         },
         "shotgun" : {
             model = ("res://scenes/player/ShotgunCSG.tscn"),
-            model_offset = Vector3(0.04, -0.6, -0.4),
+            model_offset = Vector3(0.0, -0.6, -0.4),
             projectile = null,
             projectile_origin = null,
             projectile_count = 0,
@@ -541,8 +541,8 @@ func weapon_think(delta):
     reload = reload - delta # NOTE: do not clamp here. clamp at the end
     var weapon_info = weapon_db[current_weapon]
     if inputs.m1 and reload <= 0.0 and desired_weapon == current_weapon: # FIXME: loop...?
-        if is_player:
-            print("firing!!!")
+        #if is_player:
+        #    print("firing!!!")
         time_of_shot = time_alive
         reload += weapon_info.reload_time
          
@@ -594,10 +594,10 @@ func weapon_think(delta):
                 object.set_range(weapon_info.hitscan_range)
                 var refpos = $CamRelative/WeaponHolder.find_node("EffectReference", true, false)
                 if refpos:
-                    print("aiowfaeoiaw")
+                    #print("aiowfaeoiaw")
                     object.set_visual_start_position(refpos.global_translation)
-                else:
-                    print("no refpos!!!")
+                #else:
+                #    print("no refpos!!!")
                 object.add_exception(self)
                 object.first_frame(delta)
         
@@ -614,6 +614,7 @@ func check_weapon_changed():
     if reload > 0.0:
         return
     if desired_weapon != current_weapon:
+        time_of_shot = 0.0
         current_weapon = desired_weapon
         weapon_db = build_weapon_db()
         for child in $CamRelative/WeaponHolder.get_children():
@@ -1104,7 +1105,7 @@ func check_floor_velocity(delta):
 
 func check_moving_platform_rotation():
     if moving_platform_mode > 1:
-        if floor_collision and prev_floor_collision and floor_collision.collider == prev_floor_collision.collider:
+        if floor_collision and prev_floor_collision and is_instance_valid(floor_collision.collider) and floor_collision.collider == prev_floor_collision.collider:
             var rotation_diff = floor_collision.collider.global_rotation.y - prev_floor_transform.basis.get_euler().y
             add_rotation(rotation_diff)
 
