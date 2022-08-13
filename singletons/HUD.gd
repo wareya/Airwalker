@@ -25,7 +25,7 @@ func _process(_delta):
         if Engine.target_fps != 125:
             Engine.target_fps = 125
         else:
-            Engine.target_fps = 5
+            Engine.target_fps = 24
         #Engine.time_scale = 1.0
     
     # FIXME move to hud

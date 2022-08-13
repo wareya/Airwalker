@@ -17,6 +17,8 @@ flags_transparent = true
 flags_unshaded = true
 params_cull_mode = 2
 albedo_texture = SubResource( 4 )
+proximity_fade_enable = true
+proximity_fade_distance = 0.07
 
 [sub_resource type="QuadMesh" id=2]
 material = SubResource( 1 )
