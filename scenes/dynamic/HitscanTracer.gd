@@ -31,17 +31,18 @@ func set_range(distance):
 var startpos = Vector3()
 var endpos = Vector3()
 
+var collider = null
 func first_frame(delta):
     startpos = global_translation
     endpos = global_translation
     force_raycast_update()
     if is_colliding():
         endpos = get_collision_point()
+        collider = get_collider()
         if get_collider().is_in_group("Player"):
-            var player = get_collider()
             var dir = (endpos-startpos).normalized()
-            player.apply_knockback(dir * damage * 1000.0 * knockback_scale / player.unit_scale, "shotgun")
-            player.take_damage(damage, origin_player_id, "bullet")
+            collider.apply_knockback(dir * damage * 1000.0 * knockback_scale / collider.unit_scale, "shotgun")
+            collider.take_damage(damage, origin_player_id, "bullet")
     else:
         var xform = global_transform
         endpos = xform.xform(cast_to)
@@ -70,7 +71,7 @@ var life = max_life
 var untouched_life = 0.0
 var base_scale_limit = -1
 func _process(delta):
-    if get_collider() != null and !is_instance_valid(get_collider()):
+    if collider != null and !is_instance_valid(collider):
         life = 0.0
     life = clamp(life-delta, 0.0, max_life)
     
