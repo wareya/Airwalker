@@ -64,6 +64,10 @@ transform = Transform( -0.146447, -0.853553, 0.5, 0.5, -0.5, -0.707107, 0.853553
 shape = SubResource( 8 )
 
 [node name="Particles" type="CPUParticles" parent="."]
+emitting = false
+amount = 16
+lifetime = 2.0
+one_shot = true
 local_coords = false
 mesh = SubResource( 3 )
 spread = 180.0

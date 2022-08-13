@@ -1,28 +1,10 @@
-[gd_scene load_steps=12 format=2]
+[gd_scene load_steps=9 format=2]
 
 [ext_resource path="res://sfx/HybridFoley.wav" type="AudioStream" id=1]
 [ext_resource path="res://scenes/player/MyChar.gd" type="Script" id=2]
-[ext_resource path="res://art/texture/blockmesh texture white.png" type="Texture" id=3]
-[ext_resource path="res://art/texture/blockmesh texture red.png" type="Texture" id=4]
+[ext_resource path="res://scenes/player/RocketLauncherCSG.tscn" type="PackedScene" id=3]
 [ext_resource path="res://scenes/player/Camera.gd" type="Script" id=5]
 [ext_resource path="res://3d/char/fps char.glb" type="PackedScene" id=6]
-
-[sub_resource type="SpatialMaterial" id=2]
-albedo_color = Color( 0.823529, 0.643137, 0.533333, 1 )
-albedo_texture = ExtResource( 4 )
-metallic = 0.23
-metallic_specular = 0.0
-roughness = 0.81
-uv1_scale = Vector3( 16, 16, 16 )
-uv1_triplanar = true
-
-[sub_resource type="SpatialMaterial" id=3]
-albedo_texture = ExtResource( 3 )
-metallic = 1.0
-roughness = 0.46
-uv1_scale = Vector3( 16, 16, 16 )
-uv1_triplanar = true
-uv2_triplanar = true
 
 [sub_resource type="BoxShape" id=1]
 margin = 0.001
@@ -78,37 +60,8 @@ cast_to = Vector3( 0, 0, -1000 )
 
 [node name="WeaponHolder" type="Spatial" parent="CamRelative"]
 
-[node name="CSGPolygon" type="CSGPolygon" parent="CamRelative/WeaponHolder"]
-transform = Transform( 0.5, 0, 0, 0, -2.18557e-08, 0.5, 0, -0.5, -2.18557e-08, 0.022588, -0.250202, -0.114826 )
-polygon = PoolVector2Array( 0, -0.375, 0.0875275, 0.30735, 0.125, 0.25, 0.138081, -0.230629, 0.109615, -0.517753, 0.212263, -0.876467, 0.165949, -0.894575 )
-mode = 1
-spin_degrees = 360.0
-spin_sides = 8
-material = SubResource( 2 )
-
-[node name="CSGPolygon" type="CSGPolygon" parent="CamRelative/WeaponHolder/CSGPolygon"]
-polygon = PoolVector2Array( 0, 0, 0, 0.5, 0.0961555, 0.69313, 0.0960757, 0.785035, 0.122223, 0.821768, 0.136189, 0.819724, 0.117769, 0.756881, 0.125, 0.375 )
-mode = 1
-spin_degrees = 360.0
-spin_sides = 8
-material = SubResource( 3 )
-
-[node name="CSGBox" type="CSGBox" parent="CamRelative/WeaponHolder/CSGPolygon/CSGPolygon"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.741904, 0.344993 )
-operation = 2
-calculate_tangents = false
-width = 0.571
-height = 0.044
-depth = 0.649
-material = SubResource( 3 )
-
-[node name="CSGBox2" type="CSGBox" parent="CamRelative/WeaponHolder/CSGPolygon/CSGPolygon"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.787902, 0.130895 )
-calculate_tangents = false
-width = 0.02
-height = 0.043
-depth = 0.037
-material = SubResource( 3 )
+[node name="RocketLauncherCSG" parent="CamRelative/WeaponHolder" instance=ExtResource( 3 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.012, -0.187, -0.062 )
 
 [node name="RocketOrigin" type="Spatial" parent="CamRelative"]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.125 )

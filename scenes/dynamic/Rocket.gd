@@ -30,6 +30,12 @@ func _process(delta):
 func add_exception(other):
     $RayCast.add_exception(other)
 
+func first_frame(delta):
+    advance(0.65)
+    advance(speed*delta)
+    force_update_transform()
+    $RocketParticles.emitting = true
+
 var origin_player = null
 var origin_player_id = null
 
@@ -67,27 +73,23 @@ func die():
         
         #var knockback_range = 125.0/unit_scale
         var knockback_range = 120.0/unit_scale
-        var knockback_strength_min = 35.0/unit_scale
-        var knockback_strength_max = 100.0/unit_scale
+        var knockback_strength_min = 1000.0 * 35.0/unit_scale
+        var knockback_strength_max = 1000.0 * 100.0/unit_scale
         
         if pos_diff.length() > knockback_range:
             continue
         
-        # FIXME: self only?
-        var knockback_dir = (pos_diff_raw + Vector3(0, 1.25/2.0, 0)).normalized()
+        var knockback_dir = (pos_diff_raw + Vector3(0, 0.625, 0)).normalized()
         var falloff = 1.0 - pos_diff.length()/knockback_range
         var knockback_strength = lerp(knockback_strength_min, knockback_strength_max, falloff)
         var damage = lerp(0, 100, falloff)
         
         # FIXME use a knockback function
         if object.is_in_group("Player"):
-            var f = 1000.0
-            var mass = 200.0
-            object.velocity += knockback_dir * knockback_strength * f / mass
-            object.floor_collision = null
+            object.apply_knockback(knockback_dir * knockback_strength, "rocket")
             object.take_damage(damage, origin_player_id, "rocket")
         else:
-            var force = knockback_dir * knockback_strength * 4.0
+            var force = knockback_dir * knockback_strength / 200.0
             if "linear_velocity" in object:
                 object.linear_velocity += force
             elif "velocity" in object:

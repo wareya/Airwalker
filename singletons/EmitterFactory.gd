@@ -9,6 +9,8 @@ var sounds = {
     "rocketexplosion" : preload("res://sfx/rocketexplosion.wav"),
     "rocketloop" : preload("res://sfx/rocketloop.wav"),
     "rocketshot" : preload("res://sfx/rocketshot.wav"),
+    "shotgunshot" : preload("res://sfx/ShotgunShot.wav"),
+    "machinegunshot" : preload("res://sfx/MachinegunShot.wav"),
     "teleporter fx" : preload("res://sfx/teleporter fx.wav"),
     "TubeSound3" : preload("res://sfx/TubeSound3.wav"),
     "GibFrag" : preload("res://sfx/cc0/impactsplat01.wav"),

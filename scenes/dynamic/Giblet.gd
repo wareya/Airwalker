@@ -2,7 +2,10 @@ extends RigidBody
 
 func _ready():
     physics_interpolation_mode = PHYSICS_INTERPOLATION_MODE_ON
-    pass
+    max_life += randf()
+    life = max_life
+    $Particles.emitting = true
+    $Particles.lifetime += randf()
 
 var max_life = 10.0
 var life = max_life

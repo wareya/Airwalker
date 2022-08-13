@@ -1,6 +1,6 @@
 extends Camera
 
-var mouselook_speed = -0.022*3.0
+var mouselook_speed = -0.022*2.75
 var mouse_motion = Vector2()
 
 onready var holder = get_parent()

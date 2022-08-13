@@ -1,0 +1,58 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://art/texture/blockmesh texture red.png" type="Texture" id=1]
+[ext_resource path="res://art/texture/blockmesh texture white.png" type="Texture" id=2]
+
+[sub_resource type="SpatialMaterial" id=2]
+albedo_color = Color( 0.823529, 0.643137, 0.533333, 1 )
+albedo_texture = ExtResource( 1 )
+metallic = 0.23
+metallic_specular = 0.0
+roughness = 0.81
+uv1_scale = Vector3( 16, 16, 16 )
+uv1_triplanar = true
+
+[sub_resource type="SpatialMaterial" id=3]
+albedo_texture = ExtResource( 2 )
+metallic = 1.0
+roughness = 0.46
+uv1_scale = Vector3( 16, 16, 16 )
+uv1_triplanar = true
+uv2_triplanar = true
+
+[node name="CSGCombiner" type="CSGCombiner"]
+
+[node name="CSGPolygon" type="CSGPolygon" parent="."]
+transform = Transform( 0.5, 0, 0, 0, -2.18557e-08, 0.5, 0, -0.5, -2.18557e-08, 0, 0, 0 )
+polygon = PoolVector2Array( 0, -0.375, 0.0875275, 0.30735, 0.125, 0.25, 0.138081, -0.230629, 0.109615, -0.517753, 0.212263, -0.876467, 0.165949, -0.894575 )
+mode = 1
+spin_degrees = 360.0
+spin_sides = 8
+material = SubResource( 2 )
+
+[node name="CSGPolygon" type="CSGPolygon" parent="CSGPolygon"]
+polygon = PoolVector2Array( 0, 0, 0, 0.5, 0.0961555, 0.69313, 0.0960757, 0.785035, 0.122223, 0.821768, 0.136189, 0.819724, 0.117769, 0.756881, 0.125, 0.375 )
+mode = 1
+spin_degrees = 360.0
+spin_sides = 8
+material = SubResource( 3 )
+
+[node name="CSGBox" type="CSGBox" parent="CSGPolygon/CSGPolygon"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.741904, 0.344993 )
+operation = 2
+calculate_tangents = false
+width = 0.571
+height = 0.044
+depth = 0.649
+material = SubResource( 3 )
+
+[node name="CSGBox2" type="CSGBox" parent="CSGPolygon/CSGPolygon"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.787902, 0.130895 )
+calculate_tangents = false
+width = 0.02
+height = 0.043
+depth = 0.037
+material = SubResource( 3 )
+
+[node name="EffectReference" type="Spatial" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.407578 )

@@ -168,28 +168,36 @@ func check_first_person_visibility():
     
     if !is_perspective or third_person or first_person_see_body:
         for child in $Model/Armature/Skeleton.get_children():
-            if not child is MeshInstance:
+            if not child is GeometryInstance:
                 continue
             child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
             child.visible = true
-            ((child as MeshInstance).get_active_material(0) as SpatialMaterial).params_cull_mode = SpatialMaterial.CULL_BACK
+            ((child as GeometryInstance).get_active_material(0) as SpatialMaterial).params_cull_mode = SpatialMaterial.CULL_BACK
         $Model.visible = true
     else:
         for _child in $Model/Armature/Skeleton.get_children():
-            if not _child is MeshInstance:
+            if not _child is GeometryInstance:
                 continue
-            var child : MeshInstance = _child
+            var child : GeometryInstance = _child
             child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
             child.visible = false
         $Model.visible = false
     
     if !is_perspective or third_person:
-        $"CamRelative/WeaponHolder/CSGPolygon".cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
+        for _child in $CamRelative/WeaponHolder.get_children():
+            if not _child is GeometryInstance:
+                continue
+            var child : GeometryInstance = _child
+            child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
         weapon_offset.x = 0.3
         weapon_offset.y = 0.1
         $CameraHolder/CamBasePos.translation = Vector3(0, 0.5 * cos($CameraHolder.rotation.x), 2)
     else:
-        $"CamRelative/WeaponHolder/CSGPolygon".cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
+        for _child in $CamRelative/WeaponHolder.get_children():
+            if not _child is GeometryInstance:
+                continue
+            var child : GeometryInstance = _child
+            child.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
         weapon_offset.x = 0
         weapon_offset.y = 0
         $CameraHolder/CamBasePos.translation = Vector3()
@@ -437,6 +445,16 @@ func update_inputs():
     
     inputs.walk = Input.is_action_pressed("walk")
     
+    var weapon_change = 0
+    if Input.is_action_just_released("mwheelup"):
+        weapon_change -= 1
+    if Input.is_action_just_released("mwheeldown"):
+        weapon_change += 1
+    if weapon_change != 0:
+        var current_index = weapon_list.find(desired_weapon)
+        var next_index = (current_index + weapon_change) % weapon_list.size()
+        desired_weapon = weapon_list[next_index]
+    
     wishdir = Vector3()
     if Input.is_action_pressed("ui_up"):
         wishdir += Vector3.FORWARD
@@ -461,40 +479,161 @@ func process_inputs():
     if pogostick_jumping:
         want_to_jump = inputs.jump
 
+func build_weapon_db():
+    return {
+        "rocket" : {
+            model = ("res://scenes/player/RocketLauncherCSG.tscn"),
+            #model_offset = Vector3(0.023, -0.375, -0.115),
+            model_offset = Vector3(0.1, -0.475, -0.215),
+            projectile = ("res://scenes/dynamic/Rocket.tscn"),
+            projectile_origin = $CamRelative/RocketOrigin,
+            projectile_count = 1,
+            projectile_spread = 0.0,
+            hitscan_count = 0,
+            hitscan_spread = 0.0,
+            hitscan_damage = 0,
+            hitscan_range = 0.0,
+            kickback_scale = 1.0,
+            sfx = "rocketshot",
+            reload_time = 0.8,
+        },
+        "shotgun" : {
+            model = ("res://scenes/player/ShotgunCSG.tscn"),
+            model_offset = Vector3(0.04, -0.6, -0.4),
+            projectile = null,
+            projectile_origin = null,
+            projectile_count = 0,
+            projectile_spread = 0.0,
+            hitscan_count = 16,
+            #hitscan_spread = atan(700.0/8192.0), # vq3
+            hitscan_spread = atan(900.0/8192.0), # cpma
+            hitscan_damage = 6,
+            hitscan_range = 2000.0/unit_scale, # FIXME
+            hitscan_knockback_scale = 1.0/3.0,
+            kickback_scale = 1.0,
+            sfx = "shotgunshot",
+            reload_time = 1.0,
+        },
+        "machinegun" : {
+            model = ("res://scenes/player/MachinegunCSG.tscn"),
+            model_offset = Vector3(0.0, -0.5, -0.2),
+            projectile = null,
+            projectile_origin = null,
+            projectile_count = 0,
+            projectile_spread = 0.0,
+            hitscan_count = 1,
+            hitscan_spread = atan(200.0/8192.0),
+            hitscan_damage = 5, # vq3 damage is gamemode-sensitive :| just use cpma damage
+            hitscan_range = 2000.0/unit_scale, # FIXME
+            hitscan_knockback_scale = 1.0,
+            kickback_scale = 0.4,
+            sfx = "machinegunshot",
+            reload_time = 0.1,
+        },
+    }
+
+onready var weapon_db = build_weapon_db()
+
+var weapon_list = ["rocket", "shotgun", "machinegun"]
+var current_weapon = "rocket"
+var desired_weapon = "rocket"
 func weapon_think(delta):
-    reload = reload-delta
-    if inputs.m1 and reload <= 0.0:
+    reload = reload - delta # NOTE: do not clamp here. clamp at the end
+    var weapon_info = weapon_db[current_weapon]
+    if inputs.m1 and reload <= 0.0 and desired_weapon == current_weapon: # FIXME: loop...?
         if is_player:
             print("firing!!!")
         time_of_shot = time_alive
-        reload += 0.8
-        var rocket : Spatial = load("res://scenes/dynamic/Rocket.tscn").instance()
-        rocket.origin_player = self
-        rocket.origin_player_id = player_id
-        get_parent().add_child(rocket)
+        reload += weapon_info.reload_time
+         
+        # point projectile at the point we're looking at
         $CamRelative/RayCast.force_raycast_update()
+        var aim_transform = Transform.IDENTITY
         if !$CamRelative/RayCast.is_colliding():
-            rocket.global_transform = $CamRelative/RocketOrigin.global_transform
+            aim_transform = $CamRelative/RocketOrigin.global_transform
         elif $CamRelative/RayCast.get_collision_point().distance_to(
                 $CamRelative/RayCast.global_transform.origin
-            ) > 10.0:
-            rocket.global_transform = $CamRelative/RocketOrigin.global_transform
-            rocket.global_transform = rocket.global_transform.looking_at($CamRelative/RayCast.get_collision_point(), Vector3.UP)
+            ) > 10.0: # not if it's too close
+            aim_transform = $CamRelative/RocketOrigin.global_transform
+            aim_transform = aim_transform.looking_at($CamRelative/RayCast.get_collision_point(), Vector3.UP)
         else:
-            rocket.global_transform = $CamRelative/RayCast.global_transform
+            aim_transform = $CamRelative/RayCast.global_transform
+            
+        if weapon_info.projectile:
+            for _i in range(weapon_info.projectile_count):
+                var object : Spatial = load(weapon_info.projectile).instance()
+                object.origin_player = self
+                object.origin_player_id = player_id
+                get_parent().add_child(object)
+                object.global_transform = aim_transform
+                
+                object.add_exception(self)
+                object.first_frame(delta)
         
-        rocket.add_exception(self)
+        if weapon_info.hitscan_count > 0:
+            for _i in range(weapon_info.hitscan_count):
+                var object : Spatial = load("res://scenes/dynamic/HitscanTracer.tscn").instance()
+                object.origin_player = self
+                object.origin_player_id = player_id
+                get_parent().add_child(object)
+                var spread_r = sqrt(randf())*weapon_info.hitscan_spread
+                var spread_d = randf()*PI*2.0
+                var spread_x = sin(spread_d) * spread_r
+                var spread_y = cos(spread_d) * spread_r
+                #var spread_x = (randf()*2.0-1.0)*weapon_info.hitscan_spread
+                #var spread_y = (randf()*2.0-1.0)*weapon_info.hitscan_spread
+                
+                var spread_xform = Transform.IDENTITY.rotated(Vector3.LEFT, spread_y).rotated(Vector3.UP, spread_x)
+                object.global_transform = aim_transform*spread_xform
+                
+                if _i == 0:
+                    object.first = true
+                
+                object.set_damage(weapon_info.hitscan_damage)
+                object.set_knockback_scale(weapon_info.hitscan_knockback_scale)
+                object.set_range(weapon_info.hitscan_range)
+                var refpos = $CamRelative/WeaponHolder.find_node("EffectReference", true, false)
+                if refpos:
+                    print("aiowfaeoiaw")
+                    object.set_visual_start_position(refpos.global_translation)
+                else:
+                    print("no refpos!!!")
+                object.add_exception(self)
+                object.first_frame(delta)
+        
         if is_perspective:
-            EmitterFactory.emit("rocketshot").volume_db = -4.5
+            EmitterFactory.emit(weapon_info.sfx).volume_db = -4.5
         else:
-            var fx : AudioStreamPlayer3D = EmitterFactory.emit("rocketshot", self)
+            var fx : AudioStreamPlayer3D = EmitterFactory.emit(weapon_info.sfx, self)
             fx.unit_db -= 4.5
             fx.max_db = -4.5
-        rocket.advance(0.65)
-        rocket.force_update_transform()
-        rocket.advance(rocket.speed*delta)
-        (rocket.get_node("RocketParticles") as CPUParticles).emitting = true
-    reload = max(reload, 0.0)
+    
+    reload = max(reload, 0.0) # NOTE: correctly clamping at the end
+
+func check_weapon_changed():
+    if reload > 0.0:
+        return
+    if desired_weapon != current_weapon:
+        current_weapon = desired_weapon
+        weapon_db = build_weapon_db()
+        for child in $CamRelative/WeaponHolder.get_children():
+            child.queue_free()
+        var weapon_info = weapon_db[current_weapon]
+        if weapon_info.model:
+            var model = load(weapon_info.model).instance()
+            $CamRelative/WeaponHolder.add_child(model)
+            model.translation = weapon_info.model_offset * 0.5
+            model.rotation = Vector3()
+
+var mass = 200.0
+func apply_knockback(force, source):
+    velocity += force/mass
+    # FIXME compare to floor velocity
+    # TODO: hitstun
+    if velocity.y > 0.0:
+        floor_collision = null
+    if source == "rocket":
+        floor_collision = null
 
 func angle_get_delta(a : float, b : float) -> float:
     a = fposmod(a, PI*2.0)
@@ -709,7 +848,11 @@ func do_ai(delta):
 func do_viewmodel_dynamics(delta):
     $CamRelative/WeaponHolder.transform = Transform.IDENTITY
     
+    var weapon_info = weapon_db[current_weapon]
+    
     var kickback_amount = clamp(time_of_shot + 0.5 - time_alive, 0.0, 1.0) / 0.5
+    if weapon_info:
+        kickback_amount *= weapon_info.kickback_scale
     $CamRelative/WeaponHolder.translation.z += lerp(0.0, 0.4, kickback_amount*kickback_amount)
     $CamRelative/WeaponHolder.transform.basis = Basis.IDENTITY.rotated(Vector3.RIGHT, smoothstep(0.0, 1.0, kickback_amount)*0.1)
     
@@ -755,6 +898,11 @@ func do_viewmodel_dynamics(delta):
     cam_sway_memory = cam_sway_amount
     $CamRelative/WeaponHolder.transform.origin.x += cam_sway_amount.y * 0.2
     $CamRelative/WeaponHolder.transform.origin.y += cam_sway_amount.x * -0.2
+    
+    # prevent viewmodel from sticking into walls
+    if is_perspective:
+        $CamRelative/WeaponHolder.scale *= 0.5
+        $CamRelative/WeaponHolder.translation *= 0.5
 
 var total_prev_position_time = 0.0
 # note that delta is the time since the previous entry, not the time to the next entry
@@ -1008,6 +1156,8 @@ func _process(delta):
     do_ai(delta)
     process_inputs()
     
+    check_weapon_changed()
+    
     # round delta for this frame to per-millisecond granularity
     simtimer += delta
     delta = (floor(simtimer*1000) - floor((simtimer-delta)*1000))/1000
@@ -1130,7 +1280,7 @@ func check_anim_state(_delta, did_jump):
             if anim_walk_backwards:
                 walkspeed *= -1.0
             play_animation("run", walkspeed)
-        elif floorspeed*unit_scale > 0.5 or wishdir != Vector3():
+        elif floorspeed*unit_scale > 28 or wishdir != Vector3():
             var walkspeed = max(floorspeed*unit_scale/320*1.5, 0.2)
             if anim_walk_backwards:
                 walkspeed *= -1.0
@@ -1152,6 +1302,8 @@ var armor  = 100
 var armor_ratio = 2.0/3.0
 
 func take_damage(amount, other_player_id, type):
+    if health <= 0:
+        return
     if player_id == other_player_id:
         amount *= 0.5
     amount = ceil(amount)
@@ -1160,6 +1312,7 @@ func take_damage(amount, other_player_id, type):
     
     health -= amount - to_armor
     if health <= 0:
+        collision_layer = 0
         Gamemode.kill_player(player_id, other_player_id, type)
 
 onready var navigable_floor = global_translation

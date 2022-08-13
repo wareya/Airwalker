@@ -31,7 +31,7 @@ func find_world():
 
 onready var world = find_world()
 
-func kill_player(which : int, killed_by : int, type : String):
+func kill_player(which : int, killed_by : int, _type : String):
     var player = players[which]
     var other  = players[killed_by]
     if !player or !player.entity or !is_instance_valid(player.entity):
@@ -59,16 +59,18 @@ func kill_player(which : int, killed_by : int, type : String):
         player.entity.queue_free()
     
     player.respawn_time = 5.0
-    if type == "rocket":
+    # FIXME: implement other death types
+    #if type == "rocket":
+    if true:
         randomize()
         for _i in range(16):
-            var gibs : Spatial = load("res://scenes/dynamic/Giblet.tscn").instance()
-            world.add_child(gibs)
+            var gib : Spatial = load("res://scenes/dynamic/Giblet.tscn").instance()
+            world.add_child(gib)
             var offset = Vector3(randf()*2.0-1.0, randf()*2.0-1.0, randf()*2.0-1.0).normalized()
-            gibs.scale *= randf()/2.0 + 0.5
-            gibs.global_translation = location
-            gibs.linear_velocity = velocity*0.5 + offset*8.0
-            gibs.angular_velocity = Vector3(randf()*2.0-1.0, randf()*2.0-1.0, randf()*2.0-1.0)*0.25
+            gib.scale *= randf()/2.0 + 0.5
+            gib.global_translation = location
+            gib.linear_velocity = velocity*(randf()/2.0+0.5) + offset*8.0
+            gib.angular_velocity = Vector3(randf()*2.0-1.0, randf()*2.0-1.0, randf()*2.0-1.0)*0.25
         var fx : AudioStreamPlayer3D = EmitterFactory.emit("GibFrag", null, location)
         fx.unit_db -= 12
         fx.max_db = 0
