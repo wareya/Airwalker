@@ -47,9 +47,13 @@ func adjust_player(delta):
 
 var life = 0.0
 func _process(delta):
+    set_notify_transform(true)
+    $CollisionShape.set_notify_transform(true)
+    
     adjust_player(delta)
     previous_global_transform = global_transform
     life += delta
     rotation_degrees.y += 120.0*delta
     force_update_transform()
+    $CollisionShape.force_update_transform()
     previous_delta = delta

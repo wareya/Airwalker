@@ -40,6 +40,11 @@ attenuation_filter_db = -0.1
 stream = ExtResource( 1 )
 bus = "SFX"
 
+[node name="WeaponSoundLoop" type="AudioStreamPlayer3D" parent="."]
+unit_db = 30.0
+unit_size = 0.5
+max_db = 0.0
+
 [node name="CameraHolder" type="Spatial" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, 0 )
 
@@ -64,7 +69,6 @@ cast_to = Vector3( 0, 0, -1000 )
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.012, -0.187, -0.062 )
 
 [node name="RocketOrigin" type="Spatial" parent="CamRelative"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.125 )
 
 [node name="Hull" type="CollisionShape" parent="."]
 shape = SubResource( 1 )

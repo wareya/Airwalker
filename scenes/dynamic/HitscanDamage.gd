@@ -36,7 +36,7 @@ func first_frame(_delta):
         if get_collider().is_in_group("Player"):
             var dir = (endpos-startpos).normalized()
             collider.apply_knockback(dir * damage * 1000.0 * knockback_scale / collider.unit_scale, "shotgun")
-            collider.take_damage(damage, origin_player_id, "bullet")
+            collider.take_damage(damage, origin_player_id, "bullet", endpos)
     else:
         var xform = global_transform
         endpos = xform.xform(cast_to)

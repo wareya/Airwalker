@@ -11,13 +11,11 @@ func _ready():
 func first_frame(delta):
     .first_frame(delta) # call parent function
     
-    var original_distance = (endpos-startpos).length()
-    var dir = (endpos-startpos).normalized()
-    #print(original_distance)
-    if original_distance > 0.5 and visual_start_position != null:
+    if (endpos-startpos).length() > 0.5 and visual_start_position != null:
         startpos = visual_start_position
         global_transform.basis = Transform.IDENTITY.looking_at(endpos - startpos, Vector3.UP).basis
     else:
+        var dir = (endpos-startpos).normalized()
         startpos += dir*0.4
     
     _process(delta)

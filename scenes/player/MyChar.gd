@@ -47,6 +47,8 @@ func reset_stair_camera_offset():
 
 onready var base_model_offset = $Model.translation
 func _ready():
+    set_notify_transform(true)
+    $Hull.set_notify_transform(true)
     physics_interpolation_mode = PHYSICS_INTERPOLATION_MODE_OFF
     $CameraHolder.rotation.y = rotation.y
     rotation.y = 0
@@ -495,6 +497,9 @@ func build_weapon_db():
             hitscan_range = 0.0,
             kickback_scale = 1.0,
             sfx = "rocketshot",
+            sfx_once = "",
+            sfx_idle = null,
+            sfx_idle_shoot = null,
             reload_time = 0.8,
         },
         "shotgun" : {
@@ -513,7 +518,10 @@ func build_weapon_db():
             hitscan_scene = "res://scenes/dynamic/HitscanTracer.tscn",
             kickback_scale = 1.0,
             sfx = "shotgunshot",
-            reload_time = 1.0,
+            sfx_once = "",
+            sfx_idle = null,
+            sfx_idle_shoot = null,
+            reload_time = 0.95,
         },
         "machinegun" : {
             model = ("res://scenes/player/MachinegunCSG.tscn"),
@@ -530,18 +538,77 @@ func build_weapon_db():
             hitscan_scene = "res://scenes/dynamic/HitscanTracer.tscn",
             kickback_scale = 0.4,
             sfx = "machinegunshot",
+            sfx_once = "",
+            sfx_idle = null,
+            sfx_idle_shoot = null,
             reload_time = 0.1,
+        },
+        "lightninggun" : {
+            model = ("res://scenes/player/MachinegunCSG.tscn"), # FIXME
+            model_offset = Vector3(0.0, -0.35, -0.0),
+            projectile = null,
+            projectile_origin = null,
+            projectile_count = 0,
+            projectile_spread = 0.0,
+            hitscan_count = 1,
+            hitscan_spread = 0.0,
+            hitscan_damage = 10,
+            hitscan_range = 768.0/unit_scale,
+            hitscan_knockback_scale = 1.5,
+            hitscan_scene = "res://scenes/dynamic/HitscanTracer.tscn", # FIXME
+            kickback_scale = 0.5,
+            sfx = "",
+            sfx_once = "thunderclap",
+            sfx_idle = load("res://sfx/LightningIdle.wav"),
+            sfx_idle_shoot = load("res://sfx/LightningBuzz.wav"),
+            reload_time = 1.0/15.0,
+            # FIXME add 100ms cooldown
+        },
+        "railgun" : {
+            model = ("res://scenes/player/MachinegunCSG.tscn"), # FIXME
+            model_offset = Vector3(0.15, -0.475, -0.115),
+            projectile = null,
+            projectile_origin = null,
+            projectile_count = 0,
+            projectile_spread = 0.0,
+            hitscan_count = 1,
+            hitscan_spread = 0.0,
+            hitscan_damage = 80,
+            hitscan_range = 2000.0/unit_scale, # FIXME
+            hitscan_knockback_scale = 1.0,
+            hitscan_scene = "res://scenes/dynamic/HitscanRailtrace.tscn",
+            kickback_scale = 1.0,
+            sfx = "railgunshot",
+            sfx_once = "",
+            sfx_idle = load("res://sfx/RailgunIdle.wav"),
+            sfx_idle_shoot = null,
+            reload_time = 1.25,
+            # FIXME pierce
         },
     }
 
 onready var weapon_db = build_weapon_db()
 
-var weapon_list = ["rocket", "shotgun", "machinegun"]
-var current_weapon = "rocket"
-var desired_weapon = "rocket"
+# melee, mg, shotgun, grenade, rocket, lg, railgun, plasma, bfg, grapple
+var weapon_list = ["machinegun", "shotgun", "rocket", "lightninggun", "railgun"]
+var current_weapon = ""
+var desired_weapon = "machinegun"
 func weapon_think(delta):
-    reload = reload - delta # NOTE: do not clamp here. clamp at the end
+    var first_shot = reload == 0.0
     var weapon_info = weapon_db[current_weapon]
+    if reload > 0.0 and weapon_info.sfx_idle_shoot != null:
+        if $WeaponSoundLoop.stream != weapon_info.sfx_idle_shoot:
+            $WeaponSoundLoop.stream = weapon_info.sfx_idle_shoot
+            $WeaponSoundLoop.playing = true
+    elif weapon_info.sfx_idle != null:
+        if $WeaponSoundLoop.stream != weapon_info.sfx_idle:
+            $WeaponSoundLoop.stream = weapon_info.sfx_idle
+            $WeaponSoundLoop.playing = true
+    else:
+        $WeaponSoundLoop.stream = null
+        $WeaponSoundLoop.stop()
+    
+    reload = reload - delta # NOTE: do not clamp here. clamp at the end
     if inputs.m1 and reload <= 0.0 and desired_weapon == current_weapon: # FIXME: loop...?
         #if is_player:
         #    print("firing!!!")
@@ -588,7 +655,7 @@ func weapon_think(delta):
                 var spread_xform = Transform.IDENTITY.rotated(Vector3.LEFT, spread_y).rotated(Vector3.UP, spread_x)
                 object.global_transform = aim_transform*spread_xform
                 
-                if _i == 0:
+                if _i == 0 and "first" in object:
                     object.first = true
                 
                 object.set_damage(weapon_info.hitscan_damage)
@@ -596,16 +663,25 @@ func weapon_think(delta):
                 object.set_range(weapon_info.hitscan_range)
                 var refpos = $CamRelative/WeaponHolder.find_node("EffectReference", true, false)
                 if refpos:
-                    #print("aiowfaeoiaw")
-                    object.set_visual_start_position(refpos.global_translation)
+                    var pos = refpos.global_translation
+                    if is_perspective and weapon_info.hitscan_scene != "res://scenes/dynamic/HitscanTracer.tscn":
+                        var center = $CamRelative/RayCast.global_translation
+                        pos = (pos-center)*3.0 + center
+                    object.set_visual_start_position(pos)
                 #else:
                 #    print("no refpos!!!")
                 object.add_exception(self)
                 object.first_frame(delta)
         
         if is_perspective:
+            if first_shot:
+                EmitterFactory.emit(weapon_info.sfx_once).volume_db = -4.5
             EmitterFactory.emit(weapon_info.sfx).volume_db = -4.5
         else:
+            if first_shot:
+                var fx : AudioStreamPlayer3D = EmitterFactory.emit(weapon_info.sfx_once, self)
+                fx.unit_db -= 4.5
+                fx.max_db = -4.5
             var fx : AudioStreamPlayer3D = EmitterFactory.emit(weapon_info.sfx, self)
             fx.unit_db -= 4.5
             fx.max_db = -4.5
@@ -1152,6 +1228,8 @@ var force_sway_amount = 0.0
 var prev_floor_transform = null
 var prev_floor_collision = null
 func _process(delta):
+    hit_this_frame = false
+    
     moving_platform_mode = MOVING_PLATFORM_FULL_INHERIT
     
     check_first_person_visibility()
@@ -1170,6 +1248,7 @@ func _process(delta):
     time_alive += delta
     anim_lock_time = max(0.0, anim_lock_time - delta)
     jump_state_timer = max(0.0, jump_state_timer - delta)
+    
     
     cycle_debugging_info()
     
@@ -1230,6 +1309,7 @@ func _process(delta):
     camera.update_smoothing(delta)
     weapon_think(delta)
     force_update_transform()
+    $Hull.force_update_transform()
     do_evil_anim_things(delta)
     cycle_prev_positions(delta)
     find_navigable_floor()
@@ -1304,7 +1384,8 @@ var armor  = 100
 
 var armor_ratio = 2.0/3.0
 
-func take_damage(amount, other_player_id, type):
+var hit_this_frame = false
+func take_damage(amount, other_player_id, type, location = null):
     if health <= 0:
         return
     if player_id == other_player_id:
@@ -1317,6 +1398,15 @@ func take_damage(amount, other_player_id, type):
     if health <= 0:
         collision_layer = 0
         Gamemode.kill_player(player_id, other_player_id, type)
+    
+    if location != null and !hit_this_frame:
+        var which = "hitb" if is_perspective else "hita"
+        var fx = EmitterFactory.emit(which, self, location - global_translation)
+        fx.force_update_transform()
+        fx.unit_db -= 12
+        fx.max_db -= 12
+    
+    hit_this_frame = true
 
 onready var navigable_floor = global_translation
 var navigable_floor_is_up_to_date = false

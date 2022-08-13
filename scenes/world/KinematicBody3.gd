@@ -47,10 +47,14 @@ func adjust_player(delta):
 
 var life = 0.0
 func _process(delta):
+    set_notify_transform(true)
+    $CollisionShape.set_notify_transform(true)
+    
     adjust_player(delta)
     previous_global_transform = global_transform
     life += delta
     global_translation.y += sin(life*2.0)*delta*6.0
     force_update_transform()
+    $CollisionShape.force_update_transform()
     previous_delta = delta
     #print(PhysicsServer.body_get_state(get_rid(), PhysicsServer.BODY_STATE_TRANSFORM))

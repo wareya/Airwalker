@@ -11,11 +11,18 @@ var sounds = {
     "rocketshot" : preload("res://sfx/rocketshot.wav"),
     "shotgunshot" : preload("res://sfx/ShotgunShot.wav"),
     "machinegunshot" : preload("res://sfx/MachinegunShot.wav"),
+    "railgunshot" : preload("res://sfx/RailgunShot2.wav"),
     "teleporter fx" : preload("res://sfx/teleporter fx.wav"),
     "TubeSound3" : preload("res://sfx/TubeSound3.wav"),
     "GibFrag" : preload("res://sfx/cc0/impactsplat01.wav"),
     "GibBounce1" : preload("res://sfx/cc0/random2.wav"),
     "GibBounce2" : preload("res://sfx/cc0/random3.wav"),
+    "lightningidle" : preload("res://sfx/LightningIdle.wav"),
+    "lightningbuzz" : preload("res://sfx/LightningBuzz.wav"),
+    "thunderclap" : preload("res://sfx/ThunderClap.wav"),
+    
+    "hita" : preload("res://sfx/HitA.wav"),
+    "hitb" : preload("res://sfx/HitB.wav"),
 }
 
 class Emitter3D extends AudioStreamPlayer3D:
