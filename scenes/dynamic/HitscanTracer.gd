@@ -1,4 +1,4 @@
-extends RayCast
+extends HitscanDamage
 
 var mat : SpatialMaterial
 func _ready():
@@ -8,44 +8,8 @@ func _ready():
         var child : GeometryInstance = _child
         child.material_override = mat
 
-var visual_start_position = null
-func set_visual_start_position(_pos):
-    visual_start_position = _pos
-
-var origin_player = null
-var origin_player_id = null
-
-var damage = 5
-func set_damage(_damage):
-    damage = _damage
-
-var knockback_scale = 1.0
-func set_knockback_scale(_knockback_scale):
-    knockback_scale = _knockback_scale
-
-var set_distance = 0.0
-func set_range(distance):
-    set_distance = distance
-    cast_to.z = -distance
-
-var startpos = Vector3()
-var endpos = Vector3()
-
-var collider = null
 func first_frame(delta):
-    startpos = global_translation
-    endpos = global_translation
-    force_raycast_update()
-    if is_colliding():
-        endpos = get_collision_point()
-        collider = get_collider()
-        if get_collider().is_in_group("Player"):
-            var dir = (endpos-startpos).normalized()
-            collider.apply_knockback(dir * damage * 1000.0 * knockback_scale / collider.unit_scale, "shotgun")
-            collider.take_damage(damage, origin_player_id, "bullet")
-    else:
-        var xform = global_transform
-        endpos = xform.xform(cast_to)
+    .first_frame(delta) # call parent function
     
     var original_distance = (endpos-startpos).length()
     var dir = (endpos-startpos).normalized()
@@ -70,7 +34,8 @@ var max_life = 1.5
 var life = max_life
 var untouched_life = 0.0
 var base_scale_limit = -1
-func _process(delta):
+# called by parent _process function
+func _think(delta):
     if collider != null and !is_instance_valid(collider):
         life = 0.0
     life = clamp(life-delta, 0.0, max_life)

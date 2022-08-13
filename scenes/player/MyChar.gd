@@ -510,6 +510,7 @@ func build_weapon_db():
             hitscan_damage = 6,
             hitscan_range = 2000.0/unit_scale, # FIXME
             hitscan_knockback_scale = 1.0/3.0,
+            hitscan_scene = "res://scenes/dynamic/HitscanTracer.tscn",
             kickback_scale = 1.0,
             sfx = "shotgunshot",
             reload_time = 1.0,
@@ -526,6 +527,7 @@ func build_weapon_db():
             hitscan_damage = 5, # vq3 damage is gamemode-sensitive :| just use cpma damage
             hitscan_range = 2000.0/unit_scale, # FIXME
             hitscan_knockback_scale = 1.0,
+            hitscan_scene = "res://scenes/dynamic/HitscanTracer.tscn",
             kickback_scale = 0.4,
             sfx = "machinegunshot",
             reload_time = 0.1,
@@ -572,7 +574,7 @@ func weapon_think(delta):
         
         if weapon_info.hitscan_count > 0:
             for _i in range(weapon_info.hitscan_count):
-                var object : Spatial = load("res://scenes/dynamic/HitscanTracer.tscn").instance()
+                var object : Spatial = load(weapon_info.hitscan_scene).instance()
                 object.origin_player = self
                 object.origin_player_id = player_id
                 get_parent().add_child(object)

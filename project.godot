@@ -9,12 +9,18 @@
 config_version=4
 
 _global_script_classes=[ {
+"base": "RayCast",
+"class": "HitscanDamage",
+"language": "GDScript",
+"path": "res://scenes/dynamic/HitscanDamage.gd"
+}, {
 "base": "KinematicBody",
 "class": "QuakelikeBody",
 "language": "GDScript",
 "path": "res://scenes/player/QuakelikeBody.gd"
 } ]
 _global_script_class_icons={
+"HitscanDamage": "",
 "QuakelikeBody": ""
 }
 
