@@ -70,7 +70,7 @@ var life = max_life
 var untouched_life = 0.0
 var base_scale_limit = -1
 func _process(delta):
-    if !is_instance_valid(get_collider()):
+    if get_collider() != null and !is_instance_valid(get_collider()):
         life = 0.0
     life = clamp(life-delta, 0.0, max_life)
     
