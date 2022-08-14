@@ -30,10 +30,11 @@ func _process(_delta):
     
     # FIXME move to hud
     if Input.is_action_just_pressed("ui_page_up"):
-        if get_viewport().debug_draw:
-            get_viewport().debug_draw = 0
-        else:
-            get_viewport().debug_draw = Viewport.DEBUG_DRAW_OVERDRAW
+        #if get_viewport().debug_draw:
+        #    get_viewport().debug_draw = 0
+        #else:
+        #    get_viewport().debug_draw = Viewport.DEBUG_DRAW_OVERDRAW
+        Gamemode.watch_ai = !Gamemode.watch_ai
         pass
 
 func update(player):

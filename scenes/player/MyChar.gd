@@ -166,6 +166,8 @@ func check_first_person_visibility():
     camera.input_enabled = is_player
     
     is_perspective = is_player
+    if Gamemode.watch_ai:
+        is_perspective = !is_perspective
     camera.current = is_perspective
     
     if !is_perspective or third_person or first_person_see_body:
@@ -495,6 +497,9 @@ func build_weapon_db():
             hitscan_spread = 0.0,
             hitscan_damage = 0,
             hitscan_range = 0.0,
+            hitscan_knockback_scale = 0.0,
+            hitscan_scene = "",
+            hitscan_follows_aim = false,
             kickback_scale = 1.0,
             sfx = "rocketshot",
             sfx_once = "",
@@ -516,6 +521,7 @@ func build_weapon_db():
             hitscan_range = 2000.0/unit_scale, # FIXME
             hitscan_knockback_scale = 1.0/3.0,
             hitscan_scene = "res://scenes/dynamic/HitscanTracer.tscn",
+            hitscan_follows_aim = false,
             kickback_scale = 1.0,
             sfx = "shotgunshot",
             sfx_once = "",
@@ -536,6 +542,7 @@ func build_weapon_db():
             hitscan_range = 2000.0/unit_scale, # FIXME
             hitscan_knockback_scale = 1.0,
             hitscan_scene = "res://scenes/dynamic/HitscanTracer.tscn",
+            hitscan_follows_aim = false,
             kickback_scale = 0.4,
             sfx = "machinegunshot",
             sfx_once = "",
@@ -555,7 +562,8 @@ func build_weapon_db():
             hitscan_damage = 10,
             hitscan_range = 768.0/unit_scale,
             hitscan_knockback_scale = 1.5,
-            hitscan_scene = "res://scenes/dynamic/HitscanTracer.tscn", # FIXME
+            hitscan_scene = "res://scenes/dynamic/HitscanLightning.tscn",
+            hitscan_follows_aim = true,
             kickback_scale = 0.5,
             sfx = "",
             sfx_once = "thunderclap",
@@ -577,6 +585,7 @@ func build_weapon_db():
             hitscan_range = 2000.0/unit_scale, # FIXME
             hitscan_knockback_scale = 1.0,
             hitscan_scene = "res://scenes/dynamic/HitscanRailtrace.tscn",
+            hitscan_follows_aim = false,
             kickback_scale = 1.0,
             sfx = "railgunshot",
             sfx_once = "",
@@ -586,6 +595,30 @@ func build_weapon_db():
             # FIXME pierce
         },
     }
+
+func get_aim_transform():
+    $CamRelative/RayCast.force_raycast_update()
+    var aim_transform = Transform.IDENTITY
+    if !$CamRelative/RayCast.is_colliding():
+        aim_transform = $CamRelative/RocketOrigin.global_transform
+    elif $CamRelative/RayCast.get_collision_point().distance_to(
+            $CamRelative/RayCast.global_transform.origin
+        ) > 10.0: # not if it's too close
+        aim_transform = $CamRelative/RocketOrigin.global_transform
+        aim_transform = aim_transform.looking_at($CamRelative/RayCast.get_collision_point(), Vector3.UP)
+    else:
+        aim_transform = $CamRelative/RayCast.global_transform
+    return aim_transform
+
+func get_muzzle_refpoint():
+    var refpos = $CamRelative/WeaponHolder.find_node("EffectReference", true, false)
+    if refpos:
+        var pos = refpos.global_translation
+        if is_perspective:
+            var center = $CamRelative/RayCast.global_translation
+            pos = (pos-center)*3.0 + center
+        return pos
+    return null
 
 onready var weapon_db = build_weapon_db()
 
@@ -615,18 +648,8 @@ func weapon_think(delta):
         time_of_shot = time_alive
         reload += weapon_info.reload_time
          
-        # point projectile at the point we're looking at
-        $CamRelative/RayCast.force_raycast_update()
-        var aim_transform = Transform.IDENTITY
-        if !$CamRelative/RayCast.is_colliding():
-            aim_transform = $CamRelative/RocketOrigin.global_transform
-        elif $CamRelative/RayCast.get_collision_point().distance_to(
-                $CamRelative/RayCast.global_transform.origin
-            ) > 10.0: # not if it's too close
-            aim_transform = $CamRelative/RocketOrigin.global_transform
-            aim_transform = aim_transform.looking_at($CamRelative/RayCast.get_collision_point(), Vector3.UP)
-        else:
-            aim_transform = $CamRelative/RayCast.global_transform
+        # point shot at the point we're looking at
+        var aim_transform = get_aim_transform()
             
         if weapon_info.projectile:
             for _i in range(weapon_info.projectile_count):
@@ -653,6 +676,7 @@ func weapon_think(delta):
                 #var spread_y = (randf()*2.0-1.0)*weapon_info.hitscan_spread
                 
                 var spread_xform = Transform.IDENTITY.rotated(Vector3.LEFT, spread_y).rotated(Vector3.UP, spread_x)
+                object.spread_xform = spread_xform
                 object.global_transform = aim_transform*spread_xform
                 
                 if _i == 0 and "first" in object:
@@ -661,15 +685,14 @@ func weapon_think(delta):
                 object.set_damage(weapon_info.hitscan_damage)
                 object.set_knockback_scale(weapon_info.hitscan_knockback_scale)
                 object.set_range(weapon_info.hitscan_range)
-                var refpos = $CamRelative/WeaponHolder.find_node("EffectReference", true, false)
-                if refpos:
-                    var pos = refpos.global_translation
-                    if is_perspective and weapon_info.hitscan_scene != "res://scenes/dynamic/HitscanTracer.tscn":
-                        var center = $CamRelative/RayCast.global_translation
-                        pos = (pos-center)*3.0 + center
+                
+                var pos = get_muzzle_refpoint()
+                if pos:
                     object.set_visual_start_position(pos)
-                #else:
-                #    print("no refpos!!!")
+                
+                if weapon_info.hitscan_follows_aim:
+                    object.set_follow_aim(self)
+                
                 object.add_exception(self)
                 object.first_frame(delta)
         
@@ -750,6 +773,7 @@ var do_no_ai = true
 var do_no_attack = false
 var last_used_nav_pos = Vector3()
 func do_ai(delta):
+    do_no_ai = false
     $CSGBox.visible = false
     if is_player or do_no_ai:
         return
@@ -799,8 +823,8 @@ func do_ai(delta):
     if is_on_wall():
         var new_next_pos = next_pos + $Model.global_transform.basis.xform(Vector3(2.0 * sign(sin(time_alive*4.0)), 0.0, 1.0 * sign(sin(time_alive*7.1))))
         next_pos = new_next_pos
-        $CSGBox.visible = true
-        $CSGBox.global_translation = new_next_pos
+        #$CSGBox.visible = true
+        #$CSGBox.global_translation = new_next_pos
     
     var target_diff_for_aiming = target_diff
     # FIXME: calculate in player, using physics traces
@@ -836,8 +860,8 @@ func do_ai(delta):
         #    predicted_motion.y = max(predicted_motion.y, predicted_motion.y*0.5)
         
         target_diff_for_aiming = first.pos + predicted_motion - global_translation
-        $CSGBox.visible = true
-        $CSGBox.global_translation = global_translation + target_diff_for_aiming
+        #$CSGBox.visible = true
+        #$CSGBox.global_translation = global_translation + target_diff_for_aiming
     
     # follow player off ledges
     if found_player and ((target_diff.length() < 20.0 and target_diff.y < 1.0) or (target_diff.length() < 50.0 and target_diff.y < -1.0)):
@@ -1227,7 +1251,10 @@ var force_sway_to = 0.0
 var force_sway_amount = 0.0
 var prev_floor_transform = null
 var prev_floor_collision = null
+var processing_disabled = false
 func _process(delta):
+    if processing_disabled:
+        return
     hit_this_frame = false
     
     moving_platform_mode = MOVING_PLATFORM_FULL_INHERIT
@@ -1391,6 +1418,9 @@ func take_damage(amount, other_player_id, type, location = null):
     if player_id == other_player_id:
         amount *= 0.5
     amount = ceil(amount)
+    
+    Gamemode.inform_damage(player_id, other_player_id, amount)
+    
     var to_armor = ceil(min(armor, armor_ratio*amount))
     armor -= to_armor
     
@@ -1400,11 +1430,13 @@ func take_damage(amount, other_player_id, type, location = null):
         Gamemode.kill_player(player_id, other_player_id, type)
     
     if location != null and !hit_this_frame:
-        var which = "hitb" if is_perspective else "hita"
+        var which = "hita"
         var fx = EmitterFactory.emit(which, self, location - global_translation)
         fx.force_update_transform()
         fx.unit_db -= 12
         fx.max_db -= 12
+        if is_perspective:
+            fx.pitch_scale = 1.2
     
     hit_this_frame = true
 

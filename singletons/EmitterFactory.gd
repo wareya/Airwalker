@@ -5,24 +5,29 @@ var sounds = {
     "HybridFoley3" : preload("res://sfx/HybridFoley3.wav"),
     "HybridFoley4" : preload("res://sfx/HybridFoley4.wav"),
     "HybridFoley" : preload("res://sfx/HybridFoley.wav"),
-    "rocketexplosion2" : preload("res://sfx/rocketexplosion2.wav"),
-    "rocketexplosion" : preload("res://sfx/rocketexplosion.wav"),
-    "rocketloop" : preload("res://sfx/rocketloop.wav"),
-    "rocketshot" : preload("res://sfx/rocketshot.wav"),
-    "shotgunshot" : preload("res://sfx/ShotgunShot.wav"),
-    "machinegunshot" : preload("res://sfx/MachinegunShot.wav"),
-    "railgunshot" : preload("res://sfx/RailgunShot2.wav"),
+    
     "teleporter fx" : preload("res://sfx/teleporter fx.wav"),
     "TubeSound3" : preload("res://sfx/TubeSound3.wav"),
+    
     "GibFrag" : preload("res://sfx/cc0/impactsplat01.wav"),
     "GibBounce1" : preload("res://sfx/cc0/random2.wav"),
     "GibBounce2" : preload("res://sfx/cc0/random3.wav"),
+    
+    "rocketshot" : preload("res://sfx/rocketshot.wav"),
+    "machinegunshot" : preload("res://sfx/MachinegunShot.wav"),
+    "railgunshot" : preload("res://sfx/RailgunShot2.wav"),
+    "shotgunshot" : preload("res://sfx/ShotgunShot.wav"),
     "lightningidle" : preload("res://sfx/LightningIdle.wav"),
     "lightningbuzz" : preload("res://sfx/LightningBuzz.wav"),
     "thunderclap" : preload("res://sfx/ThunderClap.wav"),
     
+    "rocketexplosion2" : preload("res://sfx/rocketexplosion2.wav"),
+    "rocketexplosion" : preload("res://sfx/rocketexplosion.wav"),
+    "rocketloop" : preload("res://sfx/rocketloop.wav"),
+    
     "hita" : preload("res://sfx/HitA.wav"),
     "hitb" : preload("res://sfx/HitB.wav"),
+    "horn" : preload("res://sfx/horn.wav"),
 }
 
 class Emitter3D extends AudioStreamPlayer3D:
@@ -46,17 +51,8 @@ class Emitter3D extends AudioStreamPlayer3D:
         stream = sound
         bus = channel
         
-        attenuation_model = ATTENUATION_INVERSE_SQUARE_DISTANCE
-        unit_db = 55
-        unit_size = 0.5
-        ## note: unit size is meaningless for ATTENUATION_INVERSE_SQUARE_DISTANCE
-        ## doubling unit size is the same as changing unit_db by approx. 6db (or was it -6db? either way)
-        
-        #attenuation_model = ATTENUATION_INVERSE_DISTANCE
-        #unit_db = 20
-        #unit_size = 4
-        
-        
+        attenuation_model = ATTENUATION_INVERSE_DISTANCE
+        unit_db = 20
         max_db = 6
         
         attenuation_filter_cutoff_hz = 22000.0

@@ -1195,7 +1195,6 @@ mwheeldown={
 
 3d/smooth_trimesh_collision=true
 common/enable_pause_aware_picking=true
-common/physics_interpolation=true
 
 [rendering]
 

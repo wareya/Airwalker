@@ -31,6 +31,18 @@ func find_world():
 
 onready var world = find_world()
 
+var player_damage_dealt_this_frame = 0.0
+
+func inform_damage(_target : int, _attacker : int, damage : float):
+    var target   = players[_target]
+    var attacker = players[_attacker]
+    if !target or !target.entity or !attacker:
+        return
+    
+    if !target.is_player and attacker.is_player:
+        player_damage_dealt_this_frame += damage
+    
+
 func kill_player(which : int, killed_by : int, _type : String):
     var player = players[which]
     var other  = players[killed_by]
@@ -57,6 +69,7 @@ func kill_player(which : int, killed_by : int, _type : String):
     
     if player.entity and is_instance_valid(player.entity):
         player.entity.queue_free()
+        player.entity.processing_disabled = true
     
     player.respawn_time = 5.0
     # FIXME: implement other death types
@@ -119,6 +132,8 @@ func do_spawn():
             spawner = array_pick_random(spawners)
         spawn_player_at(i, spawner)
 
+var watch_ai = false
+
 func playerside_processing():
     var text = ""
     for i in players:
@@ -138,6 +153,22 @@ func playerside_processing():
             else:
                 $Label2.visible = true
                 $Label2.text = "Respawning in %s..." % [ceil(player.respawn_time)]
+    
+    if player_damage_dealt_this_frame > 0.0:
+        var dmg_min = 20
+        var dmg_max = 80
+        var pitch_min = 1.6
+        var pitch_max = 0.68
+        var vol_min = -6
+        var vol_max = -3
+        
+        var amount = clamp(inverse_lerp(dmg_min, dmg_max, player_damage_dealt_this_frame), 0.0, 1.0)
+        
+        var fx : AudioStreamPlayer = EmitterFactory.emit("horn")
+        fx.pitch_scale = lerp(pitch_min, pitch_max, amount)
+        fx.volume_db += lerp(vol_min, vol_max, amount)
+        
+        player_damage_dealt_this_frame = 0.0
 
 onready var spawners = get_tree().get_nodes_in_group("Spawner")
 func _process(delta : float):

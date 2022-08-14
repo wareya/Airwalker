@@ -8,18 +8,6 @@ func _ready():
         var child : GeometryInstance = _child
         child.material_override = mat
 
-func first_frame(delta):
-    .first_frame(delta) # call parent function
-    
-    if (endpos-startpos).length() > 0.5 and visual_start_position != null:
-        startpos = visual_start_position
-        global_transform.basis = Transform.IDENTITY.looking_at(endpos - startpos, Vector3.UP).basis
-    else:
-        var dir = (endpos-startpos).normalized()
-        startpos += dir*0.4
-    
-    _process(delta)
-
 var fakespeed = 256.0*1.5
 
 var first = false
@@ -39,6 +27,8 @@ func _think(delta):
     life = clamp(life-delta, 0.0, max_life)
     
     var dist = (endpos-startpos).length()
+    if dist == 0.0:
+        return
     var traveled = (max_life-life)*fakespeed
     var travel_fraction = traveled/dist
     var travel_scale = travel_fraction*dist
