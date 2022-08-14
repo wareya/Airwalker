@@ -1,6 +1,11 @@
 extends CanvasLayer
 
+var ___forced_preload = []
+
 func _ready():
+    for f in ["res://art/texture/blockmesh texture black.png", "res://art/texture/blockmesh texture blue.png", "res://art/texture/blockmesh texture darkgray.png", "res://art/texture/blockmesh texture green.png", "res://art/texture/blockmesh texture lightgray.png", "res://art/texture/blockmesh texture lightgreen.png", "res://art/texture/blockmesh texture orange.png", "res://art/texture/blockmesh texture purple.png", "res://art/texture/blockmesh texture red.png", "res://art/texture/blockmesh texture white.png", "res://art/texture/blockmesh texture yellow.png", "res://art/texture/blockmesh texture.png"
+        ]:
+        ___forced_preload.push_back(load(f))
     yield(get_tree(), "idle_frame")
     do_spawn()
 

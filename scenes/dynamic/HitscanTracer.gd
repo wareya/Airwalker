@@ -10,8 +10,6 @@ func _ready():
 
 var fakespeed = 256.0*1.5
 
-var first = false
-
 var force_shrink = true
 
 var max_scale = 32.0

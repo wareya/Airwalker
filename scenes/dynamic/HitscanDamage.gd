@@ -34,6 +34,7 @@ func damage_collider():
         collider.apply_knockback(dir * damage * 1000.0 * knockback_scale / collider.unit_scale, "shotgun")
         collider.take_damage(damage, origin_player_id, "bullet", endpos)
 
+var first = true
 var collider = null
 var true_startpos
 func first_frame(delta):
@@ -41,6 +42,13 @@ func first_frame(delta):
     
     do_cast()
     damage_collider()
+    
+    if first and collider:
+        var fx = EmitterFactory.emit("hita", self)
+        fx.global_translation = endpos
+        fx.force_update_transform()
+        fx.unit_db -= 12
+        fx.max_db -= 12
     
     _think(delta)
 

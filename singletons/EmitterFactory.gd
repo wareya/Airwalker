@@ -27,6 +27,7 @@ var sounds = {
     
     "hita" : preload("res://sfx/HitA.wav"),
     "hitb" : preload("res://sfx/HitB.wav"),
+    "hurtsound" : preload("res://sfx/HurtSound.wav"),
     "horn" : preload("res://sfx/horn.wav"),
 }
 

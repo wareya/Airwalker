@@ -508,10 +508,10 @@ func process_inputs():
 func build_weapon_db():
     return {
         "rocket" : {
-            model = ("res://scenes/player/RocketLauncherCSG.tscn"),
+            model = preload("res://scenes/player/RocketLauncherCSG.tscn"),
             #model_offset = Vector3(0.023, -0.375, -0.115),
             model_offset = Vector3(0.15, -0.45, -0.1),
-            projectile = ("res://scenes/dynamic/Rocket.tscn"),
+            projectile = preload("res://scenes/dynamic/Rocket.tscn"),
             projectile_origin = $CamRelative/RocketOrigin,
             projectile_count = 1,
             projectile_spread = 0.0,
@@ -530,7 +530,7 @@ func build_weapon_db():
             reload_time = 0.8,
         },
         "shotgun" : {
-            model = ("res://scenes/player/ShotgunCSG.tscn"),
+            model = preload("res://scenes/player/ShotgunCSG.tscn"),
             model_offset = Vector3(0.0, -0.6, -0.4),
             projectile = null,
             projectile_origin = null,
@@ -542,7 +542,7 @@ func build_weapon_db():
             hitscan_damage = 6,
             hitscan_range = 8192.0/unit_scale, # FIXME double check
             hitscan_knockback_scale = 1.0/3.0,
-            hitscan_scene = "res://scenes/dynamic/HitscanTracer.tscn",
+            hitscan_scene = preload("res://scenes/dynamic/HitscanTracer.tscn"),
             hitscan_follows_aim = false,
             kickback_scale = 1.0,
             sfx = "shotgunshot",
@@ -552,7 +552,7 @@ func build_weapon_db():
             reload_time = 0.95,
         },
         "machinegun" : {
-            model = ("res://scenes/player/MachinegunCSG.tscn"),
+            model = preload("res://scenes/player/MachinegunCSG.tscn"),
             model_offset = Vector3(0.0, -0.5, -0.2),
             projectile = null,
             projectile_origin = null,
@@ -563,7 +563,7 @@ func build_weapon_db():
             hitscan_damage = 5, # vq3 damage is gamemode-sensitive :| just use cpma damage
             hitscan_range = 8192.0/unit_scale, # FIXME double check
             hitscan_knockback_scale = 1.0,
-            hitscan_scene = "res://scenes/dynamic/HitscanTracer.tscn",
+            hitscan_scene = preload("res://scenes/dynamic/HitscanTracer.tscn"),
             hitscan_follows_aim = false,
             kickback_scale = 0.4,
             sfx = "machinegunshot",
@@ -573,7 +573,7 @@ func build_weapon_db():
             reload_time = 0.1,
         },
         "lightninggun" : {
-            model = ("res://scenes/player/LightninggunCSG.tscn"),
+            model = preload("res://scenes/player/LightninggunCSG.tscn"),
             model_offset = Vector3(0.0, -0.55, -0.3),
             projectile = null,
             projectile_origin = null,
@@ -584,18 +584,18 @@ func build_weapon_db():
             hitscan_damage = 10,
             hitscan_range = 768.0/unit_scale,
             hitscan_knockback_scale = 1.5,
-            hitscan_scene = "res://scenes/dynamic/HitscanLightning.tscn",
+            hitscan_scene = preload("res://scenes/dynamic/HitscanLightning.tscn"),
             hitscan_follows_aim = true,
             kickback_scale = 0.5,
             sfx = "",
             sfx_once = "thunderclap",
-            sfx_idle = load("res://sfx/LightningIdle.wav"),
-            sfx_idle_shoot = load("res://sfx/LightningBuzz.wav"),
+            sfx_idle = preload("res://sfx/LightningIdle.wav"),
+            sfx_idle_shoot = preload("res://sfx/LightningBuzz.wav"),
             reload_time = 1.0/15.0,
             # FIXME add 100ms cooldown
         },
         "railgun" : {
-            model = ("res://scenes/player/RailgunCSG.tscn"),
+            model = preload("res://scenes/player/RailgunCSG.tscn"),
             model_offset = Vector3(0.15, -0.475, -0.115),
             projectile = null,
             projectile_origin = null,
@@ -606,12 +606,12 @@ func build_weapon_db():
             hitscan_damage = 80,
             hitscan_range = 8192.0/unit_scale, # FIXME double check
             hitscan_knockback_scale = 1.0,
-            hitscan_scene = "res://scenes/dynamic/HitscanRailtrace.tscn",
+            hitscan_scene = preload("res://scenes/dynamic/HitscanRailtrace.tscn"),
             hitscan_follows_aim = false,
             kickback_scale = 1.0,
             sfx = "railgunshot",
             sfx_once = "",
-            sfx_idle = load("res://sfx/RailgunIdle.wav"),
+            sfx_idle = preload("res://sfx/RailgunIdle.wav"),
             sfx_idle_shoot = null,
             reload_time = 1.25,
             # FIXME pierce
@@ -675,7 +675,10 @@ func weapon_think(delta):
             
         if weapon_info.projectile:
             for _i in range(weapon_info.projectile_count):
-                var object : Spatial = load(weapon_info.projectile).instance()
+                var scene = weapon_info.projectile
+                if scene is String:
+                    scene = load(scene)
+                var object : Spatial = scene.instance()
                 object.origin_player = self
                 object.origin_player_id = player_id
                 get_parent().add_child(object)
@@ -686,7 +689,12 @@ func weapon_think(delta):
         
         if weapon_info.hitscan_count > 0:
             for _i in range(weapon_info.hitscan_count):
-                var object : Spatial = load(weapon_info.hitscan_scene).instance()
+                var scene = weapon_info.hitscan_scene
+                if scene is String:
+                    scene = load(scene)
+                var object : Spatial = scene.instance()
+                if _i != 0:
+                    object.first = false
                 object.origin_player = self
                 object.origin_player_id = player_id
                 get_parent().add_child(object)
@@ -744,7 +752,10 @@ func check_weapon_changed():
             child.queue_free()
         var weapon_info = weapon_db[current_weapon]
         if weapon_info.model:
-            var model = load(weapon_info.model).instance()
+            var scene = weapon_info.model
+            if scene is String:
+                scene = load(weapon_info.model)
+            var model = scene.instance()
             $CamRelative/WeaponHolder.add_child(model)
             model.translation = weapon_info.model_offset * 0.5
             model.rotation = Vector3()
@@ -790,6 +801,8 @@ func ai_apply_turn_logic(delta, target_angle, axis):
     ai_angle_inertia[axis] = move_toward(ai_angle_inertia[axis], target_angle_velocity, ai_angle_accel*delta)
     $CameraHolder.rotation[axis] = old_angle + ai_angle_inertia[axis]*delta
 
+var do_no_ai_aim = false
+var do_no_ai_move = false
 var do_no_ai = false
 var do_no_attack = false
 var last_used_nav_pos = Vector3()
@@ -893,8 +906,8 @@ func do_ai(delta):
     
     #if abs(ai_angle_inertia) > PI and Engine.time_scale > 0.5:
     #    print(ai_angle_inertia)
-    var target_yaw
-    var target_pitch
+    var target_yaw = 0.0
+    var target_pitch = 0.0
     var want_to_attack = false
     var engagement_range = 8.0
     if horiz_diff.length() > 0.1:
@@ -904,22 +917,23 @@ func do_ai(delta):
                     inputs.jump_pressed = true
                     inputs.jump = true
             
-            # TODO: look at player while moving if we want to attack. adjust wishdir accordingly
-            if found_player and target_diff.length() < engagement_range + 2.0:
-                target_yaw = Vector2().angle_to_point(Vector2(target_diff_for_aiming.z, target_diff_for_aiming.x))
-                ai_apply_turn_logic(delta, target_yaw, 1)
-                
-                target_pitch = acos(clamp(-(target_diff_for_aiming-Vector3(0,0.5,0)).normalized().y, -1, 1))-PI/2.0
-                ai_apply_turn_logic(delta, target_pitch, 0)
-                want_to_attack = true
-            else:
-                target_yaw = Vector2().angle_to_point(Vector2(diff.z, diff.x))
-                ai_apply_turn_logic(delta, target_yaw, 1)
-                
-                var diff2 = diff
-                diff2.y = max(abs(diff2.y)-0.5, 0.0) * sign(diff2.y);
-                target_pitch = acos(clamp(min(0, -diff2.normalized().y), -1, 1))-PI/2.0
-                ai_apply_turn_logic(delta, target_pitch, 0)
+            if !do_no_ai_aim:
+                # TODO: look at player while moving if we want to attack. adjust wishdir accordingly
+                if found_player and target_diff.length() < engagement_range + 2.0:
+                    target_yaw = Vector2().angle_to_point(Vector2(target_diff_for_aiming.z, target_diff_for_aiming.x))
+                    ai_apply_turn_logic(delta, target_yaw, 1)
+                    
+                    target_pitch = acos(clamp(-(target_diff_for_aiming-Vector3(0,0.5,0)).normalized().y, -1, 1))-PI/2.0
+                    ai_apply_turn_logic(delta, target_pitch, 0)
+                    want_to_attack = true
+                else:
+                    target_yaw = Vector2().angle_to_point(Vector2(diff.z, diff.x))
+                    ai_apply_turn_logic(delta, target_yaw, 1)
+                    
+                    var diff2 = diff
+                    diff2.y = max(abs(diff2.y)-0.5, 0.0) * sign(diff2.y);
+                    target_pitch = acos(clamp(min(0, -diff2.normalized().y), -1, 1))-PI/2.0
+                    ai_apply_turn_logic(delta, target_pitch, 0)
             
             var angle_diff = target_yaw - $CameraHolder.rotation.y
             while angle_diff < -PI:
@@ -936,10 +950,11 @@ func do_ai(delta):
                 wishdir = Vector3.FORWARD + Vector3.RIGHT
         else:
             want_to_attack = true
-            target_yaw = Vector2().angle_to_point(Vector2(target_diff_for_aiming.z, target_diff_for_aiming.x))
-            ai_apply_turn_logic(delta, target_yaw, 1)
-            target_pitch = acos(clamp(-(target_diff_for_aiming-Vector3(0,0.5,0)).normalized().y, -1, 1))-PI/2.0
-            ai_apply_turn_logic(delta, target_pitch, 0)
+            if !do_no_ai_aim:
+                target_yaw = Vector2().angle_to_point(Vector2(target_diff_for_aiming.z, target_diff_for_aiming.x))
+                ai_apply_turn_logic(delta, target_yaw, 1)
+                target_pitch = acos(clamp(-(target_diff_for_aiming-Vector3(0,0.5,0)).normalized().y, -1, 1))-PI/2.0
+                ai_apply_turn_logic(delta, target_pitch, 0)
             
             var strafe_time = 2.0
             var strafe_timer = fmod(time_alive, strafe_time*3.0)/strafe_time*2.0
@@ -956,6 +971,8 @@ func do_ai(delta):
         
         # TODO: make it so keys have to be pressed/depressed for a certain amount of time (0.1s?) before their opposite can be pressed
         wishdir = wishdir.normalized()
+        if do_no_ai_move:
+            wishdir *= 0.0
     
     if do_no_attack:
         want_to_attack = false
@@ -1432,6 +1449,7 @@ var armor  = 100
 
 var armor_ratio = 2.0/3.0
 
+var last_hurtsound = 0.0
 var hit_this_frame = false
 func take_damage(amount, other_player_id, type, location = null):
     if health <= 0:
@@ -1451,13 +1469,9 @@ func take_damage(amount, other_player_id, type, location = null):
         Gamemode.kill_player(player_id, other_player_id, type)
     
     if location != null and !hit_this_frame:
-        var which = "hita"
-        var fx = EmitterFactory.emit(which, self, location - global_translation)
-        fx.force_update_transform()
-        fx.unit_db -= 12
-        fx.max_db -= 12
-        if is_perspective:
-            fx.pitch_scale = 1.2
+        if is_perspective and time_alive - last_hurtsound > 0.15:
+            last_hurtsound = time_alive
+            EmitterFactory.emit("hurtsound").volume_db = -6
     
     hit_this_frame = true
 
