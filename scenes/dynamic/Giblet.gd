@@ -1,6 +1,7 @@
 extends RigidBody
 
 func _ready():
+    continuous_cd = true
     physics_interpolation_mode = PHYSICS_INTERPOLATION_MODE_ON
     max_life += randf()
     life = max_life

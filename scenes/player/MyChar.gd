@@ -488,7 +488,7 @@ func build_weapon_db():
         "rocket" : {
             model = ("res://scenes/player/RocketLauncherCSG.tscn"),
             #model_offset = Vector3(0.023, -0.375, -0.115),
-            model_offset = Vector3(0.15, -0.475, -0.215),
+            model_offset = Vector3(0.15, -0.45, -0.1),
             projectile = ("res://scenes/dynamic/Rocket.tscn"),
             projectile_origin = $CamRelative/RocketOrigin,
             projectile_count = 1,
@@ -551,8 +551,8 @@ func build_weapon_db():
             reload_time = 0.1,
         },
         "lightninggun" : {
-            model = ("res://scenes/player/MachinegunCSG.tscn"), # FIXME
-            model_offset = Vector3(0.0, -0.35, -0.0),
+            model = ("res://scenes/player/LightninggunCSG.tscn"),
+            model_offset = Vector3(0.0, -0.55, -0.3),
             projectile = null,
             projectile_origin = null,
             projectile_count = 0,
@@ -573,7 +573,7 @@ func build_weapon_db():
             # FIXME add 100ms cooldown
         },
         "railgun" : {
-            model = ("res://scenes/player/MachinegunCSG.tscn"), # FIXME
+            model = ("res://scenes/player/RailgunCSG.tscn"),
             model_offset = Vector3(0.15, -0.475, -0.115),
             projectile = null,
             projectile_origin = null,
@@ -768,12 +768,10 @@ func ai_apply_turn_logic(delta, target_angle, axis):
     ai_angle_inertia[axis] = move_toward(ai_angle_inertia[axis], target_angle_velocity, ai_angle_accel*delta)
     $CameraHolder.rotation[axis] = old_angle + ai_angle_inertia[axis]*delta
 
-
-var do_no_ai = true
+var do_no_ai = false
 var do_no_attack = false
 var last_used_nav_pos = Vector3()
 func do_ai(delta):
-    do_no_ai = false
     $CSGBox.visible = false
     if is_player or do_no_ai:
         return
@@ -1180,7 +1178,7 @@ func check_landing(_delta):
             else:
                 var effect : AudioStreamPlayer3D = EmitterFactory.emit("HybridFoley4", self)
                 effect.max_db = -9.0
-                effect.unit_db = 40
+                effect.unit_db -= 9
             sway_timer = fmod(sway_timer, PI*2.0)
             if sway_timer >= PI*1.0:
                 force_sway_to = 0.0
