@@ -413,6 +413,9 @@ class Inputs extends Reference:
     
     var walk : bool
     
+    var weapon_intent = ""
+    var mwheel_change = 0
+    
     func clear():
         jump = false
         jump_pressed = false
@@ -427,6 +430,9 @@ class Inputs extends Reference:
         m2_released = false
         
         walk = false
+        
+        weapon_intent = ""
+        mwheel_change = 0
 
 var wishdir = Vector3()
 var global_wishdir = Vector3()
@@ -435,6 +441,8 @@ var inputs : Inputs = Inputs.new()
 func update_inputs():
     if !is_player:
         return
+    inputs.clear()
+    
     inputs.jump = Input.is_action_pressed("jump")
     inputs.jump_pressed = Input.is_action_just_pressed("jump")
     inputs.jump_released = Input.is_action_just_released("jump")
@@ -443,21 +451,11 @@ func update_inputs():
     inputs.m1_pressed = Input.is_action_just_pressed("m1")
     inputs.m1_released = Input.is_action_just_released("m1")
     
-    inputs.m2 = false
-    inputs.m2_pressed = false
-    inputs.m2_released = false
+    inputs.m2 = Input.is_action_pressed("m2")
+    inputs.m2_pressed = Input.is_action_just_pressed("m2")
+    inputs.m2_released = Input.is_action_just_released("m2")
     
     inputs.walk = Input.is_action_pressed("walk")
-    
-    var weapon_change = 0
-    if Input.is_action_just_released("mwheelup"):
-        weapon_change -= 1
-    if Input.is_action_just_released("mwheeldown"):
-        weapon_change += 1
-    if weapon_change != 0:
-        var current_index = weapon_list.find(desired_weapon)
-        var next_index = (current_index + weapon_change) % weapon_list.size()
-        desired_weapon = weapon_list[next_index]
     
     wishdir = Vector3()
     if Input.is_action_pressed("ui_up"):
@@ -470,6 +468,22 @@ func update_inputs():
         wishdir += Vector3.LEFT
     if wishdir.length_squared() > 1.0:
         wishdir = wishdir.normalized()
+    
+    if Input.is_action_just_pressed("w_machine"):
+        inputs.weapon_intent = "machinegun"
+    if Input.is_action_just_pressed("w_rail"):
+        inputs.weapon_intent = "railgun"
+    if Input.is_action_just_pressed("w_rocket"):
+        inputs.weapon_intent = "rocket"
+    if Input.is_action_just_pressed("w_shaft"):
+        inputs.weapon_intent = "lightninggun"
+    if Input.is_action_just_pressed("w_shotgun"):
+        inputs.weapon_intent = "shotgun"
+    
+    if Input.is_action_just_released("mwheelup"):
+        inputs.mwheel_change -= 1
+    if Input.is_action_just_released("mwheeldown"):
+        inputs.mwheel_change += 1
 
 
 func process_inputs():
@@ -482,6 +496,14 @@ func process_inputs():
     
     if pogostick_jumping:
         want_to_jump = inputs.jump
+    
+    if inputs.mwheel_change != 0:
+        var current_index = weapon_list.find(desired_weapon)
+        var next_index = (current_index + inputs.mwheel_change) % weapon_list.size()
+        desired_weapon = weapon_list[next_index]
+    
+    if inputs.weapon_intent != "":
+        desired_weapon = inputs.weapon_intent
 
 func build_weapon_db():
     return {
@@ -518,7 +540,7 @@ func build_weapon_db():
             #hitscan_spread = atan(700.0/8192.0), # vq3
             hitscan_spread = atan(900.0/8192.0), # cpma
             hitscan_damage = 6,
-            hitscan_range = 2000.0/unit_scale, # FIXME
+            hitscan_range = 8192.0/unit_scale, # FIXME double check
             hitscan_knockback_scale = 1.0/3.0,
             hitscan_scene = "res://scenes/dynamic/HitscanTracer.tscn",
             hitscan_follows_aim = false,
@@ -539,7 +561,7 @@ func build_weapon_db():
             hitscan_count = 1,
             hitscan_spread = atan(200.0/8192.0),
             hitscan_damage = 5, # vq3 damage is gamemode-sensitive :| just use cpma damage
-            hitscan_range = 2000.0/unit_scale, # FIXME
+            hitscan_range = 8192.0/unit_scale, # FIXME double check
             hitscan_knockback_scale = 1.0,
             hitscan_scene = "res://scenes/dynamic/HitscanTracer.tscn",
             hitscan_follows_aim = false,
@@ -582,7 +604,7 @@ func build_weapon_db():
             hitscan_count = 1,
             hitscan_spread = 0.0,
             hitscan_damage = 80,
-            hitscan_range = 2000.0/unit_scale, # FIXME
+            hitscan_range = 8192.0/unit_scale, # FIXME double check
             hitscan_knockback_scale = 1.0,
             hitscan_scene = "res://scenes/dynamic/HitscanRailtrace.tscn",
             hitscan_follows_aim = false,
@@ -776,6 +798,7 @@ func do_ai(delta):
     if is_player or do_no_ai:
         return
     inputs.clear()
+    desired_weapon = "shotgun"
     
     wishdir = Vector3()
     
@@ -1287,7 +1310,7 @@ func _process(delta):
     var floor_collision_before_jump = floor_collision
     var did_jump = handle_jump(delta)
     
-    camera.update_input(delta)
+    camera.update_input(delta, inputs)
     
     update_global_wishdir()
     

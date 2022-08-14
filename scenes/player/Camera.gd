@@ -1,6 +1,10 @@
 extends Camera
 
+var fov_base = 90
+var fov_zoom = fov_base*2.0/3.0
+
 var mouselook_speed = -0.022*2.75
+var mouselook_mod = 1.0
 var mouse_motion = Vector2()
 
 onready var holder = get_parent()
@@ -37,14 +41,18 @@ var correction_speed = 5
 var correction_window = 0.05
 var smoothing_amount = 0.0
 
-func update_input(_delta):
+func update_input(_delta, inputs):
+    fov = fov_base
+    if inputs.m2:
+        fov = fov_zoom
+    mouselook_mod = tan(deg2rad(fov)/2.0) / tan(deg2rad(fov_base)/2.0)
     correction_window = 0.05
     
     var y = holder.rotation_degrees.y
     var x = holder.rotation_degrees.x
     
-    x += mouse_motion.y*mouselook_speed
-    y += mouse_motion.x*mouselook_speed
+    x += mouse_motion.y*mouselook_speed*mouselook_mod
+    y += mouse_motion.x*mouselook_speed*mouselook_mod
     mouse_motion = Vector2()
     x = clamp(x, -90, 90)
     
