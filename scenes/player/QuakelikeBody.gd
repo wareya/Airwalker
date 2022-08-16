@@ -24,26 +24,46 @@ class CollisionData:
     var travel
     var query_result
 
-func find_real_collision(motion : Vector3, infinite_inertia : bool = true) -> PhysicsTestMotionResult:
+func find_real_collision(motion : Vector3, infinite_inertia : bool = true) -> CollisionData:
     var max_exclusions = 16
     var exclusions = []
     var result = PhysicsTestMotionResult.new()
     var any = false
     while true:
         any = PhysicsServer.body_test_motion(get_rid(), global_transform, motion, infinite_inertia, result, true, exclusions)
-        if any and motion.dot(result.collision_normal) > 0.0:
+        var collider_velocity = result.collider_velocity
+        if any and result.collider.has_method("get_real_velocity"):
+            collider_velocity = result.collider.get_real_velocity(result.collision_point)
+        
+        if any and (motion - collider_velocity).dot(result.collision_normal) > 0.0 and (motion).dot(result.collision_normal) > 0.0:
             if exclusions.size() >= max_exclusions:
                 break
             exclusions.push_back(result.collider_rid)
             continue
         break
+    
     if any:
-        return result
+        var ret = CollisionData.new()
+        ret.collider = result.collider
+        ret.collider_id = result.collider_id
+        ret.collider_rid = result.collider_rid
+        ret.collider_shape = result.collider_shape
+        ret.collider_velocity = result.collider_velocity
+        ret.normal = result.collision_normal
+        ret.position = global_translation + result.motion
+        ret.remainder = result.motion_remainder
+        ret.travel = result.motion
+        ret.query_result = result
+        if result.collider.has_method("get_real_velocity"):
+            ret.collider_velocity = result.collider.get_real_velocity(result.collision_point)
+        else:
+            ret.collider_velocity = Vector3()
+        return ret
     else:
         return null
 
 var collision_margin = 0.001
-func my_move_and_collide_internal(motion : Vector3, infinite_inertia : bool = true, test_only : bool = false) -> CollisionData:
+func my_move_and_collide(motion : Vector3, infinite_inertia : bool = true, test_only : bool = false) -> CollisionData:
     var normal_motion = motion.normalized()
     var marginal_motion = normal_motion*collision_margin
     var old_translation = global_translation
@@ -54,19 +74,19 @@ func my_move_and_collide_internal(motion : Vector3, infinite_inertia : bool = tr
     if result:
         if !test_only:
             # reject along test vector
-            global_translation = old_translation + result.motion
+            global_translation = old_translation + result.travel
             
             if collision_margin > 0.0:
                 var result_reject_a = find_real_collision(-marginal_motion, infinite_inertia)
                 if result_reject_a:
-                    global_translation += result_reject_a.motion
+                    global_translation += result_reject_a.travel
                 else:
                     global_translation += -marginal_motion
                 
-                var normal_rejection = result.collision_normal*collision_margin*2.0
+                var normal_rejection = result.normal*collision_margin*2.0
                 var result_reject_b = find_real_collision(normal_rejection, infinite_inertia)
                 if result_reject_b:
-                    global_translation += result_reject_b.motion/2.0
+                    global_translation += result_reject_b.travel/2.0
                 else:
                     global_translation += normal_rejection/2.0
     else:
@@ -74,29 +94,6 @@ func my_move_and_collide_internal(motion : Vector3, infinite_inertia : bool = tr
             global_translation = target_translation
         return null
     return result
-
-func my_move_and_collide(motion : Vector3, infinite_inertia : bool = true, test_only : bool = false) -> CollisionData:
-    var old_translation = global_translation
-    var target_translation = old_translation+motion
-    var result = my_move_and_collide_internal(motion, infinite_inertia, test_only)
-    if result:
-        var ret = CollisionData.new()
-        ret.collider = result.collider
-        ret.collider_id = result.collider_id
-        ret.collider_rid = result.collider_rid
-        ret.collider_shape = result.collider_shape
-        if ret.collider.has_method("get_real_velocity"):
-            ret.collider_velocity = ret.collider.get_real_velocity(global_translation)
-        else:
-            ret.collider_velocity = result.collider_velocity
-        ret.normal = result.collision_normal
-        ret.position = global_translation
-        ret.remainder = target_translation - global_translation
-        ret.travel = global_translation - old_translation
-        ret.query_result = result
-        return ret
-    else:
-        return null
 
 var floor_collision = null
 var wall_collision = null
@@ -131,7 +128,7 @@ func collide_into_floor(motion):
     var max_iters = 8
     var collision = null
     for i in range(max_iters):
-        collision = my_move_and_collide(motion, false)
+        collision = my_move_and_collide(motion)
         if collision == null:
             break
         else:
@@ -151,8 +148,6 @@ func collide_into_floor_and_reset(motion):
     return stuff
 
 func map_to_floor(pseudomotion, distance):
-    
-    floor_collision = null
     var stuff = collide_into_floor_and_reset(Vector3(0, -(distance+floor_search_distance), 0))
     if stuff == null and pseudomotion != null:
         pseudomotion.y = 0
@@ -191,7 +186,7 @@ func vector_reject(a, b) -> Vector3:
     return a - (b*backoff)
 
 func move_and_collide_vertically(motion_y):
-    return my_move_and_collide(Vector3(0, motion_y, 0), false)
+    return my_move_and_collide(Vector3(0, motion_y, 0))
 
 var did_stairs = false
 
@@ -222,9 +217,9 @@ func attempt_stair_step(motion, raw_velocity, is_wall, fallback = false):
         #print(motion)
         #print(actual_upward_motion)
     
-    var horizontal_contact = my_move_and_collide(motion, false)
+    var horizontal_contact = my_move_and_collide(motion)
     
-    var down_contact = move_and_collide_vertically(-(actual_upward_motion))
+    var down_contact = move_and_collide_vertically(-actual_upward_motion)
     
     var end_translation = translation
     translation = start_translation
@@ -250,29 +245,44 @@ func attempt_stair_step(motion, raw_velocity, is_wall, fallback = false):
     elif motion.length_squared() < stair_query_fallback_distance*stair_query_fallback_distance:
         return attempt_stair_step(original_motion, raw_velocity, is_wall, true)
 
-# FIXME: prevent inertia inheritance from other players
-func custom_move_and_slide(delta, velocity):
-    # before doing anything else: see if we're stick inside the world, and if so, try to get outside of it
+var unstuck_floor = false
+func unstuck(velocity):
+    unstuck_floor = false
     for dir in [Vector3.UP, Vector3.DOWN, Vector3.LEFT, Vector3.RIGHT, Vector3.FORWARD, Vector3.BACK]:
         var dist = 0.001
         var result = find_real_collision(dir*dist, true)
-        if result and result.motion.length() > 0.001 and result.motion.dot(dir) < 0.0:
-            global_translation += result.motion
-            
+        if result and result.travel.length() > dist and result.travel.dot(dir) < 0.0:
             var test_velocity = velocity
             var collider_velocity = result.collider_velocity
-            if result.collider.has_method("get_real_velocity"):
-                collider_velocity = result.collider.get_real_velocity(global_translation)
-            test_velocity = vector_reject(test_velocity, result.collision_normal)
-            test_velocity += vector_project(collider_velocity, result.collision_normal)
-            if vector_project(test_velocity, result.collision_normal).length_squared() > vector_project(velocity, result.collision_normal).length_squared():
-                velocity = test_velocity
+            if collider_velocity != Vector3():
+                test_velocity = vector_reject(test_velocity, result.normal)
+                test_velocity += vector_project(collider_velocity, result.normal)
+                # FIXME: ????????????????????????????
+                if vector_project(test_velocity, result.normal).length() > vector_project(velocity, result.normal).length():
+                    #print("afiowaeoiew", test_velocity - velocity)
+                    velocity = test_velocity
             
-            result = find_real_collision(dir*dist, true)
-            if result and result.motion.dot(dir) > 0.0:
-                global_translation += result.motion/2.0
+            #global_translation += result.travel
+            var result2 = find_real_collision(result.travel, true)
+            if result2 and result2.travel.dot(dir) > 0.0:
+                global_translation += result2.travel/2.0
             else:
-                global_translation += dir*dist/2.0
+                global_translation += result.travel
+            
+            if dir == Vector3.DOWN:
+                unstuck_floor = true
+    return velocity
+
+
+func custom_move_and_slide(delta, velocity):
+    var use_collider_velocity = true
+    
+    # before doing anything else: see if we're stick inside the world, and if so, try to get outside of it
+    unstuck_floor = false
+    var out_velocity = velocity
+    var unstuck_velocity_addition = Vector3()
+    out_velocity = unstuck(velocity)
+    unstuck_velocity_addition = out_velocity - velocity
     
     var raw_velocity = velocity
     var delta_velocity = velocity*delta
@@ -281,16 +291,19 @@ func custom_move_and_slide(delta, velocity):
     #var start_translation = translation
     var started_on_ground = floor_collision != null
     
+    var iters_done = 0
     var max_iters = 12
     hit_a_floor = false
     hit_a_wall = false
     did_stairs = false
     wall_collision = null
     for _i in range(max_iters):
-        var collision = my_move_and_collide(delta_velocity, false)
+        var prev_pos = global_translation
+        var collision = my_move_and_collide(delta_velocity)
         if collision == null:
             break
         else:
+            iters_done += 1
             delta_velocity -= collision.travel
             #print("testing stairs on bounce " + str(i))
             #print("original vel: " + str(raw_velocity))
@@ -320,7 +333,9 @@ func custom_move_and_slide(delta, velocity):
                 if true:#started_on_ground:
                     delta_velocity = vector_reject(delta_velocity, down_contact.normal)
                     raw_velocity = vector_reject(raw_velocity, down_contact.normal)
-                    raw_velocity += vector_project(down_contact.collider_velocity, down_contact.normal)
+                    if use_collider_velocity:
+                        raw_velocity += vector_project(down_contact.collider_velocity, down_contact.normal)
+                hit_a_floor = true
                 #print("raw velocity after stairstep: ", raw_velocity*16.0)
                 
                 #raw_velocity.y = 0
@@ -332,9 +347,11 @@ func custom_move_and_slide(delta, velocity):
                     #print("it's a wall")
                     hit_a_wall = true
                     wall_collision = collision
+                    #print(collision.collider_velocity, collision.normal, delta_velocity)
                     delta_velocity = vector_reject(delta_velocity, collision.normal)
                     raw_velocity = vector_reject(raw_velocity, collision.normal)
-                    raw_velocity += vector_project(collision.collider_velocity, collision.normal)
+                    if use_collider_velocity:
+                        raw_velocity += vector_project(collision.collider_velocity, collision.normal)
                 else:
                     #print("it's a floor")
                     hit_a_floor = true
@@ -344,12 +361,14 @@ func custom_move_and_slide(delta, velocity):
                     
                     delta_velocity = vector_reject(delta_velocity, collision.normal)
                     raw_velocity = vector_reject(raw_velocity, collision.normal)
-                    raw_velocity += vector_project(collision.collider_velocity, collision.normal)
-                    #print(collision.collider_velocity)
+                    if use_collider_velocity:
+                        var addvel = vector_project(collision.collider_velocity, collision.normal)
+                        print(addvel)
+                        raw_velocity += addvel
                     #raw_velocity.y = 0
                     
                     # retain horizontal velocity going up slopes
-                    if delta_velocity.length_squared() != 0:
+                    if (delta_velocity*delta).length_squared() != 0:
                         delta_velocity = delta_velocity.normalized()
                         delta_velocity *= delta_v_horizontal.length()
                     
@@ -357,16 +376,19 @@ func custom_move_and_slide(delta, velocity):
             #print("breaking early because remaining travel vector empty")
             break
     
-    if !stick_to_ground:
+    floor_collision = null
+    if !stick_to_ground and !hit_a_floor:
         map_to_floor(null, 0)
-    elif started_on_ground:
-        map_to_floor(raw_velocity*delta, stair_height)
+    elif started_on_ground or hit_a_floor:
+        map_to_floor(start_velocity*delta, stair_height)
+        if hit_a_floor:
+            print("hit a floor! ", floor_collision, velocity)
+            #if did_stairs:
+            #    print("in fact it was stairs!")
     elif hit_a_floor or start_velocity.y < 0:
         map_to_floor(null, 0)
-    else:
-        floor_collision = null
     
-    #if floor_collision != null:
-    #    raw_velocity.y = 0
+    #aw_velocity += unstuck_velocity_addition
+    #print(unstuck_velocity_addition)
     
     return raw_velocity

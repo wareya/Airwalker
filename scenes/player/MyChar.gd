@@ -47,9 +47,6 @@ func reset_stair_camera_offset():
 
 onready var base_model_offset = $Model.translation
 func _ready():
-    set_notify_transform(true)
-    $Hull.set_notify_transform(true)
-    physics_interpolation_mode = PHYSICS_INTERPOLATION_MODE_OFF
     $CameraHolder.rotation.y = rotation.y
     rotation.y = 0
     check_first_person_visibility()
@@ -803,7 +800,7 @@ func ai_apply_turn_logic(delta, target_angle, axis):
 
 var do_no_ai_aim = false
 var do_no_ai_move = false
-var do_no_ai = false
+var do_no_ai = true
 var do_no_attack = false
 var last_used_nav_pos = Vector3()
 func do_ai(delta):
@@ -1227,13 +1224,16 @@ func check_landing(_delta):
             force_sway_amount = 1.0
             play_animation("land")
 
+
+# FIXME use the floor_follow_start() etc data instead of this
 func check_floor_velocity(delta):
     floor_velocity = Vector3()
     if (moving_platform_mode == 3 and is_on_floor() and delta > 0.0
     and floor_collision and is_instance_valid(floor_collision.collider)
     and prev_floor_collision and is_instance_valid(prev_floor_collision.collider)
     and prev_floor_collision.collider == floor_collision.collider
-    and prev_floor_transform):
+    and prev_floor_transform
+    ):
         var floor_object : Spatial = floor_collision.collider
         if floor_object.has_method("get_real_velocity"):
             floor_velocity = floor_object.get_real_velocity(calculate_foot_position())
@@ -1277,6 +1277,35 @@ func cycle_debugging_info():
     if peak_time + 1 < simtimer:
         peak = global_transform.origin.y
 
+var floor_follow_collision = null
+var floor_relative_location = Vector3()
+var floor_foot_position_memory = Vector3()
+func floor_follow_start():
+    if floor_collision and is_instance_valid(floor_collision.collider):
+        floor_follow_collision = floor_collision
+        floor_foot_position_memory = calculate_foot_position()
+        floor_relative_location = floor_collision.collider.global_transform.affine_inverse().xform(floor_foot_position_memory)
+    else:
+        floor_follow_collision = null
+
+func floor_follow_end():
+    if floor_collision and is_instance_valid(floor_collision.collider):
+        var old_pos_valid = false
+        var old_relative_location = null
+        if "previous_global_transform" in floor_collision.collider:
+            old_relative_location = floor_collision.collider.previous_global_transform.affine_inverse().xform(floor_foot_position_memory)
+        elif floor_follow_collision and floor_collision.collider == floor_follow_collision.collider:
+            old_relative_location = floor_relative_location
+        if old_relative_location == null:
+            return
+        var new_relative_location = floor_collision.collider.global_transform.affine_inverse().xform( floor_foot_position_memory)
+        var difference = old_relative_location - new_relative_location
+        # FIXME: is this right? do we need scale too?
+        difference = floor_collision.collider.global_transform.basis.xform(difference)
+        if moving_platform_mode != MOVING_PLATFORM_PHYSICAL:
+            my_move_and_collide(difference)
+        # TODO set floor velocity here too
+
 var previous_on_floor = false
 var previous_velocity = velocity
 var want_to_jump = false
@@ -1291,6 +1320,9 @@ var prev_floor_transform = null
 var prev_floor_collision = null
 var processing_disabled = false
 func _process(delta):
+    if is_player and Input.is_key_pressed(KEY_0):
+        global_translation.y = 4.0
+    
     if processing_disabled:
         return
     hit_this_frame = false
@@ -1323,6 +1355,8 @@ func _process(delta):
     check_landing(delta)
     
     check_floor_velocity(delta)
+    #if floor_velocity != Vector3():
+    #    print(floor_velocity)
     
     var floor_collision_before_jump = floor_collision
     var did_jump = handle_jump(delta)
@@ -1357,6 +1391,11 @@ func _process(delta):
     var reset_stair_height = check_stair_height_override(closest_ground)
     
     check_moving_platform_rotation()
+    if moving_platform_mode != 0:
+        floor_follow_end()
+    if moving_platform_mode != 0:
+        floor_follow_start()
+    
     pre_move_and_slide_bookkeeping()
     
     var new_velocity = custom_move_and_slide(delta, velocity)
@@ -1373,8 +1412,7 @@ func _process(delta):
     
     camera.update_smoothing(delta)
     weapon_think(delta)
-    force_update_transform()
-    $Hull.force_update_transform()
+    Gamemode.force_update_transform(self)
     do_evil_anim_things(delta)
     cycle_prev_positions(delta)
     find_navigable_floor()
@@ -1407,6 +1445,7 @@ func apply_new_velocity(new_velocity):
         velocity.z = sign(velocity.z)*minspeed
     else:
         velocity.z = new_velocity.z
+    
 
 func check_if_left_floor(floor_collision_before_jump):
     # check for having left the floor (jump or otherwise), do inertia inheritance if necessary
@@ -1442,7 +1481,6 @@ func check_anim_state(_delta, did_jump):
             play_animation("float", 1.0)
         else:
             play_animation("air", 1.0)
-    
 
 var health = 100
 var armor  = 100
@@ -1482,7 +1520,7 @@ func find_navigable_floor():
     #FIXME don't use xor use and and or with bitwise not (or vice versa)
     collision_mask ^= 2
     var collision = find_real_collision(Vector3.DOWN*64.0)
-    if collision and collision_is_floor({normal=collision.collision_normal}):
-        navigable_floor = global_translation + collision.motion
+    if collision and collision_is_floor({normal=collision.normal}):
+        navigable_floor = global_translation + collision.travel
         navigable_floor_is_up_to_date = true
     collision_mask ^= 2

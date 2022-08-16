@@ -714,6 +714,8 @@ material = SubResource( 47 )
 transform = Transform( 1, 0, 0, 0, 0.980785, 0.19509, 0, -0.19509, 0.980785, 9, 0.5, 18 )
 
 [node name="KinematicBody" type="KinematicBody" parent="Stuff/CSGStuff/Spatial"]
+process_priority = -1
+transform = Transform( 1, 0, 0, 0, 1, 1.49012e-08, 0, -1.49012e-08, 1, 0, 0, 0 )
 collision/safe_margin = 0.04
 script = ExtResource( 9 )
 __meta__ = {
@@ -729,6 +731,7 @@ material = SubResource( 62 )
 shape = SubResource( 63 )
 
 [node name="KinematicBody4" type="KinematicBody" parent="Stuff/CSGStuff"]
+process_priority = -1
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 18.375, 0.5, 18 )
 collision/safe_margin = 0.04
 script = ExtResource( 9 )
@@ -743,6 +746,7 @@ material = SubResource( 62 )
 shape = SubResource( 64 )
 
 [node name="KinematicBody2" type="KinematicBody" parent="Stuff/CSGStuff"]
+process_priority = -1
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 1, 27.625 )
 script = ExtResource( 8 )
 
@@ -756,6 +760,7 @@ material = SubResource( 62 )
 shape = SubResource( 64 )
 
 [node name="KinematicBody3" type="KinematicBody" parent="Stuff/CSGStuff"]
+process_priority = -1
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 2.375, 38.375 )
 script = ExtResource( 7 )
 

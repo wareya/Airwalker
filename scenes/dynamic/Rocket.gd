@@ -33,7 +33,6 @@ func add_exception(other):
 func first_frame(delta):
     advance(0.65)
     advance(speed*delta)
-    force_update_transform()
     $RocketParticles.emitting = true
 
 var origin_player = null

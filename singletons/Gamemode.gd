@@ -1,5 +1,20 @@
 extends CanvasLayer
 
+var dummy_space = PhysicsServer.space_create()
+func force_update_transform(object : CollisionObject):
+    object.force_update_transform()
+    # GODOT BUG: force_update_transform doesn't actually work properly (3.5)
+    # (it doesn't update the broadphase)
+    # (doesn't seem to work at all with godot physics)
+    # however, removing the object from the physics space and then re-adding it DOES work
+    # (it updates the broadphase)
+    if object is Area:
+        PhysicsServer.area_set_space(object.get_rid(), dummy_space)
+        PhysicsServer.area_set_space(object.get_rid(), object.get_world().space)
+    else:
+        PhysicsServer.body_set_space(object.get_rid(), dummy_space)
+        PhysicsServer.body_set_space(object.get_rid(), object.get_world().space)
+
 var ___forced_preload = []
 
 func _ready():
