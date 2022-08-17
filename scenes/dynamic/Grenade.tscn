@@ -1,0 +1,44 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://scenes/dynamic/Grenade.gd" type="Script" id=1]
+
+[sub_resource type="SpatialMaterial" id=1]
+albedo_color = Color( 0.27451, 0.352941, 0.317647, 1 )
+metallic_specular = 1.0
+roughness = 0.31
+
+[sub_resource type="SpatialMaterial" id=2]
+albedo_color = Color( 0, 0, 0, 1 )
+metallic_specular = 1.0
+roughness = 0.31
+emission_enabled = true
+emission = Color( 0.129412, 0.654902, 0.447059, 1 )
+emission_energy = 1.0
+emission_operator = 0
+emission_on_uv2 = false
+
+[node name="Grenade" type="Spatial"]
+process_priority = 1
+script = ExtResource( 1 )
+
+[node name="CSGPolygon" type="CSGPolygon" parent="."]
+transform = Transform( 1.32532e-16, -3.03198e-09, -0.0693637, -0.0693637, -3.03198e-09, 0, -3.03198e-09, 0.0693637, -3.03198e-09, 0, 0, 0 )
+polygon = PoolVector2Array( 1.625, -1.125, 0.875, -1.25, 0.875, -1.625, 1.375, -1.875, 1.375, -2.5, 0.125, -2.625, 0, 3.125, 1.375, 2.75, 1.75, 2.375, 2, -0.5 )
+mode = 1
+spin_degrees = 360.0
+spin_sides = 8
+material = SubResource( 1 )
+
+[node name="CSGPolygon2" type="CSGPolygon" parent="CSGPolygon"]
+transform = Transform( 1, 5.58055e-20, 5.96028e-25, -2.16927e-20, 1, 0, 2.04946e-25, 0, 1, 0, 0, 0 )
+operation = 2
+polygon = PoolVector2Array( 2.125, 1.75, 2.125, 0.875, 1.625, 0.75, 1.625, 1.75 )
+mode = 1
+spin_degrees = 360.0
+spin_sides = 8
+material = SubResource( 2 )
+
+[node name="RayCast" type="RayCast" parent="."]
+enabled = true
+cast_to = Vector3( 0, 0, -1 )
+collision_mask = 3

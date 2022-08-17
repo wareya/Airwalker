@@ -14,12 +14,14 @@ var sounds = {
     "GibBounce2" : preload("res://sfx/cc0/random3.wav"),
     
     "rocketshot" : preload("res://sfx/rocketshot.wav"),
+    "grenadeshot" : preload("res://sfx/GrenadeShot.wav"),
     "machinegunshot" : preload("res://sfx/MachinegunShot.wav"),
     "railgunshot" : preload("res://sfx/RailgunShot2.wav"),
     "shotgunshot" : preload("res://sfx/ShotgunShot.wav"),
     "lightningidle" : preload("res://sfx/LightningIdle.wav"),
     "lightningbuzz" : preload("res://sfx/LightningBuzz.wav"),
     "thunderclap" : preload("res://sfx/ThunderClap.wav"),
+    "grenadebounce" : preload("res://sfx/BadGrenadeBounce.wav"),
     
     "rocketexplosion2" : preload("res://sfx/rocketexplosion2.wav"),
     "rocketexplosion" : preload("res://sfx/rocketexplosion.wav"),

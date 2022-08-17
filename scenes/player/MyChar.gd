@@ -526,6 +526,28 @@ func build_weapon_db():
             sfx_idle_shoot = null,
             reload_time = 0.8,
         },
+        "grenade" : {
+            model = load("res://scenes/player/GrenadeLauncherCSG.tscn"),
+            #model_offset = Vector3(0.023, -0.375, -0.115),
+            model_offset = Vector3(0.15, -0.4, -0.2),
+            projectile = preload("res://scenes/dynamic/Grenade.tscn"),
+            projectile_origin = $CamRelative/RocketOrigin,
+            projectile_count = 1,
+            projectile_spread = 0.0,
+            hitscan_count = 0,
+            hitscan_spread = 0.0,
+            hitscan_damage = 0,
+            hitscan_range = 0.0,
+            hitscan_knockback_scale = 0.0,
+            hitscan_scene = "",
+            hitscan_follows_aim = false,
+            kickback_scale = 1.0,
+            sfx = "grenadeshot",
+            sfx_once = "",
+            sfx_idle = null,
+            sfx_idle_shoot = null,
+            reload_time = 0.8,
+        },
         "shotgun" : {
             model = preload("res://scenes/player/ShotgunCSG.tscn"),
             model_offset = Vector3(0.0, -0.6, -0.4),
@@ -642,7 +664,7 @@ func get_muzzle_refpoint():
 onready var weapon_db = build_weapon_db()
 
 # melee, mg, shotgun, grenade, rocket, lg, railgun, plasma, bfg, grapple
-var weapon_list = ["machinegun", "shotgun", "rocket", "lightninggun", "railgun"]
+var weapon_list = ["machinegun", "shotgun", "grenade", "rocket", "lightninggun", "railgun"]
 var current_weapon = ""
 var desired_weapon = "machinegun"
 func weapon_think(delta):
