@@ -860,7 +860,6 @@ var do_no_ai = false
 var do_no_attack = false
 var last_used_nav_pos = Vector3()
 func do_ai(delta):
-    do_no_ai = true
     $CSGBox.visible = false
     if is_player or do_no_ai:
         return
