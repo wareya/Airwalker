@@ -1,5 +1,58 @@
 extends CanvasLayer
 
+func serialize(update_type : int):
+    if update_type == Networker.UPDATE_STATE:
+        return [players]
+
+remote func deserialize(update_type : int, data):
+    if get_tree().get_rpc_sender_id() > 1:
+        return
+    
+    var old_players = players
+    if update_type == Networker.UPDATE_STATE:
+        players = data[0]
+    for i in players:
+        if i in old_players and players[i].player_id == old_players[i].player_id:
+            players[i].entity = old_players[i].entity
+        if players[i].client_id == get_tree().network_peer.get_unique_id():
+            players[i].is_player = true
+        else:
+            players[i].is_player = false
+
+var players = {
+    0 : {name="Player", score=0, entity=null, is_player=true , is_bot=false, respawn_time=0.0, player_id=0, client_id=1},
+    1 : {name="Bot"   , score=0, entity=null, is_player=false, is_bot=true , respawn_time=0.0, player_id=0, client_id=1},
+}
+
+var next_player_id = 0
+remote func add_player(client_id : int, bot : bool):
+    if get_tree().get_rpc_sender_id() > 1:
+        return
+    
+    next_player_id += 1
+    
+    var player = {name="Player", score=0, entity=null, is_player=false, is_bot=bot, respawn_time=0.1, player_id=next_player_id, client_id=client_id}
+    print("building a player...")
+    print(get_tree().network_peer.get_unique_id())
+    print(client_id)
+    
+    if !bot and get_tree().network_peer.get_unique_id() == client_id:
+        player.is_local_player = true
+    
+    players[next_player_id] = player
+    return player
+
+remote func remove_player(client_id : int):
+    if get_tree().get_rpc_sender_id() > 1:
+        return
+    
+    for id in players:
+        if players[id].client_id == client_id:
+            for character in get_tree().get_nodes_in_group("Player"):
+                if character.player_id == id:
+                    character.despawn()
+            players.erase(id)
+
 var dummy_space = PhysicsServer.space_create()
 func force_update_transform(object : CollisionObject):
     object.force_update_transform()
@@ -8,6 +61,7 @@ func force_update_transform(object : CollisionObject):
     # (doesn't seem to work at all with godot physics)
     # however, removing the object from the physics space and then re-adding it DOES work
     # (it updates the broadphase)
+    # (also doesn't work at all with godot physics)
     if object is Area:
         PhysicsServer.area_set_space(object.get_rid(), dummy_space)
         PhysicsServer.area_set_space(object.get_rid(), object.get_world().space)
@@ -16,30 +70,36 @@ func force_update_transform(object : CollisionObject):
         PhysicsServer.body_set_space(object.get_rid(), object.get_world().space)
 
 var ___forced_preload = []
-
 func _ready():
-    for f in ["res://art/texture/blockmesh texture black.png", "res://art/texture/blockmesh texture blue.png", "res://art/texture/blockmesh texture darkgray.png", "res://art/texture/blockmesh texture green.png", "res://art/texture/blockmesh texture lightgray.png", "res://art/texture/blockmesh texture lightgreen.png", "res://art/texture/blockmesh texture orange.png", "res://art/texture/blockmesh texture purple.png", "res://art/texture/blockmesh texture red.png", "res://art/texture/blockmesh texture white.png", "res://art/texture/blockmesh texture yellow.png", "res://art/texture/blockmesh texture.png"
+    for f in [
+        "res://art/texture/blockmesh texture black.png",
+        "res://art/texture/blockmesh texture blue.png",
+        "res://art/texture/blockmesh texture darkgray.png",
+        "res://art/texture/blockmesh texture green.png",
+        "res://art/texture/blockmesh texture lightgray.png",
+        "res://art/texture/blockmesh texture lightgreen.png",
+        "res://art/texture/blockmesh texture orange.png",
+        "res://art/texture/blockmesh texture purple.png",
+        "res://art/texture/blockmesh texture red.png",
+        "res://art/texture/blockmesh texture white.png",
+        "res://art/texture/blockmesh texture yellow.png",
+        "res://art/texture/blockmesh texture.png"
         ]:
         ___forced_preload.push_back(load(f))
-    yield(get_tree(), "idle_frame")
-    do_spawn()
 
-var player_kills = 0
-var enemy_kills  = 0
+func array_random_index(array : Array):
+    if array.size() == 0:
+        return -1
+    return randi() % array.size()
 
 func array_pick_random(array : Array, destructive = false):
     if array.size() == 0:
         return null
-    var i = randi() % array.size()
+    var i = array_random_index(array)
     var ele = array[i]
     if destructive:
         array.pop_at(i)
     return ele
-
-var players = {
-    0 : {name="Player", score=0, entity=null, is_player=true , is_bot=false, respawn_time=0.0},
-    1 : {name="Bot"   , score=0, entity=null, is_player=false, is_bot=true , respawn_time=0.0},
-}
 
 func find_world():
     var _world = get_tree().get_nodes_in_group("NavWorld")
@@ -50,7 +110,6 @@ func find_world():
     return _world
 
 onready var world = find_world()
-
 var player_damage_dealt_this_frame = 0.0
 
 func inform_damage(_target : int, _attacker : int, damage : float):
@@ -61,9 +120,8 @@ func inform_damage(_target : int, _attacker : int, damage : float):
     
     if !target.is_player and attacker.is_player:
         player_damage_dealt_this_frame += damage
-    
 
-func kill_player(which : int, killed_by : int, _type : String):
+remote func kill_player(which : int, killed_by : int, _type : String):
     var player = players[which]
     var other  = players[killed_by]
     if !player or !player.entity or !is_instance_valid(player.entity):
@@ -109,7 +167,14 @@ func kill_player(which : int, killed_by : int, _type : String):
         fx.max_db = 0
 
 var char_scene = preload("res://scenes/player/MyChar.tscn")
-func spawn_player_at(which : int, spawner : Spatial):
+remote func spawn_player_at(which : int, where : int, network_id : int = -1):
+    if get_tree().get_rpc_sender_id() > 1:
+        return
+    print("spawning player...")
+    if which < 0:
+        print("no spawner")
+        return
+    var spawner = spawners[where]
     var player = players[which]
     
     var found_player = null
@@ -134,22 +199,28 @@ func spawn_player_at(which : int, spawner : Spatial):
     
     mychar.map_to_floor(null, 1.0)
     if player.is_player:
-        mychar.is_player = true
+        mychar.is_local_player = true
         mychar.force_take_camera()
+    if player.is_bot:
+        mychar.is_bot = true
     
-    yield(get_tree(), "idle_frame")
-    var fx : AudioStreamPlayer3D = EmitterFactory.emit("teleporter fx", mychar)
-    fx.unit_db -= 6
-    fx.max_db = -6
+    network_id = Networker.net_id_setup(mychar, network_id)
+    if Networker.is_server and get_tree().get_rpc_sender_id() == 0:
+        rpc("spawn_player_at", which, where, network_id)
 
+func pick_spawner():
+    return array_random_index(spawners)
 
-func do_spawn():
+func spawn_player(i):
+    spawn_player_at(i, array_random_index(spawners))
+
+func respawn_all():
     randomize()
-    var mut_spawners = get_tree().get_nodes_in_group("Spawner")
+    var mut_spawners = range(spawners.size())
     for i in players:
         var spawner = array_pick_random(mut_spawners, true)
         if !spawner:
-            spawner = array_pick_random(spawners)
+            spawner = array_random_index(spawners)
         spawn_player_at(i, spawner)
 
 var watch_ai = false
@@ -192,13 +263,19 @@ func playerside_processing():
 
 onready var spawners = get_tree().get_nodes_in_group("Spawner")
 func _process(delta : float):
-    for i in players:
-        var player = players[i]
-        if player.respawn_time > 0.0:
-            player.respawn_time -= delta
-            if player.respawn_time <= 0.0:
-                var spawner = array_pick_random(spawners)
-                spawn_player_at(i, spawner)
+    if Networker.is_server:
+        for i in players:
+            var player = players[i]
+            if player.respawn_time > 0.0:
+                player.respawn_time -= delta
+                if player.respawn_time <= 0.0:
+                    var spawner = array_random_index(spawners)
+                    spawn_player_at(i, spawner)
     
     playerside_processing()
+    
+    # FIXME move to hud
+    if Input.is_action_just_pressed("ui_page_up"):
+        Gamemode.watch_ai = !Gamemode.watch_ai
+        pass
     

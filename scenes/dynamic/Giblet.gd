@@ -24,8 +24,8 @@ func _process(delta):
         $RayCast.force_raycast_update()
         if $RayCast.is_colliding():
             var vec = $RayCast.get_collision_point() - old_origin
-            var dist = min(0.125 * scale.x, vec.length())
-            var dir = vec.normalized()
+            var _dist = min(0.125 * scale.x, vec.length())
+            var _dir = vec.normalized()
             global_translation = $RayCast.get_collision_point()
     physics_ticked = false
     
@@ -39,7 +39,7 @@ func _process(delta):
         queue_free()
 
 var old_xform : Transform
-func _physics_process(delta):
+func _physics_process(_delta):
     old_xform = global_transform
     physics_ticked = true
     angular_damp = 1.0

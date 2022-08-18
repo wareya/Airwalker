@@ -37,13 +37,14 @@ default_bus_layout="res://res/default_bus_layout.tres"
 
 [autoload]
 
+Networker="*res://singletons/Networker.gd"
 EmitterFactory="*res://singletons/EmitterFactory.gd"
 HUD="*res://singletons/HUD.tscn"
 Gamemode="*res://singletons/Gamemode.tscn"
 
 [debug]
 
-settings/fps/force_fps=250
+settings/fps/force_fps=60
 settings/physics_interpolation/enable_warnings=false
 
 [display]

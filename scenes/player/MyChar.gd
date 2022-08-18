@@ -1,5 +1,39 @@
 extends QuakelikeBody
 
+var network_id = -1
+
+func serialize(update_type : int):
+    if update_type == Networker.UPDATE_STATE:
+        return [global_translation, velocity, inputs.serialize(), wishdir_intent, $CameraHolder.rotation, health, armor, player_id]
+
+func deserialize(update_type : int, data):
+    if update_type == Networker.UPDATE_STATE:
+        global_translation = data[0]
+        velocity = data[1]
+        
+        inputs.deserialize(data[2])
+        if Engine.get_frames_drawn() % 100 == 0:
+            print(data[2])
+        wishdir = data[3]
+        
+        if !is_local_player:
+            $CameraHolder.rotation.y = data[4].y
+            $CameraHolder.rotation.x = data[4].x
+        
+        health = data[5]
+        armor = data[6]
+        
+        player_id = data[7]
+
+func serialize_inputs():
+    return [inputs_intent.serialize(), wishdir_intent, $CameraHolder.rotation]
+
+func deserialize_inputs(data):
+    inputs.deserialize(data[0])
+    wishdir = data[1]
+    $CameraHolder.rotation.y = data[2].y
+    $CameraHolder.rotation.x = data[2].x
+    
 
 # Declare member variables here. Examples:
 # var a = 2
@@ -15,8 +49,9 @@ enum {
 export var moving_platform_mode : int = MOVING_PLATFORM_NO_INHERIT
 export var moving_platform_jump_ignore_vertical : bool = false
 export var pogostick_jumping : bool = true
-export var is_player : bool = false
 
+var is_local_player : bool = false
+var is_bot : bool = false
 var player_id = -1
 
 func force_take_camera():
@@ -64,6 +99,16 @@ func _ready():
             _anim.track_set_interpolation_loop_wrap(t, true)
     
     $Model/Armature.translation.z = -0.08
+    
+    var fx : AudioStreamPlayer3D = EmitterFactory.emit("teleporter fx", self)
+    fx.unit_db -= 6
+    fx.max_db = -6
+
+func despawn():
+    var fx : AudioStreamPlayer3D = EmitterFactory.emit("teleporter fx", self)
+    fx.unit_db -= 6
+    fx.max_db = -6
+    queue_free()
 
 var bone_index_cache = {}
 func do_ik_for_side(solver_name : String, root : String, tip : String, skip_if_above):
@@ -149,8 +194,6 @@ func do_anim_ik(delta):
                     normalize += 1.0
         if normalize > 0.0:
             offset_average /= normalize
-        #if is_player:
-        #    print(offset_average, " ", normalize)
     
     offset_memory = lerp(offset_memory, offset_average, 1.0 - pow(0.0001, delta))
     $Model/Armature.translation.y = 1.24
@@ -180,9 +223,9 @@ var first_person_see_body = false
 var is_perspective = false
 func check_first_person_visibility():
     third_person = false
-    camera.input_enabled = is_player
+    camera.input_enabled = is_local_player
     
-    is_perspective = is_player
+    is_perspective = is_local_player
     if Gamemode.watch_ai:
         is_perspective = !is_perspective
     camera.current = is_perspective
@@ -233,7 +276,6 @@ func update_from_camera_smoothing():
     $CamRelative.visible = true
     $CamRelative.global_transform = $CameraHolder.global_transform
     $CamRelative.global_translation.y += amount
-
 
 var anim_lock_time = 0.0
 func play_no_self_override(anim, speed, blendmult) -> bool:
@@ -436,67 +478,101 @@ class Inputs extends Reference:
         m2_released = false
         
         walk = false
-        
-        weapon_intent = ""
-        mwheel_change = 0
+    
+    func serialize():
+        return [jump, m1, m2, walk, weapon_intent, mwheel_change]
+    func deserialize(data):
+        jump = data[0]
+        m1 = data[1]
+        m2 = data[2]
+        walk = data[3]
+        weapon_intent = data[4]
+        mwheel_change = data[5]
+    
+    func clone() -> Inputs:
+        var new = Inputs.new()
+        for prop in get_property_list():
+            if not prop.usage & PROPERTY_USAGE_SCRIPT_VARIABLE:
+                continue
+            var x = get(prop.name)
+            if x is Object and x.has_method("duplicate"):
+                x = x.duplicate()
+            elif x is Object and x.has_method("clone"):
+                x = x.clone()
+            new.set(prop.name, x)
+        return new
 
 var wishdir = Vector3()
 var global_wishdir = Vector3()
+var previous_inputs : Inputs = Inputs.new()
 var inputs : Inputs = Inputs.new()
 
-func update_inputs():
-    if !is_player:
+var inputs_intent : Inputs = Inputs.new()
+var wishdir_intent = Vector3()
+
+func update_inputs_intent():
+    if !is_local_player:
         return
-    inputs.clear()
     
-    inputs.jump = Input.is_action_pressed("jump")
-    inputs.jump_pressed = Input.is_action_just_pressed("jump")
-    inputs.jump_released = Input.is_action_just_released("jump")
+    inputs_intent.clear()
+    wishdir_intent = Vector3()
     
-    inputs.m1 = Input.is_action_pressed("m1")
-    inputs.m1_pressed = Input.is_action_just_pressed("m1")
-    inputs.m1_released = Input.is_action_just_released("m1")
+    if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+        return
     
-    inputs.m2 = Input.is_action_pressed("m2")
-    inputs.m2_pressed = Input.is_action_just_pressed("m2")
-    inputs.m2_released = Input.is_action_just_released("m2")
+    if is_local_player and Input.is_key_pressed(KEY_0):
+        global_translation.y = 4.0
     
-    inputs.walk = Input.is_action_pressed("walk")
+    inputs_intent.jump = Input.is_action_pressed("jump")
     
-    wishdir = Vector3()
+    inputs_intent.m1 = Input.is_action_pressed("m1")
+    
+    inputs_intent.m2 = Input.is_action_pressed("m2")
+    
+    inputs_intent.walk = Input.is_action_pressed("walk")
+    
+    wishdir_intent = Vector3()
     if Input.is_action_pressed("ui_up"):
-        wishdir += Vector3.FORWARD
+        wishdir_intent += Vector3.FORWARD
     if Input.is_action_pressed("ui_down"):
-        wishdir += Vector3.BACK
+        wishdir_intent += Vector3.BACK
     if Input.is_action_pressed("ui_right"):
-        wishdir += Vector3.RIGHT
+        wishdir_intent += Vector3.RIGHT
     if Input.is_action_pressed("ui_left"):
-        wishdir += Vector3.LEFT
-    if wishdir.length_squared() > 1.0:
-        wishdir = wishdir.normalized()
+        wishdir_intent += Vector3.LEFT
+    if wishdir_intent.length_squared() > 1.0:
+        wishdir_intent = wishdir_intent.normalized()
     
     if Input.is_action_just_pressed("w_machine"):
-        inputs.weapon_intent = "machinegun"
+        inputs_intent.weapon_intent = "machinegun"
     if Input.is_action_just_pressed("w_rail"):
-        inputs.weapon_intent = "railgun"
+        inputs_intent.weapon_intent = "railgun"
     if Input.is_action_just_pressed("w_rocket"):
-        inputs.weapon_intent = "rocket"
+        inputs_intent.weapon_intent = "rocket"
     if Input.is_action_just_pressed("w_shaft"):
-        inputs.weapon_intent = "lightninggun"
+        inputs_intent.weapon_intent = "lightninggun"
     if Input.is_action_just_pressed("w_shotgun"):
-        inputs.weapon_intent = "shotgun"
+        inputs_intent.weapon_intent = "shotgun"
     if Input.is_action_just_pressed("w_grenade"):
-        inputs.weapon_intent = "grenade"
+        inputs_intent.weapon_intent = "grenade"
     if Input.is_action_just_pressed("w_plasma"):
-        inputs.weapon_intent = "plasma"
+        inputs_intent.weapon_intent = "plasma"
     
+    inputs_intent.mwheel_change = 0
     if Input.is_action_just_released("mwheelup"):
-        inputs.mwheel_change -= 1
+        inputs_intent.mwheel_change -= 1
     if Input.is_action_just_released("mwheeldown"):
-        inputs.mwheel_change += 1
-
+        inputs_intent.mwheel_change += 1
 
 func process_inputs():
+    inputs.m1_pressed  =  inputs.m1 and !previous_inputs.m1
+    inputs.m1_released = !inputs.m1 and  previous_inputs.m1
+    inputs.m2_pressed  =  inputs.m2 and !previous_inputs.m2
+    inputs.m2_released = !inputs.m2 and  previous_inputs.m2
+    inputs.jump_pressed  =  inputs.jump and !previous_inputs.jump
+    inputs.jump_released = !inputs.jump and  previous_inputs.jump
+    #print(inputs.jump, previous_inputs.jump)
+    
     if inputs.jump_pressed:
         want_to_jump = true
         can_doublejump = true
@@ -507,13 +583,18 @@ func process_inputs():
     if pogostick_jumping:
         want_to_jump = inputs.jump
     
+    if inputs.weapon_intent != "":
+        desired_weapon = inputs.weapon_intent
+        inputs.weapon_intent = ""
+        inputs_intent.weapon_intent = ""
+    
     if inputs.mwheel_change != 0:
         var current_index = weapon_list.find(desired_weapon)
         var next_index = (current_index + inputs.mwheel_change) % weapon_list.size()
         desired_weapon = weapon_list[next_index]
+        inputs.mwheel_change = 0
     
-    if inputs.weapon_intent != "":
-        desired_weapon = inputs.weapon_intent
+    previous_inputs = inputs.clone()
 
 func build_weapon_db():
     return {
@@ -718,7 +799,7 @@ func weapon_think(delta):
     
     reload = reload - delta # NOTE: do not clamp here. clamp at the end
     if inputs.m1 and reload <= 0.0 and desired_weapon == current_weapon: # FIXME: loop...?
-        #if is_player:
+        #if is_local_player:
         #    print("firing!!!")
         time_of_shot = time_alive
         reload += weapon_info.reload_time
@@ -861,7 +942,7 @@ var do_no_attack = false
 var last_used_nav_pos = Vector3()
 func do_ai(delta):
     $CSGBox.visible = false
-    if is_player or do_no_ai:
+    if !is_bot or do_no_ai:
         return
     inputs.clear()
     desired_weapon = "shotgun"
@@ -870,7 +951,7 @@ func do_ai(delta):
     
     var player = null
     for other in get_tree().get_nodes_in_group("Player"):
-        if other.is_player:
+        if other.is_local_player:
             player = other
             break
     if !player:
@@ -1254,7 +1335,7 @@ func handle_friction_and_accel(delta):
     # subdivide friction and acceleration to approximately 1ms steps to increase accuracy
     var steps = max(1.0, round(delta*1000.0))
     var step_size = delta/steps
-    for i in range(steps):
+    for _i in range(steps):
         handle_friction(step_size)
         handle_accel(step_size)
 
@@ -1386,9 +1467,6 @@ var prev_floor_transform = null
 var prev_floor_collision = null
 var processing_disabled = false
 func _process(delta):
-    if is_player and Input.is_key_pressed(KEY_0):
-        global_translation.y = 4.0
-    
     if processing_disabled:
         return
     hit_this_frame = false
@@ -1396,7 +1474,6 @@ func _process(delta):
     moving_platform_mode = MOVING_PLATFORM_FULL_INHERIT
     
     check_first_person_visibility()
-    update_inputs()
     do_ai(delta)
     process_inputs()
     

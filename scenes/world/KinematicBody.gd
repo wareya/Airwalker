@@ -1,7 +1,5 @@
 extends KinematicBody
 
-# FIXME move all this crap into a new parent script
-
 var previous_global_transform = null
 var previous_delta = 0.0
 
