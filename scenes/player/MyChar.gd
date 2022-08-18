@@ -126,7 +126,9 @@ var foot_ik_r1 = null
 var foot_ik_r2 = null
 
 func do_anim_ik(delta):
-    return # TODO: make this optional. it has a meaningful performance impact (~0.25ms per character on an i5 6600)
+    # TODO: make this optional. it has a meaningful performance impact (~0.25ms per character on an i5 6600)
+    if true:
+        return
     var offset_average = 0.0
     if is_on_floor():
         var normalize = 0.0
@@ -253,7 +255,7 @@ var anim_table = {
     "float" :  {name="Float", speed=1.0, blend=2.0},
     "air"   :  {name="Air"  , speed=1.0, blend=2.0},
     "walk"  :  {name="Walk" , speed=2.0},
-    "run"   :  {name="Run" , speed=2.0},
+    "run"   :  {name="Run"  , speed=2.0},
     "jump"  :  {name="Jump" , speed=1.0, blend=0.5, override_lock=true},
     "land"  :  {name="Land" , speed=1.5, lock=0.2},
 }
@@ -539,7 +541,7 @@ func build_weapon_db():
         },
         "grenade" : {
             model = preload("res://scenes/player/GrenadeLauncherCSG.tscn"),
-            model_offset = Vector3(0.15, -0.4, -0.1),
+            model_offset = Vector3(0.15, -0.35, -0.1),
             projectile = preload("res://scenes/dynamic/Grenade.tscn"),
             projectile_origin = $CamRelative/RocketOrigin,
             projectile_count = 1,
@@ -600,6 +602,7 @@ func build_weapon_db():
             sfx_idle = null,
             sfx_idle_shoot = null,
             reload_time = 0.95,
+            # FIXME the way "penetration" works for CPMA's shotgun is very weird
         },
         "machinegun" : {
             model = preload("res://scenes/player/MachinegunCSG.tscn"),
