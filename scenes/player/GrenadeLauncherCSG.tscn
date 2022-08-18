@@ -31,26 +31,26 @@ uv1_triplanar = true
 [node name="CSGCombiner" type="CSGCombiner"]
 
 [node name="CSGPolygon" type="CSGPolygon" parent="."]
-transform = Transform( -7.04782e-09, 3.43694e-15, -0.322471, 0, 0.161235, 6.87388e-15, 0.161235, 1.50233e-22, -1.40956e-08, -0.0411235, -0.0237705, -0.00393843 )
+transform = Transform( -7.04782e-09, 3.43694e-15, -0.322471, 0, 0.161235, 6.87388e-15, 0.161235, 1.50233e-22, -1.40956e-08, -0.03, -0.0510851, -0.08 )
 polygon = PoolVector2Array( 0.0625, 0.3125, 0.6875, 0.3125, 0.8125, 0, 0.5, -0.1875, -0.0625, -0.1875, -0.1875, -0.0625 )
-depth = 0.2
+depth = 0.18
 material = SubResource( 4 )
 
 [node name="CSGPolygon5" type="CSGPolygon" parent="."]
-transform = Transform( -1.7138e-08, 0.322471, 2.81913e-08, -0.112865, 1.21729e-08, -0.279268, -0.195487, -3.52984e-08, 0.161235, -0.00887647, -0.111644, 0.15329 )
+transform = Transform( -1.7138e-08, 0.322471, 2.81913e-08, -0.112865, 1.21729e-08, -0.279268, -0.195487, -3.52984e-08, 0.161235, 0, -0.139085, 0.077 )
 polygon = PoolVector2Array( 0, 0.0625, 0.0625, 0.0625, 0.125, 0, 0.0625, -0.0625, 0, -0.0625, -0.0625, 0 )
 depth = 0.32
 material = SubResource( 4 )
 
 [node name="CSGPolygon7" type="CSGBox" parent="."]
-transform = Transform( -1.88101e-08, 0.322471, 2.09017e-08, 0.138426, 2.69525e-08, -0.291249, -0.291249, -8.01644e-09, -0.138426, -0.00887647, -0.086813, -0.0414862 )
+transform = Transform( -1.88101e-08, 0.322471, 2.09017e-08, 0.138426, 2.69525e-08, -0.291249, -0.291249, -8.01644e-09, -0.138426, 0, -0.114085, -0.117 )
 width = 0.211029
 height = 0.0700688
 depth = 0.330767
 material = SubResource( 4 )
 
 [node name="CSGPolygon6" type="CSGPolygon" parent="."]
-transform = Transform( -1.40956e-08, -0.322471, -3.43694e-15, 0.322471, -1.40956e-08, -8.19475e-23, -6.82858e-23, -3.43694e-15, 0.322471, -0.00887647, -0.0126805, 0.0225199 )
+transform = Transform( -1.40956e-08, -0.322471, -3.43694e-15, 0.322471, -1.40956e-08, -8.19475e-23, -6.82858e-23, -3.43694e-15, 0.322471, 0, -0.0400851, -0.053 )
 polygon = PoolVector2Array( 0.25, 0.0625, 0.25, -0.0625, 0.1875, -0.125, -0.125, -0.125, -0.1875, -0.0625, -0.1875, 0.0625, -0.125, 0.125, 0.1875, 0.125 )
 depth = 0.6
 material = SubResource( 3 )
@@ -85,4 +85,4 @@ height = 0.140867
 material = SubResource( 4 )
 
 [node name="EffectReference" type="Spatial" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0664503, -0.262271 )
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0100919, -0.262696 )

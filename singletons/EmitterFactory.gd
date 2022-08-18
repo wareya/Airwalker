@@ -21,11 +21,17 @@ var sounds = {
     "lightningidle" : preload("res://sfx/LightningIdle.wav"),
     "lightningbuzz" : preload("res://sfx/LightningBuzz.wav"),
     "thunderclap" : preload("res://sfx/ThunderClap.wav"),
-    "grenadebounce" : preload("res://sfx/BadGrenadeBounce.wav"),
+    "plasmashot" : preload("res://sfx/PlasmaSweep.wav"),
+    "plasmaidle" : preload("res://sfx/PlasmaIdle.wav"),
     
     "rocketexplosion2" : preload("res://sfx/rocketexplosion2.wav"),
     "rocketexplosion" : preload("res://sfx/rocketexplosion.wav"),
     "rocketloop" : preload("res://sfx/rocketloop.wav"),
+    
+    "grenadebounce" : preload("res://sfx/BadGrenadeBounce.wav"),
+    
+    "plasmasplat" : preload("res://sfx/PlasmaSplat2.wav"),
+    "plasmaloop" : preload("res://sfx/PlasmaHiss.wav"),
     
     "hita" : preload("res://sfx/HitA.wav"),
     "hitb" : preload("res://sfx/HitB.wav"),
@@ -44,11 +50,13 @@ class Emitter3D extends AudioStreamPlayer3D:
             queue_free()
 
     func emit(parent : Node, sound, arg_position, channel):
-        parent.add_child(self)
+        if parent:
+            parent.add_child(self)
         transform.origin = arg_position
         var abs_position = global_transform.origin
-        parent.remove_child(self)
-        parent.get_tree().get_root().add_child(self)
+        if parent:
+            parent.remove_child(self)
+        Gamemode.get_tree().get_root().add_child(self)
         global_transform.origin = abs_position
         
         stream = sound

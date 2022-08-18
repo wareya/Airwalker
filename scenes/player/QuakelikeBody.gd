@@ -279,10 +279,11 @@ func custom_move_and_slide(delta, velocity):
     
     # before doing anything else: see if we're stick inside the world, and if so, try to get outside of it
     unstuck_floor = false
-    var out_velocity = velocity
-    var unstuck_velocity_addition = Vector3()
-    out_velocity = unstuck(velocity)
-    unstuck_velocity_addition = out_velocity - velocity
+    #var out_velocity = velocity
+    #var unstuck_velocity_addition = Vector3()
+    #out_velocity = unstuck(velocity)
+    #unstuck_velocity_addition = out_velocity - velocity
+    unstuck(velocity)
     
     var raw_velocity = velocity
     var delta_velocity = velocity*delta
@@ -291,19 +292,19 @@ func custom_move_and_slide(delta, velocity):
     #var start_translation = translation
     var started_on_ground = floor_collision != null
     
-    var iters_done = 0
+    #var iters_done = 0
     var max_iters = 12
     hit_a_floor = false
     hit_a_wall = false
     did_stairs = false
     wall_collision = null
     for _i in range(max_iters):
-        var prev_pos = global_translation
+        #var prev_pos = global_translation
         var collision = my_move_and_collide(delta_velocity)
         if collision == null:
             break
         else:
-            iters_done += 1
+            #iters_done += 1
             delta_velocity -= collision.travel
             #print("testing stairs on bounce " + str(i))
             #print("original vel: " + str(raw_velocity))

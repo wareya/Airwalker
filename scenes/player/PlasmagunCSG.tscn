@@ -1,0 +1,95 @@
+[gd_scene load_steps=4 format=2]
+
+[sub_resource type="SpatialMaterial" id=7]
+albedo_color = Color( 0.290196, 0.227451, 0.552941, 1 )
+metallic = 0.23
+metallic_specular = 0.0
+roughness = 0.81
+uv1_scale = Vector3( 16, 16, 16 )
+uv1_triplanar = true
+
+[sub_resource type="SpatialMaterial" id=3]
+metallic = 1.0
+roughness = 0.46
+uv1_scale = Vector3( 16, 16, 16 )
+uv1_triplanar = true
+uv2_triplanar = true
+
+[sub_resource type="SpatialMaterial" id=6]
+albedo_color = Color( 0.313726, 0.698039, 0.831373, 1 )
+metallic = 0.23
+metallic_specular = 0.0
+roughness = 0.81
+emission_enabled = true
+emission = Color( 0.431373, 0.207843, 0.811765, 1 )
+emission_energy = 1.0
+emission_operator = 0
+emission_on_uv2 = false
+uv1_scale = Vector3( 16, 16, 16 )
+uv1_triplanar = true
+
+[node name="CSGCombiner" type="CSGCombiner"]
+snap = 0.0001
+
+[node name="CSGPolygon5" type="CSGPolygon" parent="."]
+transform = Transform( -3.73754e-08, 0.35, 4.37114e-08, -0.151352, 1.14267e-08, -0.450833, -0.315583, -4.69317e-08, 0.216217, 0, -0.134196, 0.315652 )
+polygon = PoolVector2Array( 0, 0.0625, 0.0625, 0.0625, 0.125, 0, 0.0625, -0.0625, 0, -0.0625, -0.0625, 0 )
+depth = 0.32
+material = SubResource( 7 )
+
+[node name="CSGPolygon" type="CSGPolygon" parent="."]
+transform = Transform( 0.25, 0, 0, 0, 0.25, 0, 0, 0, 0.25, 0, 0.0905246, -0.218027 )
+polygon = PoolVector2Array( -0.1875, 0, -0.0625, 0.1875, 0.0625, 0.1875, 0.1875, 0 )
+depth = 0.5
+material = SubResource( 7 )
+
+[node name="CSGBox" type="CSGBox" parent="CSGPolygon"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.282481, -0.25 )
+operation = 2
+width = 0.75
+height = 0.375
+depth = 0.125
+material = SubResource( 7 )
+
+[node name="CSGPolygon6" type="CSGPolygon" parent="."]
+transform = Transform( 9.55343e-16, 2.18557e-08, -0.5, 0.5, -2.18557e-08, -4.49776e-23, -2.18557e-08, -0.5, -2.18557e-08, -0.075, 0, -0.0930271 )
+polygon = PoolVector2Array( 0.25, -0.0625, 0.1875, -0.8125, 0, -0.8125, -0.125, -0.5625, -0.0625, -0.4375, -0.0625, -0.3125, -0.1875, -0.1875, -0.1875, 0.125, -0.0625, 0.25, -0.0625, 0.5625, 0.25, 0.5625 )
+depth = 0.3
+material = SubResource( 3 )
+
+[node name="CSGPolygon11" type="CSGPolygon" parent="CSGPolygon6"]
+transform = Transform( 1, -3.55271e-15, -8.26286e-15, 3.55271e-15, 1, 0, -8.43612e-16, 0, 1, 0.279785, 0.0935063, 0.0595724 )
+operation = 2
+polygon = PoolVector2Array( 0, 0.0625, -0.25, -0.0625, -0.125, -0.375, 0, -0.4375 )
+depth = 0.5
+material = SubResource( 3 )
+
+[node name="CSGPolygon12" type="CSGPolygon" parent="CSGPolygon6"]
+transform = Transform( 0.999924, -4.37081e-08, -0.0123567, -0.0123567, -4.31713e-08, -0.999924, 4.31713e-08, 1, -4.37081e-08, 0.28, -0.848626, -0.2 )
+operation = 2
+polygon = PoolVector2Array( 0.1875, 0.25, -0.19375, 0.25, -0.0625, 0.125, -0.0625, -0.03125, -0.19375, -0.15625, 0.1875, -0.15625 )
+depth = 1.55
+material = SubResource( 3 )
+
+[node name="CSGPolygon2" type="CSGPolygon" parent="."]
+transform = Transform( -1.09278e-08, 0, -0.25, -0.0180136, 0.24935, 7.87401e-10, 0.24935, 0.0180136, -1.08994e-08, -0.04, 0.078283, -0.175 )
+polygon = PoolVector2Array( -0.09375, 0.0625, 0.875, 0.3125, 1.09375, 0.0625, 1, 0.0625, 0.84375, 0.1875, 0.140625, 0.015625 )
+depth = 0.33
+material = SubResource( 3 )
+
+[node name="CSGPolygon10" type="CSGBox" parent="."]
+transform = Transform( -1.27237e-12, 1.09485e-08, -0.25, 0.249527, 0.0153754, 6.72079e-10, 0.0153754, -0.249527, -1.09278e-08, 0, 0.0513437, -0.0421407 )
+width = 0.39818
+height = 1.125
+depth = 0.5375
+material = SubResource( 6 )
+
+[node name="CSGPolygon13" type="CSGPolygon" parent="CSGPolygon10"]
+transform = Transform( 1.41029, 1.28595e-09, 0.0983246, 0.0694172, -5.22827e-08, -1.99758, 1.49939e-09, 1.211, -8.63464e-08, 0.347229, -1.17813, -1.70806e-07 )
+operation = 2
+polygon = PoolVector2Array( 0, 0.25, -0.1625, 0.25, -0.0625, 0.125, -0.0625, -0.125, -0.1625, -0.25, 0, -0.25 )
+depth = 1.55
+material = SubResource( 6 )
+
+[node name="EffectReference" type="Spatial" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0472582, -0.286012 )

@@ -1,0 +1,133 @@
+[gd_scene load_steps=11 format=2]
+
+[ext_resource path="res://sfx/PlasmaHiss.wav" type="AudioStream" id=1]
+[ext_resource path="res://scenes/dynamic/Plasma.gd" type="Script" id=2]
+[ext_resource path="res://scenes/dynamic/FadingLight.gd" type="Script" id=3]
+
+[sub_resource type="Shader" id=9]
+code = "// NOTE: Shader automatically converted from Godot Engine 3.5.stable's SpatialMaterial.
+
+shader_type spatial;
+render_mode async_visible,blend_mix,depth_draw_opaque,cull_back,unshaded;
+uniform vec4 albedo : hint_color;
+uniform sampler2D texture_albedo : hint_albedo;
+uniform float specular;
+uniform float metallic;
+uniform float proximity_fade_distance;
+uniform float roughness : hint_range(0,1);
+uniform float point_size : hint_range(0,128);
+uniform sampler2D texture_depth : hint_black;
+uniform float depth_scale;
+uniform int depth_min_layers;
+uniform int depth_max_layers;
+uniform vec2 depth_flip;
+uniform vec3 uv1_scale;
+uniform vec3 uv1_offset;
+uniform vec3 uv2_scale;
+uniform vec3 uv2_offset;
+
+uniform float uv_rotation;
+
+void vertex() {
+    MODELVIEW_MATRIX = INV_CAMERA_MATRIX * mat4(CAMERA_MATRIX[0],CAMERA_MATRIX[1],CAMERA_MATRIX[2],WORLD_MATRIX[3]);
+    MODELVIEW_MATRIX = MODELVIEW_MATRIX * mat4(vec4(length(WORLD_MATRIX[0].xyz), 0.0, 0.0, 0.0),vec4(0.0, length(WORLD_MATRIX[1].xyz), 0.0, 0.0),vec4(0.0, 0.0, length(WORLD_MATRIX[2].xyz), 0.0),vec4(0.0, 0.0, 0.0, 1.0));
+}
+
+void fragment() {
+    vec2 base_uv = UV;
+    {
+        vec3 view_dir = normalize(normalize(-VERTEX)*mat3(TANGENT*depth_flip.x,-BINORMAL*depth_flip.y,NORMAL));
+        
+        float s = sin(uv_rotation);
+        float c = cos(uv_rotation);
+        mat2 mat = mat2(vec2(c, s), vec2(-s, c));
+        mat2 inv = inverse(mat2(vec2(c, s), vec2(-s, c)));
+        vec2 depth_uv1 = (base_uv-vec2(0.5, 0.5))*mat+vec2(0.5, 0.5);
+        vec2 depth_uv2 = (base_uv-vec2(0.5, 0.5))*inv*0.9+vec2(0.5, 0.5);
+        
+        float depth1 = texture(texture_depth, depth_uv1).r;
+        float depth2 = texture(texture_depth, depth_uv2).r;
+        vec2 ofs = mix(base_uv, vec2(0.5), -max(depth1*depth1, depth2*depth2) * depth_scale);
+        base_uv=ofs;
+    }
+    vec4 albedo_tex = texture(texture_albedo,base_uv);
+    ALBEDO = albedo.rgb * albedo_tex.rgb;
+    METALLIC = metallic;
+    ROUGHNESS = roughness;
+    SPECULAR = specular;
+    ALPHA = albedo.a * albedo_tex.a;
+    float depth_tex = textureLod(DEPTH_TEXTURE,SCREEN_UV,0.0).r;
+    vec4 world_pos = INV_PROJECTION_MATRIX * vec4(SCREEN_UV*2.0-1.0,depth_tex*2.0-1.0,1.0);
+    world_pos.xyz/=world_pos.w;
+    ALPHA*=clamp(1.0-smoothstep(world_pos.z+proximity_fade_distance,world_pos.z,VERTEX.z),0.0,1.0);
+}
+"
+
+[sub_resource type="Gradient" id=1]
+interpolation_mode = 2
+offsets = PoolRealArray( 0, 0.133758, 0.292994, 0.541401, 0.707006, 0.866242, 1 )
+colors = PoolColorArray( 1, 1, 1, 1, 0.631373, 0.844485, 1, 0.827451, 0.580392, 0.890196, 1, 1, 0.443137, 0.694118, 1, 0.52549, 0.435294, 0.717647, 1, 0.180392, 0.419608, 0.69493, 1, 0.0705882, 0.141176, 0.384616, 0.870588, 0 )
+
+[sub_resource type="GradientTexture2D" id=2]
+flags = 13
+gradient = SubResource( 1 )
+fill = 1
+fill_from = Vector2( 0.5, 0.5 )
+fill_to = Vector2( 0.5, 0 )
+
+[sub_resource type="OpenSimplexNoise" id=7]
+
+[sub_resource type="NoiseTexture" id=8]
+seamless = true
+noise = SubResource( 7 )
+
+[sub_resource type="ShaderMaterial" id=10]
+shader = SubResource( 9 )
+shader_param/albedo = Color( 1, 1, 1, 1 )
+shader_param/specular = 0.0
+shader_param/metallic = 0.0
+shader_param/proximity_fade_distance = 0.12
+shader_param/roughness = 1.0
+shader_param/point_size = 1.0
+shader_param/depth_scale = 1.0
+shader_param/depth_min_layers = 14
+shader_param/depth_max_layers = 14
+shader_param/depth_flip = Vector2( 1, 1 )
+shader_param/uv1_scale = Vector3( 1, 1, 1 )
+shader_param/uv1_offset = Vector3( 0, 0, 0 )
+shader_param/uv2_scale = Vector3( 1, 1, 1 )
+shader_param/uv2_offset = Vector3( 0, 0, 0 )
+shader_param/uv_rotation = -3.254
+shader_param/texture_albedo = SubResource( 2 )
+shader_param/texture_depth = SubResource( 8 )
+
+[sub_resource type="QuadMesh" id=6]
+material = SubResource( 10 )
+
+[node name="Plasma" type="Spatial"]
+process_priority = 1
+script = ExtResource( 2 )
+
+[node name="OmniLight" type="OmniLight" parent="."]
+light_color = Color( 0.333333, 0.894118, 0.709804, 1 )
+light_energy = 2.0
+omni_range = 8.0
+omni_attenuation = 0.5
+script = ExtResource( 3 )
+
+[node name="RayCast" type="RayCast" parent="."]
+cast_to = Vector3( 0, 0, -1 )
+collision_mask = 3
+
+[node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource( 1 )
+unit_db = 20.0
+max_db = 6.0
+autoplay = true
+bus = "SFX"
+attenuation_filter_cutoff_hz = 20500.0
+attenuation_filter_db = -0.1
+
+[node name="Billboard" type="MeshInstance" parent="."]
+transform = Transform( 1.3, 0, 0, 0, 1.3, 0, 0, 0, 1.3, 0, 0, 0 )
+mesh = SubResource( 6 )

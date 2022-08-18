@@ -74,7 +74,7 @@ func do_cast():
     
 
 var spread_xform
-func next_frame(delta):
+func next_frame(_delta):
     if !follow_aim_of or !is_instance_valid(follow_aim_of):
         return
     

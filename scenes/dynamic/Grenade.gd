@@ -30,7 +30,6 @@ func _process(delta):
 func add_exception(other):
     $RayCast.add_exception(other)
 
-
 func first_frame(delta):
     velocity = global_transform.basis.xform(Vector3(0, 0, -initial_speed))
     

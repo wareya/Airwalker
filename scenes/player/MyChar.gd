@@ -476,6 +476,10 @@ func update_inputs():
         inputs.weapon_intent = "lightninggun"
     if Input.is_action_just_pressed("w_shotgun"):
         inputs.weapon_intent = "shotgun"
+    if Input.is_action_just_pressed("w_grenade"):
+        inputs.weapon_intent = "grenade"
+    if Input.is_action_just_pressed("w_plasma"):
+        inputs.weapon_intent = "plasma"
     
     if Input.is_action_just_released("mwheelup"):
         inputs.mwheel_change -= 1
@@ -527,9 +531,8 @@ func build_weapon_db():
             reload_time = 0.8,
         },
         "grenade" : {
-            model = load("res://scenes/player/GrenadeLauncherCSG.tscn"),
-            #model_offset = Vector3(0.023, -0.375, -0.115),
-            model_offset = Vector3(0.15, -0.4, -0.2),
+            model = preload("res://scenes/player/GrenadeLauncherCSG.tscn"),
+            model_offset = Vector3(0.15, -0.4, -0.1),
             projectile = preload("res://scenes/dynamic/Grenade.tscn"),
             projectile_origin = $CamRelative/RocketOrigin,
             projectile_count = 1,
@@ -541,12 +544,33 @@ func build_weapon_db():
             hitscan_knockback_scale = 0.0,
             hitscan_scene = "",
             hitscan_follows_aim = false,
-            kickback_scale = 1.0,
+            kickback_scale = 0.65,
             sfx = "grenadeshot",
             sfx_once = "",
             sfx_idle = null,
             sfx_idle_shoot = null,
             reload_time = 0.8,
+        },
+        "plasma" : {
+            model = preload("res://scenes/player/PlasmagunCSG.tscn"),
+            model_offset = Vector3(0.0, -0.6, -0.2),
+            projectile = preload("res://scenes/dynamic/Plasma.tscn"),
+            projectile_origin = $CamRelative/RocketOrigin,
+            projectile_count = 1,
+            projectile_spread = 0.0,
+            hitscan_count = 0,
+            hitscan_spread = 0.0,
+            hitscan_damage = 0,
+            hitscan_range = 0.0,
+            hitscan_knockback_scale = 0.0,
+            hitscan_scene = "",
+            hitscan_follows_aim = false,
+            kickback_scale = 0.5,
+            sfx = "plasmashot",
+            sfx_once = "",
+            sfx_idle = preload("res://sfx/PlasmaIdle.wav"),
+            sfx_idle_shoot = preload("res://sfx/PlasmaIdle.wav"),
+            reload_time = 0.1,
         },
         "shotgun" : {
             model = preload("res://scenes/player/ShotgunCSG.tscn"),
@@ -664,7 +688,7 @@ func get_muzzle_refpoint():
 onready var weapon_db = build_weapon_db()
 
 # melee, mg, shotgun, grenade, rocket, lg, railgun, plasma, bfg, grapple
-var weapon_list = ["machinegun", "shotgun", "grenade", "rocket", "lightninggun", "railgun"]
+var weapon_list = ["machinegun", "shotgun", "grenade", "rocket", "lightninggun", "railgun", "plasma"]
 var current_weapon = ""
 var desired_weapon = "machinegun"
 func weapon_think(delta):
@@ -1312,7 +1336,7 @@ func floor_follow_start():
 
 func floor_follow_end():
     if floor_collision and is_instance_valid(floor_collision.collider):
-        var old_pos_valid = false
+        #var old_pos_valid = false
         var old_relative_location = null
         if "previous_global_transform" in floor_collision.collider:
             old_relative_location = floor_collision.collider.previous_global_transform.affine_inverse().xform(floor_foot_position_memory)
@@ -1325,7 +1349,7 @@ func floor_follow_end():
         # FIXME: is this right? do we need scale too?
         difference = floor_collision.collider.global_transform.basis.xform(difference)
         if moving_platform_mode != MOVING_PLATFORM_PHYSICAL:
-            my_move_and_collide(difference)
+            var _unused = my_move_and_collide(difference)
         # TODO set floor velocity here too
 
 var previous_on_floor = false
