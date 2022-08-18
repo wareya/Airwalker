@@ -28,6 +28,7 @@ _global_script_class_icons={
 
 config/name="Airwalker"
 run/main_scene="res://scenes/levels/Demo Scene 2.tscn"
+boot_splash/show_image=false
 config/icon="res://res/icon.png"
 
 [audio]
@@ -42,7 +43,7 @@ Gamemode="*res://singletons/Gamemode.tscn"
 
 [debug]
 
-settings/fps/force_fps=125
+settings/fps/force_fps=250
 settings/physics_interpolation/enable_warnings=false
 
 [display]
@@ -1255,8 +1256,6 @@ common/enable_pause_aware_picking=true
 threads/thread_model=2
 threads/thread_safe_bvh=true
 quality/shading/use_physical_light_attenuation=true
-quality/depth_prepass/enable=false
-quality/spatial_partitioning/render_tree_balance=0.19
 misc/occlusion_culling/max_active_polygons=32
 quality/reflections/atlas_subdiv=256
 quality/filters/msaa=2

@@ -39,7 +39,7 @@ func _process(_delta):
             player.set_rotation($Target.global_transform.basis.get_euler().y + PI/2.0)
             player.velocity = $Target.global_transform.basis.xform(Vector3.LEFT) * 400.0/32.0
             player.reset_stair_camera_offset()
-            player.remove_from_ground()
+            player.detach_from_floor()
             # FIXME force a ground check
             print("teleporter")
             $Target/TeleportSFX.play()

@@ -22,8 +22,8 @@ func _process(_delta):
     $ArmorLabel.visible = false
     
     if Input.is_action_just_pressed("ui_page_down"):
-        if Engine.target_fps != 125:
-            Engine.target_fps = 125
+        if Engine.target_fps == 24:
+            Engine.target_fps = 500
         else:
             Engine.target_fps = 24
         #Engine.time_scale = 1.0
@@ -38,14 +38,16 @@ func _process(_delta):
         pass
 
 func update(player):
-    $Peak.text = "%s\n%s\n%s\n%s\n%s\n%s\n%s" % \
+    $Peak.text = "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s %s %s" % \
         [(player.peak*player.unit_scale),
         (player.velocity * Vector3(1,0,1)).length()*player.unit_scale,
         player.velocity.length()*player.unit_scale,
         player.is_on_floor(),
         player.global_translation*player.unit_scale,
         player.velocity.y*player.unit_scale,
-        Engine.get_frames_per_second()]
+        Engine.get_frames_per_second(),
+        player.hit_a_floor, player.hit_a_wall, player.did_stairs
+        ]
     
     $Crosshair.visible = true
     

@@ -100,8 +100,7 @@ var wall_collision = null
 
 export var stair_height = 18.0/32.0
 export var floor_search_distance = 0.05
-#export var stair_query_fallback_distance = 0.05
-export var stair_query_fallback_distance = 0.06
+export var stair_query_fallback_distance = 0.05
 # allows 45.5ish degrees and shallower (rad2deg(acos(0.7)) is about 45.573 degrees)
 export var floor_normal_threshold = 0.7
 
@@ -152,7 +151,7 @@ func map_to_floor(pseudomotion, distance):
     if stuff == null and pseudomotion != null:
         pseudomotion.y = 0
         pseudomotion = pseudomotion.normalized()
-        pseudomotion *= stair_query_fallback_distance
+        pseudomotion *= stair_query_fallback_distance # FIXME ??????
         stuff = collide_into_floor_and_reset(Vector3(pseudomotion.x, -(distance+floor_search_distance), pseudomotion.z))
         
     if stuff != null:
@@ -161,12 +160,14 @@ func map_to_floor(pseudomotion, distance):
         var bounces = stuff[2]
         if collision_is_floor(collision):
             # the y of temp_translation should be negativer than translation
+            # (prevents problems on ramps)
             var actual_distance = translation.y - temp_translation.y
             if bounces == 0:
+                # FIXME pretty sure the math behind this is wrong
                 if actual_distance > floor_search_distance:
                     translation.y = temp_translation.y + floor_search_distance
             else:
-                translation = temp_translation
+                translation = temp_translation + Vector3(0, floor_search_distance, 0)
             floor_collision = collision
 
 # b must be normalized
@@ -241,7 +242,10 @@ func attempt_stair_step(motion, raw_velocity, is_wall, fallback = false):
     #    print("found collision was not a floor: %s" % down_contact)
     
     if !use_fallback_stair_logic or fallback or !is_wall:
-        return null
+        if is_wall and (!horizontal_contact or horizontal_contact.travel.length() > 0.0):
+            return []
+        else:
+            return null
     elif motion.length_squared() < stair_query_fallback_distance*stair_query_fallback_distance:
         return attempt_stair_step(original_motion, raw_velocity, is_wall, true)
 
@@ -275,6 +279,9 @@ func unstuck(velocity):
 
 
 func custom_move_and_slide(delta, velocity):
+    if velocity.y <= 0:
+        no_floor_check = false
+    
     var use_collider_velocity = true
     
     # before doing anything else: see if we're stick inside the world, and if so, try to get outside of it
@@ -292,7 +299,7 @@ func custom_move_and_slide(delta, velocity):
     #var start_translation = translation
     var started_on_ground = floor_collision != null
     
-    #var iters_done = 0
+    var _iters_done = 0
     var max_iters = 12
     hit_a_floor = false
     hit_a_wall = false
@@ -304,7 +311,7 @@ func custom_move_and_slide(delta, velocity):
         if collision == null:
             break
         else:
-            #iters_done += 1
+            _iters_done += 1
             delta_velocity -= collision.travel
             #print("testing stairs on bounce " + str(i))
             #print("original vel: " + str(raw_velocity))
@@ -317,7 +324,7 @@ func custom_move_and_slide(delta, velocity):
                 #print("trying stairs")
                 stair_residual = attempt_stair_step(delta_velocity, raw_velocity, is_wall)
             
-            if stair_residual:
+            if stair_residual != null and stair_residual.size() > 0:
                 did_stairs = true
                 #print("stair residual exists")
                 delta_velocity = stair_residual[0]
@@ -349,10 +356,15 @@ func custom_move_and_slide(delta, velocity):
                     hit_a_wall = true
                     wall_collision = collision
                     #print(collision.collider_velocity, collision.normal, delta_velocity)
-                    delta_velocity = vector_reject(delta_velocity, collision.normal)
-                    raw_velocity = vector_reject(raw_velocity, collision.normal)
-                    if use_collider_velocity:
-                        raw_velocity += vector_project(collision.collider_velocity, collision.normal)
+                    if stair_residual != null and stair_residual.size() == 0:
+                        # no wall slide
+                        #print("no wall slide")
+                        pass
+                    else:
+                        delta_velocity = vector_reject(delta_velocity, collision.normal)
+                        raw_velocity = vector_reject(raw_velocity, collision.normal)
+                        if use_collider_velocity:
+                            raw_velocity += vector_project(collision.collider_velocity, collision.normal)
                 else:
                     #print("it's a floor")
                     hit_a_floor = true
@@ -377,19 +389,28 @@ func custom_move_and_slide(delta, velocity):
             #print("breaking early because remaining travel vector empty")
             break
     
+    
+    if hit_a_floor:
+        no_floor_check = false
+    
     floor_collision = null
-    if !stick_to_ground and !hit_a_floor:
+    if !stick_to_ground and !hit_a_floor and !no_floor_check:
         map_to_floor(null, 0)
+        pass
     elif started_on_ground or hit_a_floor:
         map_to_floor(start_velocity*delta, stair_height)
-        if hit_a_floor:
-            print("hit a floor! ", floor_collision, velocity)
+        #if hit_a_floor:
+            #print("hit a floor! ", floor_collision, velocity)
             #if did_stairs:
             #    print("in fact it was stairs!")
-    elif hit_a_floor or start_velocity.y < 0:
+    elif !no_floor_check and (hit_a_floor or start_velocity.y < 0):
         map_to_floor(null, 0)
-    
-    #aw_velocity += unstuck_velocity_addition
-    #print(unstuck_velocity_addition)
+        pass
     
     return raw_velocity
+
+var no_floor_check = false
+
+func detach_from_floor():
+    floor_collision = null
+    no_floor_check = true

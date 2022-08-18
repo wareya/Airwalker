@@ -2739,6 +2739,10 @@ transform = Transform( 0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 1
 [node name="Spawner4" parent="Stuff/NavigationMeshInstance" instance=ExtResource( 6 )]
 transform = Transform( -0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, -0.707107, -5.5, 2, -24.75 )
 
+[node name="BakedLightmap" type="BakedLightmap" parent="Stuff"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 47.0358, 9.23127, 5.09277 )
+extents = Vector3( 27.5912, 10, 33.7205 )
+
 [editable path="Stuff/NavigationMeshInstance/Teleporter"]
 [editable path="Stuff/NavigationMeshInstance/Teleporter2"]
 [editable path="Stuff/NavigationMeshInstance/Teleporter3"]

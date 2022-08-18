@@ -44,7 +44,7 @@ func _process(delta):
         pos_diff.z = pos_diff_raw.z
         pos_diff = subtract_hull_size_from_distance(pos_diff)
         if pos_diff.length_squared() == 0.0:
-            player.remove_from_ground()
+            player.detach_from_floor()
             player.velocity = global_transform.basis.xform(velocity)
             ignore[player] = 1.0
             print("jump check")

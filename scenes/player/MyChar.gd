@@ -52,10 +52,28 @@ func _ready():
     check_first_person_visibility()
     $Hull2.queue_free()
     
+    for anim in ["Walk", "Idle", "Run", "Air", "Float"]:
+        $Model/AnimationPlayer.get_animation(anim).loop = true
+    for anim in ["Land", "Jump", "ArmSwing"]:
+        $Model/AnimationPlayer.get_animation(anim).loop = false
+    
+    for anim_name in $Model/AnimationPlayer.get_animation_list():
+        var _anim : Animation = $Model/AnimationPlayer.get_animation(anim_name)
+        for t in _anim.get_track_count():
+            _anim.track_set_interpolation_type(t, Animation.INTERPOLATION_LINEAR)
+            _anim.track_set_interpolation_loop_wrap(t, true)
+    
     $Model/Armature.translation.z = -0.08
 
+var bone_index_cache = {}
 func do_ik_for_side(solver_name : String, root : String, tip : String, skip_if_above):
-    var index = $Model/Armature/Skeleton.find_bone(tip)
+    var index
+    if tip in bone_index_cache:
+        index = bone_index_cache[tip]
+    else:
+        index = $Model/Armature/Skeleton.find_bone(tip)
+        bone_index_cache[tip] = index
+    
     var xform = $Model/Armature/Skeleton.global_transform * $Model/Armature/Skeleton.get_bone_global_pose(index)
     var origin = xform.origin
     
@@ -88,7 +106,7 @@ func do_ik_for_side(solver_name : String, root : String, tip : String, skip_if_a
         solver.use_magnet = true
     solver.root_bone = root
     solver.tip_bone  = tip
-    solver.max_iterations = 10
+    solver.max_iterations = 3
     solver.min_distance = 0.01
     solver.override_tip_basis = false
     solver.target = $IKFinder.global_transform.translated(end_pos - $IKFinder.global_translation)
@@ -108,7 +126,7 @@ var foot_ik_r1 = null
 var foot_ik_r2 = null
 
 func do_anim_ik(delta):
-    
+    return # TODO: make this optional. it has a meaningful performance impact (~0.25ms per character on an i5 6600)
     var offset_average = 0.0
     if is_on_floor():
         var normalize = 0.0
@@ -217,15 +235,6 @@ func update_from_camera_smoothing():
 
 var anim_lock_time = 0.0
 func play_no_self_override(anim, speed, blendmult) -> bool:
-    for anim_name in $Model/AnimationPlayer.get_animation_list():
-        var _anim : Animation = $Model/AnimationPlayer.get_animation(anim_name)
-        for t in _anim.get_track_count():
-            _anim.track_set_interpolation_type(t, Animation.INTERPOLATION_LINEAR)
-            _anim.track_set_interpolation_loop_wrap(t, true)
-    for anim in ["Walk", "Idle", "Run", "Air", "Float"]:
-        $Model/AnimationPlayer.get_animation(anim).loop = true
-    for anim in ["Land", "Jump", "ArmSwing"]:
-        $Model/AnimationPlayer.get_animation(anim).loop = false
     if anim_lock_time > 0.0:
         return false
     if $Model/AnimationPlayer.current_animation != anim:
@@ -239,16 +248,16 @@ func play_no_self_override(anim, speed, blendmult) -> bool:
         $Model/AnimationPlayer.playback_speed = speed
         return false
 
+var anim_table = {
+    "idle"  :  {name="Idle" , speed=0.25},
+    "float" :  {name="Float", speed=1.0, blend=2.0},
+    "air"   :  {name="Air"  , speed=1.0, blend=2.0},
+    "walk"  :  {name="Walk" , speed=2.0},
+    "run"   :  {name="Run" , speed=2.0},
+    "jump"  :  {name="Jump" , speed=1.0, blend=0.5, override_lock=true},
+    "land"  :  {name="Land" , speed=1.5, lock=0.2},
+}
 func play_animation(anim : String, speed : float = 1.0):
-    var anim_table = {
-        "idle"  :  {name="Idle" , speed=0.25},
-        "float" :  {name="Float", speed=1.0, blend=2.0},
-        "air"   :  {name="Air"  , speed=1.0, blend=2.0},
-        "walk"  :  {name="Walk" , speed=2.0},
-        "run"   :  {name="Run" , speed=2.0},
-        "jump"  :  {name="Jump" , speed=1.0, blend=0.5, override_lock=true},
-        "land"  :  {name="Land" , speed=1.5, lock=0.2},
-    }
     if anim in anim_table:
         var blendmult = 1.0
         if "blend" in anim_table[anim]:
@@ -257,6 +266,7 @@ func play_animation(anim : String, speed : float = 1.0):
             anim_lock_time = 0.0
         if play_no_self_override(anim_table[anim].name, speed*anim_table[anim].speed, blendmult):
             if "lock" in anim_table[anim]:
+                anim_lock_time = anim_table[anim].lock
                 anim_lock_time = anim_table[anim].lock
 
 var last_offset_angle = 0.0
@@ -362,9 +372,6 @@ func _friction(_velocity : Vector3, delta : float) -> Vector3:
 
 var jump_state_timer_max = 0.4
 var jump_state_timer = 0
-
-func remove_from_ground():
-    floor_collision = null
 
 var air_control_disabled_this_frame = false
 func disable_air_control_this_frame():
@@ -809,9 +816,9 @@ func apply_knockback(force, source):
     # FIXME compare to floor velocity
     # TODO: hitstun
     if velocity.y > 0.0:
-        floor_collision = null
+        detach_from_floor()
     if source == "rocket":
-        floor_collision = null
+        detach_from_floor()
 
 func angle_get_delta(a : float, b : float) -> float:
     a = fposmod(a, PI*2.0)
@@ -1152,7 +1159,8 @@ func handle_jump(_delta):
     #print(velocity*unit_scale)
     
     #print(my_jumpstr)
-    floor_collision = null
+    #floor_collision = null
+    detach_from_floor()
     last_jump_coordinate = global_transform.origin
     #print(velocity.y)
     return true
@@ -1462,6 +1470,7 @@ func _process(delta):
     do_evil_anim_things(delta)
     cycle_prev_positions(delta)
     find_navigable_floor()
+
 
 func check_stair_height_override(closest_ground):
     var reset_stair_height = stair_height

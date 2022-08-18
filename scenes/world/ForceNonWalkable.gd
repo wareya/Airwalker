@@ -28,7 +28,7 @@ func _process(delta):
         var pos_diff = player.subtract_hull_size_from_distance(pos_diff_raw)
         pos_diff = subtract_hull_size_from_distance(pos_diff)
         if pos_diff.length_squared() == 0.0:
-            player.remove_from_ground()
+            player.detach_from_floor()
             player.disable_air_control_this_frame()
             player.velocity += pos_diff_raw.normalized()*delta*4.0
         
