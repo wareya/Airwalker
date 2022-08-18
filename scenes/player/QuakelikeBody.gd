@@ -282,6 +282,7 @@ func unstuck(velocity):
 
 func custom_move_and_slide(delta, velocity):
     var started_on_ground = is_on_floor()
+    var above_a_floor = collision_is_floor(find_real_collision(Vector3(0, -10, 0)))
     if velocity.y <= 0:
         no_floor_check = false
     
@@ -323,7 +324,7 @@ func custom_move_and_slide(delta, velocity):
             var is_wall = !collision_is_floor(collision)
             if (slopes_are_stairs or is_wall):
                 #print("trying stairs")
-                stair_residual = attempt_stair_step(delta_velocity, raw_velocity, started_on_ground, is_wall)
+                stair_residual = attempt_stair_step(delta_velocity, raw_velocity, started_on_ground or above_a_floor, is_wall)
             
             if stair_residual != null and stair_residual.size() > 0:
                 did_stairs = true
