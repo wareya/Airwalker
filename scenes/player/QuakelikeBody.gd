@@ -227,7 +227,9 @@ func attempt_stair_step(motion, raw_velocity, is_wall, fallback = false):
     
     var test_offset = 0.05 if upward_contact else 0.0
     
-    if collision_is_floor(down_contact):
+    var found_floor = collision_is_floor(down_contact)
+    
+    if found_floor:
         if end_translation.y-test_offset > start_translation.y:
             if horizontal_contact:
                 return [
@@ -242,7 +244,7 @@ func attempt_stair_step(motion, raw_velocity, is_wall, fallback = false):
     #    print("found collision was not a floor: %s" % down_contact)
     
     if !use_fallback_stair_logic or fallback or !is_wall:
-        if is_wall and (!horizontal_contact or horizontal_contact.travel.length() > 0.0):
+        if is_wall and found_floor and (!horizontal_contact or horizontal_contact.travel.length() > 0.0):
             return []
         else:
             return null
@@ -358,7 +360,7 @@ func custom_move_and_slide(delta, velocity):
                     #print(collision.collider_velocity, collision.normal, delta_velocity)
                     if stair_residual != null and stair_residual.size() == 0:
                         # no wall slide
-                        #print("no wall slide")
+                        print("no wall slide")
                         pass
                     else:
                         delta_velocity = vector_reject(delta_velocity, collision.normal)

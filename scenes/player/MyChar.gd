@@ -856,7 +856,7 @@ func ai_apply_turn_logic(delta, target_angle, axis):
 
 var do_no_ai_aim = false
 var do_no_ai_move = false
-var do_no_ai = true
+var do_no_ai = false
 var do_no_attack = false
 var last_used_nav_pos = Vector3()
 func do_ai(delta):
