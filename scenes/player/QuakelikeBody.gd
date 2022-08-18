@@ -192,7 +192,7 @@ func move_and_collide_vertically(motion_y):
 var did_stairs = false
 
 # fallback is for physics engine badness at low delta times like 8ms
-func attempt_stair_step(motion, raw_velocity, is_wall, fallback = false):
+func attempt_stair_step(motion, raw_velocity, started_on_ground, is_wall, fallback = false):
     if !do_stairs:
         return null
     if motion.x == 0 and motion.z == 0:
@@ -244,12 +244,12 @@ func attempt_stair_step(motion, raw_velocity, is_wall, fallback = false):
     #    print("found collision was not a floor: %s" % down_contact)
     
     if !use_fallback_stair_logic or fallback or !is_wall:
-        if is_wall and found_floor and (!horizontal_contact or horizontal_contact.travel.length() > 0.0):
+        if is_wall and (found_floor or started_on_ground) and (!horizontal_contact or horizontal_contact.travel.length() > 0.0):
             return []
         else:
             return null
     elif motion.length_squared() < stair_query_fallback_distance*stair_query_fallback_distance:
-        return attempt_stair_step(original_motion, raw_velocity, is_wall, true)
+        return attempt_stair_step(original_motion, raw_velocity, started_on_ground, is_wall, true)
 
 var unstuck_floor = false
 func unstuck(velocity):
@@ -281,6 +281,7 @@ func unstuck(velocity):
 
 
 func custom_move_and_slide(delta, velocity):
+    var started_on_ground = is_on_floor()
     if velocity.y <= 0:
         no_floor_check = false
     
@@ -298,8 +299,6 @@ func custom_move_and_slide(delta, velocity):
     var delta_velocity = velocity*delta
     
     var start_velocity = velocity
-    #var start_translation = translation
-    var started_on_ground = floor_collision != null
     
     var _iters_done = 0
     var max_iters = 12
@@ -324,7 +323,7 @@ func custom_move_and_slide(delta, velocity):
             var is_wall = !collision_is_floor(collision)
             if (slopes_are_stairs or is_wall):
                 #print("trying stairs")
-                stair_residual = attempt_stair_step(delta_velocity, raw_velocity, is_wall)
+                stair_residual = attempt_stair_step(delta_velocity, raw_velocity, started_on_ground, is_wall)
             
             if stair_residual != null and stair_residual.size() > 0:
                 did_stairs = true
