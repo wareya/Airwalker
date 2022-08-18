@@ -1180,6 +1180,7 @@ func handle_friction(delta):
     if is_on_floor():
         velocity = _friction(velocity, delta)
 
+
 func handle_accel(delta):
     if wishdir != Vector3():
         var down = Vector3.DOWN
@@ -1249,6 +1250,14 @@ func handle_accel(delta):
             #print(vector_reject(velocity, Vector3.DOWN).length())
         #elif tempdot > 0.
     
+func handle_friction_and_accel(delta):
+    # subdivide friction and acceleration to approximately 1ms steps to increase accuracy
+    var steps = max(1.0, round(delta*1000.0))
+    var step_size = delta/steps
+    for i in range(steps):
+        handle_friction(step_size)
+        handle_accel(step_size)
+
 var floor_velocity = Vector3()
 
 func check_landing(_delta):
@@ -1428,8 +1437,8 @@ func _process(delta):
         velocity -= floor_velocity
     
     handle_gravity(delta)
-    handle_friction(delta)
-    handle_accel(delta)
+    
+    handle_friction_and_accel(delta)
     
     if is_on_floor():
         velocity += floor_velocity

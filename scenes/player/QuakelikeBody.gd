@@ -360,7 +360,6 @@ func custom_move_and_slide(delta, velocity):
                     #print(collision.collider_velocity, collision.normal, delta_velocity)
                     if stair_residual != null and stair_residual.size() == 0:
                         # no wall slide
-                        print("no wall slide")
                         pass
                     else:
                         delta_velocity = vector_reject(delta_velocity, collision.normal)

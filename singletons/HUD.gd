@@ -22,10 +22,10 @@ func _process(_delta):
     $ArmorLabel.visible = false
     
     if Input.is_action_just_pressed("ui_page_down"):
-        if Engine.target_fps == 24:
+        if Engine.target_fps < 100:
             Engine.target_fps = 500
         else:
-            Engine.target_fps = 24
+            Engine.target_fps = 30
         #Engine.time_scale = 1.0
     
     # FIXME move to hud
